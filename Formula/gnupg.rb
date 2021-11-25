@@ -1,18 +1,26 @@
 class Gnupg < Formula
   desc "GNU Pretty Good Privacy (PGP) package"
   homepage "https://gnupg.org/"
-  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.18.tar.bz2"
-  sha256 "30d37ce2ca55b2b9b61480b2a175a3b22066ab41cd3f84688448919b566dec0a"
+  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.3.tar.bz2"
+  sha256 "5789b86da6a1a6752efb38598f16a77af51170a8494039c3842b085032e8e937"
+  license "GPL-3.0-or-later"
+  revision 1
+
+  livecheck do
+    url "https://gnupg.org/ftp/gcrypt/gnupg/"
+    regex(/href=.*?gnupg[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "f917eab1b8680aaec7f565917b168ff5cf085476ccd1a32db5961b27ca98d376" => :catalina
-    sha256 "b65d87ac6cb5dc10de6f4afa7e33ca79c146b5a2a35ad8455ac01eeddc9e82f5" => :mojave
-    sha256 "b3ba15bfd670a472ec9b2ddbf65b3d05c2d9802089afeee8a129a5eb470dcaea" => :high_sierra
+    sha256 arm64_monterey: "7935ce2295cc17a978ad5d00c0cb34f2969c510e8820f1404f44fd7d3bd585b0"
+    sha256 arm64_big_sur:  "e1f444e61d3e8c00970d2e61d513caf02ab4b2c07c2bd8a2b13dd8265e4c379a"
+    sha256 monterey:       "054b5d03dc3b3e3fb71ec3f8b4c39e250bde24ac4981c5f2c041567e5643be90"
+    sha256 big_sur:        "3854d1939e38f51eee0d471dbb86be5880c583fc43099e04f11b7538318606e0"
+    sha256 catalina:       "a810862dacc767bcece54292cf27854d96c10f028b6fee3bc0ea421aebe8c334"
+    sha256 x86_64_linux:   "05705f2461335835103d19f0451222e129dac8f05c4c8d3e972dba30a119558d"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "sqlite" => :build if MacOS.version == :mavericks
-  depends_on "adns"
   depends_on "gettext"
   depends_on "gnutls"
   depends_on "libassuan"
@@ -23,6 +31,19 @@ class Gnupg < Formula
   depends_on "npth"
   depends_on "pinentry"
 
+  uses_from_macos "sqlite", since: :catalina
+
+  on_linux do
+    depends_on "libidn"
+  end
+
+  # Silence warning about /proc.
+  # Remove with the next release.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/890be5f6af88e7913d177af87a50129049e681bb/gnupg/2.3.3-proc-error.patch"
+    sha256 "c4ee02929a03935121b8a2db01e83fbe046a07f104514b2d1cba453c47464204"
+  end
+
   def install
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
@@ -30,11 +51,20 @@ class Gnupg < Formula
                           "--sbindir=#{bin}",
                           "--sysconfdir=#{etc}",
                           "--enable-all-tests",
-                          "--enable-symcryptrun",
                           "--with-pinentry-pgm=#{Formula["pinentry"].opt_bin}/pinentry"
     system "make"
     system "make", "check"
     system "make", "install"
+
+    # Configure scdaemon as recommended by upstream developers
+    # https://dev.gnupg.org/T5415#145864
+    if OS.mac?
+      # write to buildpath then install to ensure existing files are not clobbered
+      (buildpath/"scdaemon.conf").write <<~EOS
+        disable-ccid
+      EOS
+      pkgetc.install "scdaemon.conf"
+    end
   end
 
   def post_install

@@ -1,29 +1,47 @@
 class Stgit < Formula
-  desc "Push/pop utility built on top of Git"
-  homepage "https://github.com/ctmarinas/stgit"
-  url "https://github.com/ctmarinas/stgit/archive/v0.21.tar.gz"
-  sha256 "ba1ccbbc15beccc4648ae3b3a198693be7e6b1b1e330f45605654d56095dac0d"
-  head "https://github.com/ctmarinas/stgit.git"
+  desc "Manage Git commits as a stack of patches"
+  homepage "https://stacked-git.github.io"
+  url "https://github.com/stacked-git/stgit/releases/download/v1.4/stgit-1.4.tar.gz"
+  sha256 "145cacd89127a31e0363e4e6a7997fb0510c193d4669aa7f614dd6a8b5def1af"
+  license "GPL-2.0-only"
+  head "https://github.com/stacked-git/stgit.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "736d0fb7ba2e2f09acb9f3c12e7a232d975c1f20306b1d6b56dbc8fa9622bb0e" => :catalina
-    sha256 "a8c5a52941bb5c524f97bddf295dbf65b79ec74b4ec5a0d0ebcdb25429e1e03d" => :mojave
-    sha256 "a8c5a52941bb5c524f97bddf295dbf65b79ec74b4ec5a0d0ebcdb25429e1e03d" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "59448529868c52e55158e4ef210eadc9da518259ec376929e482c43f29cac86f"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "59448529868c52e55158e4ef210eadc9da518259ec376929e482c43f29cac86f"
+    sha256 cellar: :any_skip_relocation, monterey:       "8b3584c471cc086f02f1a92541a85466492cfb91d2713ecd082b42c115821f69"
+    sha256 cellar: :any_skip_relocation, big_sur:        "8b3584c471cc086f02f1a92541a85466492cfb91d2713ecd082b42c115821f69"
+    sha256 cellar: :any_skip_relocation, catalina:       "8b3584c471cc086f02f1a92541a85466492cfb91d2713ecd082b42c115821f69"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "59448529868c52e55158e4ef210eadc9da518259ec376929e482c43f29cac86f"
   end
 
+  depends_on "asciidoc" => :build
+  depends_on "xmlto" => :build
+  depends_on "python@3.10"
+
   def install
-    ENV["PYTHON"] = "python" # overrides 'python2' built into makefile
+    ENV["PYTHON"] = Formula["python@3.10"].opt_bin/"python3"
+    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
     system "make", "prefix=#{prefix}", "all"
     system "make", "prefix=#{prefix}", "install"
+    system "make", "prefix=#{prefix}", "install-doc"
+    bash_completion.install "completion/stgit.bash"
+    fish_completion.install "completion/stg.fish"
+    zsh_completion.install "completion/stgit.zsh" => "_stgit"
   end
 
   test do
     system "git", "init"
+    system "git", "config", "user.name", "BrewTestBot"
+    system "git", "config", "user.email", "brew@test.bot"
     (testpath/"test").write "test"
     system "git", "add", "test"
     system "git", "commit", "--message", "Initial commit", "test"
+    system "#{bin}/stg", "--version"
     system "#{bin}/stg", "init"
+    system "#{bin}/stg", "new", "-m", "patch0"
+    (testpath/"test").append_lines "a change"
+    system "#{bin}/stg", "refresh"
     system "#{bin}/stg", "log"
   end
 end

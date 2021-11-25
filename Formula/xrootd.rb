@@ -1,24 +1,41 @@
 class Xrootd < Formula
   desc "High performance, scalable, fault-tolerant access to data"
-  homepage "http://xrootd.org"
-  url "http://xrootd.org/download/v4.10.1/xrootd-4.10.1.tar.gz"
-  sha256 "ad14174796328e0b62f13505862c8cd1b12842ec4b5f807b0efb3bfaac7a760d"
-  head "https://github.com/xrootd/xrootd.git"
+  homepage "https://xrootd.slac.stanford.edu/"
+  url "https://xrootd.slac.stanford.edu/download/v5.3.3/xrootd-5.3.3.tar.gz"
+  sha256 "59c55c329af408274bd2be5269f20c56b72882312b19d398ab897406d2f69499"
+  license "LGPL-3.0-or-later"
+  head "https://github.com/xrootd/xrootd.git", branch: "master"
+
+  livecheck do
+    url "https://xrootd.slac.stanford.edu/dload.html"
+    regex(/href=.*?xrootd[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "6ddd6b2fae855806a745afb4941d827f50449f92fc1b487082161f7ee3e69d9b" => :catalina
-    sha256 "bd952b516cd0f29d6baef29720a1d3f4fcc43b10e04e44baa33b2079c1d0772e" => :mojave
-    sha256 "23344eb8a2084a805b95e18176321e426d086e39570243ee1ec7dbfa26a8c7ee" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "125b165586aef72874a20577c50a4c4d8e502bb078ac71285ea2e8a52df6cfb4"
+    sha256 cellar: :any,                 arm64_big_sur:  "a409acd75077722ad8ab59a933c86b97e20a373c112a05175e35d0d21061fc08"
+    sha256 cellar: :any,                 monterey:       "9a88e13af60a26b1a90635287913a4cefe068820cda850f232b0d221dafaa7be"
+    sha256 cellar: :any,                 big_sur:        "910b4b7a1e0b39d2868ddcb69c6732b6f74362c3a381d4f70ac7cd880f15f471"
+    sha256 cellar: :any,                 catalina:       "39ffd96d95a4c06f07050c3dacbfc7b1b0759ab44df6cabd62eabd02130dec66"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "0e3d6b6625a404a28060210c03c107fc6c3544c2d33e82e1fc0f37908c6ceaba"
   end
 
   depends_on "cmake" => :build
   depends_on "openssl@1.1"
   depends_on "readline"
 
+  uses_from_macos "libxml2"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "util-linux"
+  end
+
   def install
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args, "-DENABLE_PYTHON=OFF"
+      system "cmake", "..", *std_cmake_args,
+                            "-DENABLE_PYTHON=OFF",
+                            "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make", "install"
     end
   end

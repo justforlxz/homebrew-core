@@ -3,22 +3,26 @@ class RstLint < Formula
 
   desc "ReStructuredText linter"
   homepage "https://github.com/twolfson/restructuredtext-lint"
-  url "https://github.com/twolfson/restructuredtext-lint/archive/1.3.0.tar.gz"
-  sha256 "4bf9d4724f59bc05ebe1cd5192c03d4597ee95c4bbf60bd5644422e1a2558da3"
+  url "https://files.pythonhosted.org/packages/45/69/5e43d0e8c2ca903aaa2def7f755b97a3aedc5793630abbd004f2afc3b295/restructuredtext_lint-1.3.2.tar.gz"
+  sha256 "d3b10a1fe2ecac537e51ae6d151b223b78de9fafdd50e5eb6b08c243df173c80"
+  license "Unlicense"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e7d5b085ef98fb5613edaec5be706c31831aa3721081dc43ca6282e69c45360c" => :catalina
-    sha256 "6141abff3561e93a197148e81d2c0634a3665f41beabb4a5bbf92bb0355ce270" => :mojave
-    sha256 "377505a302c81418df15ab1a29723a0b4572d78e7a8bb984a33bd57daf352fbd" => :high_sierra
-    sha256 "46da54ff6e6f96663327291d0f51380107c377705d9eaccc7461c9156916799b" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "9f38f4267988a8a15da26707c04bd7fe201a12ca94c43e7ac32a054953143f49"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "9f38f4267988a8a15da26707c04bd7fe201a12ca94c43e7ac32a054953143f49"
+    sha256 cellar: :any_skip_relocation, monterey:       "4e0d8defb5305731e9053120f61fba399c1fc2908367df0ce332acfc09d2550a"
+    sha256 cellar: :any_skip_relocation, big_sur:        "4e0d8defb5305731e9053120f61fba399c1fc2908367df0ce332acfc09d2550a"
+    sha256 cellar: :any_skip_relocation, catalina:       "4e0d8defb5305731e9053120f61fba399c1fc2908367df0ce332acfc09d2550a"
+    sha256 cellar: :any_skip_relocation, mojave:         "4e0d8defb5305731e9053120f61fba399c1fc2908367df0ce332acfc09d2550a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "f5492b290c6c3b00356c0d956ca4d270855c2852519114ade876c6ea5b183932"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   resource "docutils" do
-    url "https://files.pythonhosted.org/packages/84/f4/5771e41fdf52aabebbadecc9381d11dea0fa34e4759b4071244fa094804c/docutils-0.14.tar.gz"
-    sha256 "51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274"
+    url "https://files.pythonhosted.org/packages/2f/e0/3d435b34abd2d62e8206171892f174b180cd37b09d57b924ca5c2ef2219d/docutils-0.16.tar.gz"
+    sha256 "c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc"
   end
 
   def install

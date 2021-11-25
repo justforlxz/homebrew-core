@@ -3,14 +3,22 @@ class ConjureUp < Formula
 
   desc "Big software deployments so easy it's almost magical"
   homepage "https://conjure-up.io/"
-  url "https://github.com/conjure-up/conjure-up/archive/2.6.9.tar.gz"
-  sha256 "b5ebba187d27b3474b36acd715df015b198c0e5df8aefb32200ba4f3f3de17f4"
+  url "https://github.com/conjure-up/conjure-up/archive/2.6.14.tar.gz"
+  sha256 "c9f115229a305ff40eae051f40db2ca18a3dc2bd377397e22786bba032feb79a"
+  license "MIT"
+  revision 4
 
   bottle do
-    cellar :any
-    sha256 "8353c30ae1baa70b248c63fbbcab0a958df64eb5c2f4ad7822c344d21528d8b4" => :mojave
-    sha256 "311cb690eab903378d5ce9c2a0622d5e4ed98562460d50251a7ecf62aa7d22c6" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "e4da8a68d5c475d4432d9706c22b5d8ab8b69cf20e7ced2c26d7686c273d2682"
+    sha256 cellar: :any,                 arm64_big_sur:  "0d392e7fe4c46dcb50da2344dec0a11dc2141bca36c7342b311e813bbd021b03"
+    sha256 cellar: :any,                 monterey:       "178493694c306b5aed3aa4f816fd94f82a90d0f28795c3f28497a5e9b4f97501"
+    sha256 cellar: :any,                 big_sur:        "4aa49ccf202ed4bf0ecbb987b04fa30ee28bdc3e4c4bf37c396668269b23537e"
+    sha256 cellar: :any,                 catalina:       "b9c8766c411e1d736d52714678420065071866d795360a5a8e21045d559714f7"
+    sha256 cellar: :any,                 mojave:         "1e8d73fbff45339f18bb6fbbc1b00bd7bba4590feeb6a2980b8c68ddefb56c98"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "941ffccefb435bdb64de4f993b6c946383ef5fb79b399deae3ea76038fb027f7"
   end
+
+  deprecate! date: "2021-04-15", because: :repo_archived
 
   depends_on "awscli"
   depends_on "jq"
@@ -18,8 +26,14 @@ class ConjureUp < Formula
   depends_on "juju-wait"
   depends_on "libyaml"
   depends_on "pwgen"
-  depends_on "python"
+  depends_on "python@3.10"
   depends_on "redis"
+
+  uses_from_macos "libffi"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+  end
 
   # list generated from the 'requirements.txt' file in the repository root
   resource "aiofiles" do
@@ -28,8 +42,8 @@ class ConjureUp < Formula
   end
 
   resource "asn1crypto" do
-    url "https://files.pythonhosted.org/packages/fc/f1/8db7daa71f414ddabfa056c4ef792e1461ff655c2ae2928a2b675bfed6b4/asn1crypto-0.24.0.tar.gz"
-    sha256 "9d5c20441baf0cb60a4ac34cc447c6c189024b6b4c6cd7877034f4965c464e49"
+    url "https://files.pythonhosted.org/packages/9f/3d/8beae739ed8c1c8f00ceac0ab6b0e97299b42da869e24cf82851b27a9123/asn1crypto-1.3.0.tar.gz"
+    sha256 "5a215cb8dc12f892244e3a113fe05397ee23c5c4ca7a69cd6e69811755efc42d"
   end
 
   resource "bcrypt" do
@@ -43,8 +57,8 @@ class ConjureUp < Formula
   end
 
   resource "cffi" do
-    url "https://files.pythonhosted.org/packages/93/1a/ab8c62b5838722f29f3daffcc8d4bd61844aa9b5f437341cc890ceee483b/cffi-1.12.3.tar.gz"
-    sha256 "041c81822e9f84b1d9c401182e174996f0bae9991f33725d059b771744290774"
+    url "https://files.pythonhosted.org/packages/66/6a/98e023b3d11537a5521902ac6b50db470c826c682be6a8c661549cb7717a/cffi-1.14.4.tar.gz"
+    sha256 "1a465cbe98a7fd391d47dce4b8f7e5b921e6cd805ef421d04f5f66ba8f06086c"
   end
 
   resource "chardet" do
@@ -53,8 +67,8 @@ class ConjureUp < Formula
   end
 
   resource "cryptography" do
-    url "https://files.pythonhosted.org/packages/c2/95/f43d02315f4ec074219c6e3124a87eba1d2d12196c2767fadfdc07a83884/cryptography-2.7.tar.gz"
-    sha256 "e6347742ac8f35ded4a46ff835c60e68c22a536a8ae5c4422966d06946b6d4c6"
+    url "https://files.pythonhosted.org/packages/be/60/da377e1bed002716fb2d5d1d1cab720f298cb33ecff7bf7adea72788e4e4/cryptography-2.8.tar.gz"
+    sha256 "3cda1f0ed8747339bbdf71b9f38ca74c7b592f24f65cdb3ab3765e4b02871651"
   end
 
   resource "env" do
@@ -95,6 +109,13 @@ class ConjureUp < Formula
   resource "macaroonbakery" do
     url "https://files.pythonhosted.org/packages/d0/22/ca60ef57ad0ea904292daaa1cb0f1e991303667f70794a97674f4a3695fa/macaroonbakery-1.2.3.tar.gz"
     sha256 "bd27e7d2d98cb3dc1973d7b67b2a0c475fb005c0f9c35c04dbf9b272e98939ec"
+
+    # Python 3.9 compatibility platform.linux_distribution
+    # Remove in next release
+    patch do
+      url "https://github.com/go-macaroon-bakery/py-macaroon-bakery/commit/78daf9d233e33da3f4bd2c34553843f82c09b21e.patch?full_index=1"
+      sha256 "70b36abee3f9d93afee7fb4d4cb9018370aad83f16a2ab7c5b5770aa1178be86"
+    end
   end
 
   resource "MarkupSafe" do
@@ -242,7 +263,17 @@ class ConjureUp < Formula
     sha256 "08e3c3e0535befa4f0c4443824496c03ecc25062debbcf895874f8a0b4c97c9f"
   end
 
+  # See https://github.com/conjure-up/conjure-up/pull/1655
+  patch do
+    url "https://github.com/conjure-up/conjure-up/commit/d2bf8ab8e71ff01321d0e691a8d3e3833a047678.patch?full_index=1"
+    sha256 "a2bc3249200c1a809c18ffea69c9292a937902dfe2c8b7ee10da4c7aa319469c"
+  end
+
   def install
+    # See https://github.com/conjure-up/conjure-up/pull/1655
+    inreplace "conjureup/juju.py", "os.environ['JUJU']", "\"#{Formula["juju"].opt_bin}/juju\""
+    inreplace "conjureup/juju.py", "os.environ['JUJU_WAIT']", "\"#{Formula["juju-wait"].opt_bin}/juju-wait\""
+
     venv = virtualenv_create(libexec, "python3")
     venv.pip_install resource("cffi") # needs to be installed prior to bcrypt
     res = resources.map(&:name).to_set - ["cffi"]

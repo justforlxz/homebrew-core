@@ -1,22 +1,31 @@
 class StressNg < Formula
   desc "Stress test a computer system in various selectable ways"
-  homepage "https://kernel.ubuntu.com/~cking/stress-ng/"
-  url "https://kernel.ubuntu.com/~cking/tarballs/stress-ng/stress-ng-0.10.11.tar.xz"
-  sha256 "ec41d375d1ae61862b00a939a5263791c8c8fdb262ad14ea204944df4ca140f1"
+  homepage "https://wiki.ubuntu.com/Kernel/Reference/stress-ng"
+  url "https://github.com/ColinIanKing/stress-ng/archive/refs/tags/V0.13.07.tar.gz"
+  sha256 "f7c0a0d0f49c39ff9b1a45919741e60e770c7873851028f46b4bbefd1e8a4e74"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "05b4ed30ef511ae912fbf7f5e43907bf7fa064604ee5e2da3ed7d68265222d1d" => :catalina
-    sha256 "4f45108da1cd056c9340441db433a595fd4ce632a34670c8dfb68bae06053e47" => :mojave
-    sha256 "fcd8788e53246cc9134bdd5a8bb90a63ac2cf26fedb57fa1b355ec1814b896e8" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "b81c8396076b2233f3d4309edfcea3851f559baa57bd0a380a250b59871b1477"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "d48466537fd65580d8794b66a3f968cf9db8de802f18403241270cc963039cc5"
+    sha256 cellar: :any_skip_relocation, monterey:       "6f58889c5359790e4451034d9e80e6d9ec4c67532de1afdae2fb6c5751d16120"
+    sha256 cellar: :any_skip_relocation, big_sur:        "ebb12f258d0eff88636563e23233775bf29df94d2e2e1a289d4f96e1c0a5d046"
+    sha256 cellar: :any_skip_relocation, catalina:       "a611e635cd91020b03c2690113fbb61b53327f7dd45e3239ef9afc1710dbdbde"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "feb322a5da3b392d6f191b4b69e1dabad59e8a21386f1dfbb7fb40152efb993b"
   end
 
-  depends_on :macos => :sierra
+  depends_on macos: :sierra
+
+  uses_from_macos "zlib"
 
   def install
-    inreplace "Makefile", "/usr", prefix
+    inreplace "Makefile" do |s|
+      s.gsub! "/usr", prefix
+      s.change_make_var! "BASHDIR", prefix/"etc/bash_completion.d"
+    end
     system "make"
     system "make", "install"
+    bash_completion.install "bash-completion/stress-ng"
   end
 
   test do

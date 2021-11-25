@@ -1,15 +1,23 @@
 class Hypre < Formula
   desc "Library featuring parallel multigrid methods for grid problems"
-  homepage "https://computation.llnl.gov/casc/hypre/software.html"
-  url "https://github.com/hypre-space/hypre/archive/v2.18.2.tar.gz"
-  sha256 "28007b5b584eaf9397f933032d8367788707a2d356d78e47b99e551ab10cc76a"
+  homepage "https://computing.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods"
+  url "https://github.com/hypre-space/hypre/archive/v2.23.0.tar.gz"
+  sha256 "8a9f9fb6f65531b77e4c319bf35bfc9d34bf529c36afe08837f56b635ac052e2"
+  license any_of: ["MIT", "Apache-2.0"]
   head "https://github.com/hypre-space/hypre.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6330b511b0e5a2ab686fd15b3de330ea9e104bab3fcb8f2ff1dc3c70b55b0a39" => :catalina
-    sha256 "2d2b435909d08f1d1d59cc9c6a4c2d4ec6148f1422e8b11c93fc923785e7b84b" => :mojave
-    sha256 "92ae0488c49e818175585a2975e9d5a055b0235839bf9bc2e102152d0a9c8168" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6d796ac1e31fcff5d06bbd3e09ab2646f7dfaa4f49ef35e8a09e1df6147bf57f"
+    sha256 cellar: :any_skip_relocation, monterey:      "f12a1f18105429672ee561b804606545a1c9d7fd50d503f612710ec4f620451b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2bbab9c35697fa612704afb0029668a41f57efab62c9729e6adea8283c393737"
+    sha256 cellar: :any_skip_relocation, catalina:      "f2ee0a12ab45e114c9f88584d79048f9181ede8ec55a99b470f26621085818f0"
+    sha256 cellar: :any_skip_relocation, mojave:        "c8da05950a2acde7622d24e878629c69618e1dc4882a9e02e76ee2f3427d98de"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6d8de40631ed84d03ca5267f71f22ae75704400b771f58296d30dbc026295550"
   end
 
   depends_on "gcc" # for gfortran
@@ -32,7 +40,7 @@ class Hypre < Formula
       }
     EOS
 
-    system ENV.cc, "test.cpp", "-o", "test"
+    system ENV.cxx, "test.cpp", "-o", "test"
     system "./test"
   end
 end

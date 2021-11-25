@@ -1,14 +1,22 @@
 class TomcatAT8 < Formula
   desc "Implementation of Java Servlet and JavaServer Pages"
   homepage "https://tomcat.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=tomcat/tomcat-8/v8.5.49/bin/apache-tomcat-8.5.49.tar.gz"
-  sha256 "40f23e1d9a882b33bbc0029bc17405a231099437b2bf1fb60f55a620385831d4"
+  url "https://www.apache.org/dyn/closer.lua?path=tomcat/tomcat-8/v8.5.73/bin/apache-tomcat-8.5.73.tar.gz"
+  mirror "https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.73/bin/apache-tomcat-8.5.73.tar.gz"
+  sha256 "f8965400c9f21361ff81ff04478dbb4ce365276d14b0b99b85912c9de949f6a0"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "10d480f4c5fc8c6dbb54d571eb32589967d3c8096323f4eb2fc3bae483b405ca"
+  end
 
   keg_only :versioned_formula
 
-  depends_on :java => "1.7+"
+  depends_on "openjdk"
 
   def install
     # Remove Windows scripts
@@ -16,31 +24,24 @@ class TomcatAT8 < Formula
 
     # Install files
     prefix.install %w[NOTICE LICENSE RELEASE-NOTES RUNNING.txt]
+
+    pkgetc.install Dir["conf/*"]
+    (buildpath/"conf").rmdir
+    libexec.install_symlink pkgetc => "conf"
+
     libexec.install Dir["*"]
-    bin.install_symlink "#{libexec}/bin/catalina.sh" => "catalina"
+    (bin/"catalina").write_env_script "#{libexec}/bin/catalina.sh", JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
-  plist_options :manual => "catalina run"
+  def caveats
+    <<~EOS
+      Configuration files: #{pkgetc}
+    EOS
+  end
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Disabled</key>
-        <false/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/catalina</string>
-          <string>run</string>
-        </array>
-        <key>KeepAlive</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"catalina", "run"]
+    keep_alive true
   end
 
   test do

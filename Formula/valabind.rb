@@ -1,25 +1,30 @@
 class Valabind < Formula
   desc "Vala bindings for radare, reverse engineering framework"
   homepage "https://github.com/radare/valabind"
-  url "https://github.com/radare/valabind/archive/1.7.1.tar.gz"
-  sha256 "b463b18419de656e218855a2f30a71051f03a9c4540254b4ceaea475fb79102e"
-  revision 3
-  head "https://github.com/radare/valabind.git"
+  url "https://github.com/radare/valabind/archive/1.8.0.tar.gz"
+  sha256 "3eba8c36c923eda932a95b8d0c16b7b30e8cdda442252431990436519cf87cdd"
+  license "GPL-3.0-or-later"
+  revision 2
+  head "https://github.com/radare/valabind.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "533aeb6b5634de0237165620b2650f25f571cce1c43d57a8cfb1af05acb3d475" => :catalina
-    sha256 "8d671e3398e213a62ac8a3307cabf87a4f4b0469dccec7d4b6c298173e14f0c8" => :mojave
-    sha256 "d181837a5f5795f5d09d0519d0a82bdd8f1c1f5b23a4ef04ff472e31d138f129" => :high_sierra
-    sha256 "f3c111ef34b0c9ddd08070bcd23b79ef8df6e11df093d2ad0223c629143d0234" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "e3ab92ce9929d10db47821cb54a99943397f7708bcf9bac7fba29e5c1a5a184d"
+    sha256 cellar: :any,                 monterey:      "bf9c0b7132a821fa243686e1f2dd8d7642405c98937c5b9ba662f2bc9bb42d7c"
+    sha256 cellar: :any,                 big_sur:       "bef04beaf352699df3774e1d26423b16cdd487836553755d6777b5d3a20e4413"
+    sha256 cellar: :any,                 catalina:      "d1013e81b20cf4c4981b7840c12d281fb2042aebb874317e8dff44d550915954"
+    sha256 cellar: :any,                 mojave:        "ca8cb97fd10e22e1ac1a8966889c9eda14f33bedeeae8395811c55748e2740cc"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d60a5907d80687fc3bf619f357d525ed856aaedf23dbad26fcd8c80636b37698"
   end
 
   depends_on "pkg-config" => :build
   depends_on "swig"
   depends_on "vala"
 
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+
   def install
-    system "make"
+    system "make", "VALA_PKGLIBDIR=#{Formula["vala"].opt_lib}/vala-#{Formula["vala"].version.major_minor}"
     system "make", "install", "PREFIX=#{prefix}"
   end
 

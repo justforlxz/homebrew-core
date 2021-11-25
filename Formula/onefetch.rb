@@ -1,26 +1,35 @@
 class Onefetch < Formula
   desc "Git repository summary on your terminal"
   homepage "https://github.com/o2sh/onefetch"
-  url "https://github.com/o2sh/onefetch/archive/v2.1.0.tar.gz"
-  sha256 "54c7b543b39cf22bac2505c792d7fbba75bfdbe1a19900879b439dc65c75c414"
+  url "https://github.com/o2sh/onefetch/archive/v2.11.0.tar.gz"
+  sha256 "ffd3cc3bd24e299ede1fada2b2da8bf066d59219da167477e1997c860650c192"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b77c8972bc84e19b9be005f8e39501534ee80dad87e8f0d3b510f3772d470c48" => :catalina
-    sha256 "e700489820122dd35495bf62bce935f0d3ce7af771f6477dc535b8575973391a" => :mojave
-    sha256 "1a46c6c38c0042838d1ab7a696a4c22e104ee2fecf83a4191fe851a8a3eb2856" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "14329e52884db110cee66f01adcb3b8eacb727ee89168babc58048bb5a5a5d01"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "ff6d677011879fe9cd3b8b6dfb6b69bc0e6ff2ab7de8273ced602e243530841e"
+    sha256 cellar: :any_skip_relocation, monterey:       "506ac362844e2abacbd75b5b863309419e2a03eea42c201dd6faed1b8624b4e0"
+    sha256 cellar: :any_skip_relocation, big_sur:        "eeeb2f6e74a243573259be8a8342bac4a6c638063dd2364980423f1fa10f04a8"
+    sha256 cellar: :any_skip_relocation, catalina:       "88c955974088f0ee61033b21b2e8bfb7950964a4993ec8aa1cd0140787db67dc"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "370515a1bae2b42bfd0a92d9f9d8ca7127dd752ce0bc936c1aaac20a1cbe71da"
   end
 
   depends_on "rust" => :build
 
+  uses_from_macos "zlib"
+
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
     system "#{bin}/onefetch", "--help"
     assert_match "onefetch " + version.to_s, shell_output("#{bin}/onefetch -V").chomp
-    system "git init && echo \"puts 'Hello, world'\" > main.rb && git add main.rb && git commit -m \"First commit\""
-    assert_match /Language:.*Ruby/, shell_output("#{bin}/onefetch").chomp
+
+    system "git", "init"
+    system "git", "config", "user.name", "BrewTestBot"
+    system "git", "config", "user.email", "BrewTestBot@test.com"
+    system "echo \"puts 'Hello, world'\" > main.rb && git add main.rb && git commit -m \"First commit\""
+    assert_match(/Language:.*Ruby/, shell_output("#{bin}/onefetch").chomp)
   end
 end

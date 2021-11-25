@@ -1,17 +1,19 @@
 class Pango < Formula
   desc "Framework for layout and rendering of i18n text"
   homepage "https://www.pango.org/"
-  url "https://download.gnome.org/sources/pango/1.44/pango-1.44.7.tar.xz"
-  sha256 "66a5b6cc13db73efed67b8e933584509f8ddb7b10a8a40c3850ca4a985ea1b1f"
+  url "https://download.gnome.org/sources/pango/1.48/pango-1.48.10.tar.xz"
+  sha256 "21e1f5798bcdfda75eabc4280514b0896ab56f656d4e7e66030b9a2535ecdc98"
+  license "LGPL-2.0-or-later"
+  head "https://gitlab.gnome.org/GNOME/pango.git", branch: "main"
 
   bottle do
-    sha256 "38a8cab63ed7ea37fc5448b74dae21b7f935d4f4ea9c08b658f3553f20ec8f28" => :catalina
-    sha256 "643284e68fcb4699572e7ab327a16ae3eb1c242527a96cb404cd98f14f22a893" => :mojave
-    sha256 "42552a9d26655f006f2361c9a1773d56bd5c5cabcd4f6ad5861fec29bd27c2cc" => :high_sierra
-  end
-
-  head do
-    url "https://gitlab.gnome.org/GNOME/pango.git"
+    sha256 cellar: :any, arm64_monterey: "e35599f68980e0303f6d68878a89a2fd06884fc403480eba360a986e37793968"
+    sha256 cellar: :any, arm64_big_sur:  "8c0c48d5ff91e88db64b6792c7f74ce417fd56ed9fa7a6476ffc71991dd3ef1d"
+    sha256 cellar: :any, monterey:       "05377c40967e56f9f1818ade30a93a9c6c74c35afff21bd3cef3f05e0f676896"
+    sha256 cellar: :any, big_sur:        "ea25146681018c99e13404ee299f006679397c082a388c486c7a685ec8d8eca9"
+    sha256 cellar: :any, catalina:       "251360bab0dd655f7272a262d35a25d3e9e10514a6c0d0074567e6095c7c92d5"
+    sha256 cellar: :any, mojave:         "3328f7fa94c12d18ee87556f817f56516d93dc5bc5c6cefee26f4f471758dfac"
+    sha256               x86_64_linux:   "e37135eeafe195be62a70b534849f7854a554790af51759cbabaddcc5dc8000c"
   end
 
   depends_on "gobject-introspection" => :build
@@ -26,9 +28,9 @@ class Pango < Formula
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}",
+      system "meson", *std_meson_args,
                       "-Ddefault_library=both",
-                      "-Dintrospection=true",
+                      "-Dintrospection=enabled",
                       "-Duse_fontconfig=true",
                       ".."
       system "ninja", "-v"
@@ -78,10 +80,12 @@ class Pango < Formula
       -lcairo
       -lglib-2.0
       -lgobject-2.0
-      -lintl
       -lpango-1.0
       -lpangocairo-1.0
     ]
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

@@ -1,14 +1,22 @@
 class Rpm < Formula
   desc "Standard unix software packaging tool"
   homepage "https://rpm.org/"
-  url "http://ftp.rpm.org/releases/rpm-4.15.x/rpm-4.15.1.tar.bz2"
-  sha256 "ddef45f9601cd12042edfc9b6e37efcca32814e1e0f4bb8682d08144a3e2d230"
+  url "http://ftp.rpm.org/releases/rpm-4.17.x/rpm-4.17.0.tar.bz2"
+  mirror "https://ftp.osuosl.org/pub/rpm/releases/rpm-4.17.x/rpm-4.17.0.tar.bz2"
+  sha256 "2e0d220b24749b17810ed181ac1ed005a56bbb6bc8ac429c21f314068dc65e6a"
+  license "GPL-2.0-only"
   version_scheme 1
 
+  livecheck do
+    url "https://rpm.org/download.html"
+    regex(/href=.*?rpm[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "001127e004c5bda9299956bdcdfc4fc95b9c9894a191f23c9325fa0f3f47ac55" => :catalina
-    sha256 "36a81d3e478ca4d48554954373f56d9cd31539504b25038e72c4aead4ab82270" => :mojave
-    sha256 "77a3a72aa150d019c2ef6b5ed2e4ee30c2289325e597c5bb591ba0fdcaf5be0f" => :high_sierra
+    sha256 big_sur:      "6f857111ed59bf5efb8f97ad26c7ed52fb8e70a92d2978dc7d2f6173d14675cd"
+    sha256 catalina:     "29846a4e13dd2683318362442fe7a84c2b7cd71813291be24cc356bc657f8a8d"
+    sha256 mojave:       "aeab2644677216b3d631a4a1abb3d75aada85152f7f85a550ab43943b934f994"
+    sha256 x86_64_linux: "1147c07948c53779fdf751623b349d6da6d6b4753103ce2c898da2cc68a0a041"
   end
 
   depends_on "berkeley-db"
@@ -20,11 +28,17 @@ class Rpm < Formula
   depends_on "openssl@1.1"
   depends_on "pkg-config"
   depends_on "popt"
+  depends_on "sqlite"
   depends_on "xz"
   depends_on "zstd"
 
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+  end
+
   def install
-    ENV.prepend_path "PKG_CONFIG_PATH", Formula["lua"].opt_libexec/"lib/pkgconfig"
     ENV.append "CPPFLAGS", "-I#{Formula["lua"].opt_include}/lua"
     ENV.append "LDFLAGS", "-lomp"
 
@@ -47,15 +61,24 @@ class Rpm < Formula
                           "--with-external-db",
                           "--with-crypto=openssl",
                           "--without-apidocs",
-                          "--with-vendor=homebrew"
+                          "--with-vendor=#{tap.user.downcase}",
+                          # Don't allow superenv shims to be saved into lib/rpm/macros
+                          "__MAKE=/usr/bin/make",
+                          "__GIT=/usr/bin/git",
+                          "__LD=/usr/bin/ld"
     system "make", "install"
+
+    # NOTE: We need the trailing `/` to avoid leaving it behind.
+    inreplace lib/"rpm/macros", "#{Superenv.shims_path}/", ""
   end
 
   def post_install
     (var/"lib/rpm").mkpath
 
-    # Attempt to fix expected location of GPG to a sane default.
-    inreplace lib/"rpm/macros", "/usr/bin/gpg2", HOMEBREW_PREFIX/"bin/gpg"
+    if OS.mac?
+      # Attempt to fix expected location of GPG to a sane default.
+      inreplace lib/"rpm/macros", "/usr/bin/gpg2", HOMEBREW_PREFIX/"bin/gpg"
+    end
   end
 
   def test_spec
@@ -92,17 +115,14 @@ class Rpm < Formula
   test do
     (testpath/"rpmbuild").mkpath
 
-    # Falsely flagged by RuboCop.
-    # rubocop:disable Style/FormatStringToken
     (testpath/".rpmmacros").write <<~EOS
       %_topdir		#{testpath}/rpmbuild
-      %_tmppath		%{_topdir}/tmp
+      %_tmppath		%\{_topdir}/tmp
     EOS
-    # rubocop:enable Style/FormatStringToken
 
     system "#{bin}/rpm", "-vv", "-qa", "--dbpath=#{testpath}/var/lib/rpm"
-    assert_predicate testpath/"var/lib/rpm/Packages", :exist?,
-                     "Failed to create 'Packages' file!"
+    assert_predicate testpath/"var/lib/rpm/rpmdb.sqlite", :exist?,
+                     "Failed to create 'rpmdb.sqlite' file"
     rpmdir("%_builddir").mkpath
     specfile = rpmdir("%_specdir")+"test.spec"
     specfile.write(test_spec)

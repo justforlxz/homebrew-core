@@ -4,43 +4,54 @@ require "json"
 class Webpack < Formula
   desc "Bundler for JavaScript and friends"
   homepage "https://webpack.js.org/"
-  url "https://registry.npmjs.org/webpack/-/webpack-4.41.2.tgz"
-  sha256 "06a91fdf5a6d7d39c6337542956ad5770619c8648162869256b37c9ef4c665fc"
-  head "https://github.com/webpack/webpack.git"
+  url "https://registry.npmjs.org/webpack/-/webpack-5.64.3.tgz"
+  sha256 "797987674c777008162055badca8c05589d8c089da03d33f7148cc8641224d89"
+  license "MIT"
+  head "https://github.com/webpack/webpack.git", branch: "main"
 
   bottle do
-    sha256 "d586c725119c7b418519b1661f1edb3c1554fe546beb6263964b121ef67ebc82" => :catalina
-    sha256 "d1f2e501ca5a0289fdaf99f177abcd826480e65d0da5aff0a5c2a51e80500f5b" => :mojave
-    sha256 "b2a4ae8dfd9d91e50bb61d3d890fcb0d6768f4602a59a01cfa35cf4501f677b6" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "254b038746d882d133bca695cc81c58fe5e88d3efa801fe21ccd6c3af00cb43a"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "254b038746d882d133bca695cc81c58fe5e88d3efa801fe21ccd6c3af00cb43a"
+    sha256 cellar: :any_skip_relocation, monterey:       "cc5672965e73bffe00bf3ccd5ddf891333a009816ce4fb03037eb3c05411e663"
+    sha256 cellar: :any_skip_relocation, big_sur:        "f16acb98e060ecaffe3b45de580b9478a858b663d99086a90a89cb21a73aacfa"
+    sha256 cellar: :any_skip_relocation, catalina:       "f16acb98e060ecaffe3b45de580b9478a858b663d99086a90a89cb21a73aacfa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "84c0d8cff6dda80aba2da435c9fd62b9fd6d9884df5c21ebe2d5f849d200929d"
   end
 
   depends_on "node"
 
   resource "webpack-cli" do
-    url "https://registry.npmjs.org/webpack-cli/-/webpack-cli-3.3.8.tgz"
-    sha256 "a198025f402cb37d0e44329ff35fb8dc3bb74c5dd533d299b2997a0b4fc5973f"
+    url "https://registry.npmjs.org/webpack-cli/-/webpack-cli-4.9.1.tgz"
+    sha256 "0e80f38d28019f7c30f7237ca0b7a250dfe0b561d07d8248b162dde663cd54ff"
   end
 
   def install
     (buildpath/"node_modules/webpack").install Dir["*"]
     buildpath.install resource("webpack-cli")
 
+    cd buildpath/"node_modules/webpack" do
+      system "npm", "install", *Language::Node.local_npm_install_args, "--legacy-peer-deps"
+    end
+
     # declare webpack as a bundledDependency of webpack-cli
-    pkg_json = JSON.parse(IO.read("package.json"))
+    pkg_json = JSON.parse(File.read("package.json"))
     pkg_json["dependencies"]["webpack"] = version
-    pkg_json["bundledDependencies"] = ["webpack"]
-    IO.write("package.json", JSON.pretty_generate(pkg_json))
+    pkg_json["bundleDependencies"] = ["webpack"]
+    File.write("package.json", JSON.pretty_generate(pkg_json))
 
     system "npm", "install", *Language::Node.std_npm_install_args(libexec)
 
     bin.install_symlink libexec/"bin/webpack-cli"
     bin.install_symlink libexec/"bin/webpack-cli" => "webpack"
+
+    # Replace universal binaries with their native slices
+    deuniversalize_machos
   end
 
   test do
     (testpath/"index.js").write <<~EOS
-      function component () {
-        var element = document.createElement('div');
+      function component() {
+        const element = document.createElement('div');
         element.innerHTML = 'Hello' + ' ' + 'webpack';
         return element;
       }
@@ -48,7 +59,7 @@ class Webpack < Formula
       document.body.appendChild(component());
     EOS
 
-    system bin/"webpack", "index.js", "--output=bundle.js"
-    assert_predicate testpath/"bundle.js", :exist?, "bundle.js was not generated"
+    system bin/"webpack", "bundle", "--mode", "production", "--entry", testpath/"index.js"
+    assert_match "const e=document\.createElement(\"div\");", File.read(testpath/"dist/main.js")
   end
 end

@@ -3,24 +3,29 @@ class Yapf < Formula
 
   desc "Formatter for python code"
   homepage "https://github.com/google/yapf"
-  url "https://files.pythonhosted.org/packages/8e/1e/730a64d83e1b6a64bb8efa5358fc8e9418e6c2d19862523dce22be1040ed/yapf-0.29.0.tar.gz"
-  sha256 "712e23c468506bf12cadd10169f852572ecc61b266258422d45aaf4ad7ef43de"
+  url "https://files.pythonhosted.org/packages/85/60/8532f7ca17cea13de00e80e2fe1e6bd59a9379856706a027536b19daf0d3/yapf-0.31.0.tar.gz"
+  sha256 "408fb9a2b254c302f49db83c59f9aa0b4b0fd0ec25be3a5c51181327922ff63d"
+  license "Apache-2.0"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3c8ed0da14d9c9deffe008f7de41ba3574df0b3dcff3477e988c9b58884184ab" => :catalina
-    sha256 "8ffbfe8a3b6b474dcae1822e64ccbca54fd344cc5b080f018bc51adb33956510" => :mojave
-    sha256 "326436e6bc974790bf36de06e7ea7070d3d0bcaf52b14e2067727c3e95ee47dc" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "b46a3dbefb7b1e3ff520b32d75744b90eca77200de3201a4be5a95bbd45de65e"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "b46a3dbefb7b1e3ff520b32d75744b90eca77200de3201a4be5a95bbd45de65e"
+    sha256 cellar: :any_skip_relocation, monterey:       "a7a417d2b6e9a1c2cea6f5b470ad8e18687780c3c69b354d108baa85a6a50e87"
+    sha256 cellar: :any_skip_relocation, big_sur:        "a7a417d2b6e9a1c2cea6f5b470ad8e18687780c3c69b354d108baa85a6a50e87"
+    sha256 cellar: :any_skip_relocation, catalina:       "a7a417d2b6e9a1c2cea6f5b470ad8e18687780c3c69b354d108baa85a6a50e87"
+    sha256 cellar: :any_skip_relocation, mojave:         "a7a417d2b6e9a1c2cea6f5b470ad8e18687780c3c69b354d108baa85a6a50e87"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "3f401553a61944a8b9aad2059b04aac3c4e9cec64786736f5e8f39108782fb93"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
     virtualenv_install_with_resources
   end
 
   test do
-    output = shell_output("echo \"x='homebrew'\" | #{bin}/yapf")
+    output = pipe_output("#{bin}/yapf", "x='homebrew'")
     assert_equal "x = 'homebrew'", output.strip
   end
 end

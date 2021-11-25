@@ -1,59 +1,131 @@
 class Openjdk < Formula
   desc "Development kit for the Java programming language"
   homepage "https://openjdk.java.net/"
-  url "https://hg.openjdk.java.net/jdk-updates/jdk13u/archive/jdk-13.0.1+9.tar.bz2"
-  version "13.0.1+9"
-  sha256 "97328e767bc5f47b097ec0e9d88a6a650e60c448dbaba2e835284a2bf5594eb5"
+  url "https://github.com/openjdk/jdk17u/archive/jdk-17.0.1-ga.tar.gz"
+  sha256 "f27e2f3fd2dcfd144f875e610e7d6c2d9d957e1be96e4f865307b6df381cf7a9"
+  license "GPL-2.0-only" => { with: "Classpath-exception-2.0" }
 
-  bottle do
-    cellar :any
-    sha256 "cac85fcc79d435eff83fdb616cebe07ff10d3cbdd525fc61f9e5297072f346fb" => :catalina
-    sha256 "f34c615559bfb80d00c8cc706d2d212e4b61217acf5dd7225946c6708d84a8ea" => :mojave
-    sha256 "7b62e237d3b90fbce0b136e0ddc54224ded9cac74021fa7a7de3a4b39729b833" => :high_sierra
+  livecheck do
+    url :stable
+    regex(/^jdk[._-]v?(\d+(?:\.\d+)*)-ga$/i)
   end
 
-  keg_only :provided_by_macos
+  bottle do
+    sha256 cellar: :any, arm64_monterey: "dff2595b1bd5bfc0d630786b5eec9dcd65af7f71ec603e2bb7394ee7ba4549cf"
+    sha256 cellar: :any, arm64_big_sur:  "6cd342cc46a444ddc821dc2dbaf2f0b4f30530e89a5ec1f472fb37ed5639dc1b"
+    sha256 cellar: :any, monterey:       "d44ec9edcc2743a7e6ca21629951b5ae92ecf55d3173d73d7e9a65495f02e9dd"
+    sha256 cellar: :any, big_sur:        "91b650ff481f27671645c4bae344cc38ac7ec3cf32cf2a3188cfbb60fb24d52c"
+    sha256 cellar: :any, catalina:       "1275629b5f778935659d35bc0cda71040cb1dc3bacd881e86bd756b190274fc6"
+    sha256               x86_64_linux:   "b9836436c6a8b56a9982bfeec807e44748d127abf8914ef925cfe5335a6edc99"
+  end
+
+  keg_only :shadowed_by_macos
 
   depends_on "autoconf" => :build
 
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "alsa-lib"
+    depends_on "cups"
+    depends_on "fontconfig"
+    depends_on "gcc"
+    depends_on "libx11"
+    depends_on "libxext"
+    depends_on "libxrandr"
+    depends_on "libxrender"
+    depends_on "libxt"
+    depends_on "libxtst"
+    depends_on "unzip"
+    depends_on "zip"
+
+    ignore_missing_libraries "libjvm.so"
+  end
+
+  fails_with gcc: "5"
+
+  # From https://jdk.java.net/archive/
   resource "boot-jdk" do
-    url "https://download.java.net/java/GA/jdk12.0.2/e482c34c86bd4bf8b56c0b35558996b9/10/GPL/openjdk-12.0.2_osx-x64_bin.tar.gz"
-    sha256 "675a739ab89b28a8db89510f87cb2ec3206ec6662fb4b4996264c16c72cdd2a1"
+    on_macos do
+      if Hardware::CPU.arm?
+        url "https://download.java.net/java/GA/jdk17/0d483333a00540d886896bac774ff48b/35/GPL/openjdk-17_macos-aarch64_bin.tar.gz"
+        sha256 "b5bf6377aabdc935bd72b36c494e178b12186b0e1f4be50f35134daa33bda052"
+      else
+        url "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_osx-x64_bin.tar.gz"
+        sha256 "e65f2437585f16a01fa8e10139d0d855e8a74396a1dfb0163294ed17edd704b8"
+      end
+    end
+    on_linux do
+      url "https://download.java.net/java/GA/jdk16.0.2/d4a915d82b4c4fbb9bde534da945d746/7/GPL/openjdk-16.0.2_linux-x64_bin.tar.gz"
+      sha256 "6c714ded7d881ca54970ec949e283f43d673a142fda1de79b646ddd619da9c0c"
+    end
   end
 
   def install
-    boot_jdk_dir = Pathname.pwd/"boot-jdk"
-    resource("boot-jdk").stage boot_jdk_dir
-    boot_jdk = boot_jdk_dir/"Contents/Home"
+    boot_jdk = Pathname.pwd/"boot-jdk"
+    resource("boot-jdk").stage boot_jdk
+    boot_jdk /= "Contents/Home" if OS.mac?
     java_options = ENV.delete("_JAVA_OPTIONS")
 
-    short_version, _, build = version.to_s.rpartition("+")
+    args = %W[
+      --disable-warnings-as-errors
+      --with-boot-jdk-jvmargs=#{java_options}
+      --with-boot-jdk=#{boot_jdk}
+      --with-debug-level=release
+      --with-jvm-variants=server
+      --with-native-debug-symbols=none
+      --with-vendor-bug-url=#{tap.issues_url}
+      --with-vendor-name=#{tap.user}
+      --with-vendor-url=#{tap.issues_url}
+      --with-vendor-version-string=#{tap.user}
+      --with-vendor-vm-bug-url=#{tap.issues_url}
+      --with-version-build=#{revision}
+      --without-version-opt
+      --without-version-pre
+    ]
+
+    args += if OS.mac?
+      %W[
+        --enable-dtrace
+        --with-extra-ldflags=-headerpad_max_install_names
+        --with-sysroot=#{MacOS.sdk_path}
+      ]
+    else
+      %W[
+        --with-x=#{HOMEBREW_PREFIX}
+        --with-cups=#{HOMEBREW_PREFIX}
+        --with-fontconfig=#{HOMEBREW_PREFIX}
+      ]
+    end
 
     chmod 0755, "configure"
-    system "./configure", "--without-version-pre",
-                          "--without-version-opt",
-                          "--with-version-build=#{build}",
-                          "--with-toolchain-path=/usr/bin",
-                          "--with-extra-ldflags=-headerpad_max_install_names",
-                          "--with-boot-jdk=#{boot_jdk}",
-                          "--with-boot-jdk-jvmargs=#{java_options}",
-                          "--with-debug-level=release",
-                          "--with-native-debug-symbols=none",
-                          "--enable-dtrace=auto",
-                          "--with-jvm-variants=server"
+    system "./configure", *args
 
     ENV["MAKEFLAGS"] = "JOBS=#{ENV.make_jobs}"
     system "make", "images"
 
-    libexec.install "build/macosx-x86_64-server-release/images/jdk-bundle/jdk-#{short_version}.jdk" => "openjdk.jdk"
-    bin.install_symlink Dir["#{libexec}/openjdk.jdk/Contents/Home/bin/*"]
+    if OS.mac?
+      jdk = Dir["build/*/images/jdk-bundle/*"].first
+      libexec.install jdk => "openjdk.jdk"
+      bin.install_symlink Dir[libexec/"openjdk.jdk/Contents/Home/bin/*"]
+      include.install_symlink Dir[libexec/"openjdk.jdk/Contents/Home/include/*.h"]
+      include.install_symlink Dir[libexec/"openjdk.jdk/Contents/Home/include/darwin/*.h"]
+      man1.install_symlink Dir[libexec/"openjdk.jdk/Contents/Home/man/man1/*"]
+    else
+      libexec.install Dir["build/linux-x86_64-server-release/images/jdk/*"]
+      bin.install_symlink Dir[libexec/"bin/*"]
+      include.install_symlink Dir[libexec/"include/*.h"]
+      include.install_symlink Dir[libexec/"include/linux/*.h"]
+      man1.install_symlink Dir[libexec/"man/man1/*"]
+    end
   end
 
   def caveats
-    <<~EOS
-      For the system Java wrappers to find this JDK, symlink it with
-        sudo ln -sfn #{opt_libexec}/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
-    EOS
+    on_macos do
+      <<~EOS
+        For the system Java wrappers to find this JDK, symlink it with
+          sudo ln -sfn #{opt_libexec}/openjdk.jdk /Library/Java/JavaVirtualMachines/openjdk.jdk
+      EOS
+    end
   end
 
   test do

@@ -1,25 +1,47 @@
 class Postgresql < Formula
   desc "Object-relational database system"
   homepage "https://www.postgresql.org/"
-  url "https://ftp.postgresql.org/pub/source/v12.1/postgresql-12.1.tar.bz2"
-  sha256 "a09bf3abbaf6763980d0f8acbb943b7629a8b20073de18d867aecdb7988483ed"
-  head "https://github.com/postgres/postgres.git"
+  url "https://ftp.postgresql.org/pub/source/v14.1/postgresql-14.1.tar.bz2"
+  sha256 "4d3c101ea7ae38982f06bdc73758b53727fb6402ecd9382006fa5ecc7c2ca41f"
+  license "PostgreSQL"
+  revision 1
+  head "https://github.com/postgres/postgres.git", branch: "master"
+
+  livecheck do
+    url "https://ftp.postgresql.org/pub/source/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    sha256 "309377407d7cb766d238f063c10210c4e48d48fcdadd62560346c2d4af782bc4" => :catalina
-    sha256 "2e97d7d591916d79f8e8a5ed0023c6d1e31e27a5b289d31d9b5cdf51e1d3a040" => :mojave
-    sha256 "754aac4d7055bdd801f91eef7e36ba93ee5fafd931e0a13a02bcd64e71ff34a9" => :high_sierra
+    sha256 arm64_monterey: "6e6f3099ad1e64fbdc9dff2152c33a2f01743d2010330bcb34cefe13052fa228"
+    sha256 arm64_big_sur:  "d75aee6c8beaabf4add33f0f77f150b13523ffc21f6b72fd2a3c1ea0b7095362"
+    sha256 monterey:       "027c8b48406c3d732241426e0f5d2caf9f48cb4d2d38610b8f5d46f0adf7a89f"
+    sha256 big_sur:        "b207e5d55b0696b3b1dd649b4496d8213c933304b2b85e1913270f0834167b7f"
+    sha256 catalina:       "7708c5cd803ce6bc1481527ecff0ad387d7489e71a3da47140768995bed3e145"
+    sha256 x86_64_linux:   "37477f8fd9f0fed2956558ad9f7169123200e6761a65936e8732a3a88d95c3ca"
   end
 
   depends_on "pkg-config" => :build
   depends_on "icu4c"
+
+  # GSSAPI provided by Kerberos.framework crashes when forked.
+  # See https://github.com/Homebrew/homebrew-core/issues/47494.
+  depends_on "krb5"
+
   depends_on "openssl@1.1"
   depends_on "readline"
 
-  def install
-    # avoid adding the SDK library directory to the linker search path
-    ENV["XML2_CONFIG"] = "xml2-config --exec-prefix=/usr"
+  uses_from_macos "libxml2"
+  uses_from_macos "libxslt"
+  uses_from_macos "openldap"
+  uses_from_macos "perl"
 
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "util-linux"
+  end
+
+  def install
     ENV.prepend "LDFLAGS", "-L#{Formula["openssl@1.1"].opt_lib} -L#{Formula["readline"].opt_lib}"
     ENV.prepend "CPPFLAGS", "-I#{Formula["openssl@1.1"].opt_include} -I#{Formula["readline"].opt_include}"
 
@@ -32,7 +54,6 @@ class Postgresql < Formula
       --sysconfdir=#{etc}
       --docdir=#{doc}
       --enable-thread-safety
-      --with-bonjour
       --with-gssapi
       --with-icu
       --with-ldap
@@ -43,13 +64,16 @@ class Postgresql < Formula
       --with-perl
       --with-uuid=e2fs
     ]
-
-    # The CLT is required to build Tcl support on 10.7 and 10.8 because
-    # tclConfig.sh is not part of the SDK
-    args << "--with-tcl"
-    if File.exist?("#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework/tclConfig.sh")
-      args << "--with-tclconfig=#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework"
+    if OS.mac?
+      args += %w[
+        --with-bonjour
+        --with-tcl
+      ]
     end
+
+    # PostgreSQL by default uses xcodebuild internally to determine this,
+    # which does not work on CLT-only installs.
+    args << "PG_SYSROOT=#{MacOS.sdk_path}" if MacOS.sdk_root_needed?
 
     system "./configure", *args
     system "make"
@@ -60,54 +84,58 @@ class Postgresql < Formula
                                     "pkgincludedir=#{include}/postgresql",
                                     "includedir_server=#{include}/postgresql/server",
                                     "includedir_internal=#{include}/postgresql/internal"
+
+    if OS.linux?
+      inreplace lib/"postgresql/pgxs/src/Makefile.global",
+                "LD = #{HOMEBREW_PREFIX}/Homebrew/Library/Homebrew/shims/linux/super/ld",
+                "LD = #{HOMEBREW_PREFIX}/bin/ld"
+    end
   end
 
   def post_install
     (var/"log").mkpath
-    (var/"postgres").mkpath
-    unless File.exist? "#{var}/postgres/PG_VERSION"
-      system "#{bin}/initdb", "--locale=C", "-E", "UTF-8", "#{var}/postgres"
-    end
+    postgresql_datadir.mkpath
+
+    # Don't initialize database, it clashes when testing other PostgreSQL versions.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
+    system "#{bin}/initdb", "--locale=C", "-E", "UTF-8", postgresql_datadir unless pg_version_exists?
   end
 
-  def caveats; <<~EOS
-    To migrate existing data from a previous major version of PostgreSQL run:
-      brew postgresql-upgrade-database
-  EOS
+  def postgresql_datadir
+    var/"postgres"
   end
 
-  plist_options :manual => "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgres start"
+  def postgresql_log_path
+    var/"log/postgres.log"
+  end
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/postgres</string>
-        <string>-D</string>
-        <string>#{var}/postgres</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{HOMEBREW_PREFIX}</string>
-      <key>StandardOutPath</key>
-      <string>#{var}/log/postgres.log</string>
-      <key>StandardErrorPath</key>
-      <string>#{var}/log/postgres.log</string>
-    </dict>
-    </plist>
-  EOS
+  def pg_version_exists?
+    (postgresql_datadir/"PG_VERSION").exist?
+  end
+
+  def caveats
+    <<~EOS
+      To migrate existing data from a previous major version of PostgreSQL run:
+        brew postgresql-upgrade-database
+
+      This formula has created a default database cluster with:
+        initdb --locale=C -E UTF-8 #{postgresql_datadir}
+      For more details, read:
+        https://www.postgresql.org/docs/#{version.major}/app-initdb.html
+    EOS
+  end
+
+  service do
+    run [opt_bin/"postgres", "-D", var/"postgres"]
+    keep_alive true
+    log_path var/"log/postgres.log"
+    error_log_path var/"log/postgres.log"
+    working_dir HOMEBREW_PREFIX
   end
 
   test do
-    system "#{bin}/initdb", testpath/"test"
+    system "#{bin}/initdb", testpath/"test" unless ENV["HOMEBREW_GITHUB_ACTIONS"]
     assert_equal "#{HOMEBREW_PREFIX}/share/postgresql", shell_output("#{bin}/pg_config --sharedir").chomp
     assert_equal "#{HOMEBREW_PREFIX}/lib", shell_output("#{bin}/pg_config --libdir").chomp
     assert_equal "#{HOMEBREW_PREFIX}/lib/postgresql", shell_output("#{bin}/pg_config --pkglibdir").chomp

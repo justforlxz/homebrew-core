@@ -1,27 +1,30 @@
 class DnscryptProxy < Formula
   desc "Secure communications between a client and a DNS resolver"
-  homepage "https://github.com/DNSCrypt/dnscrypt-proxy"
-  url "https://github.com/jedisct1/dnscrypt-proxy/archive/2.0.34.tar.gz"
-  sha256 "38ec7df2bdeff6d094d8975c0005c1d896a63b529cba417381b63fcf51d42303"
+  homepage "https://dnscrypt.info"
+  url "https://github.com/DNSCrypt/dnscrypt-proxy/archive/2.1.1.tar.gz"
+  sha256 "cc4a2f274ce48c3731ff981e940e6475d912fb356a80481e91725e81d67bde14"
+  license "ISC"
   head "https://github.com/DNSCrypt/dnscrypt-proxy.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a6f6c31f9d646f4aa9a0fdc312cadff55359fd341d6579c694887e0da8e1e281" => :catalina
-    sha256 "de424b60cb3e1ebfa23af61e3ede99dd6b38d66b3a5ec5196ce7d0c340e18296" => :mojave
-    sha256 "d157da6a8643ff3818c85b75cb1745bcab16da209450b3da24a0f33f312384c4" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "1c5f214e81da7b5f339e8abbe78e386ece9f42c72baf426d13bd08a40cad949c"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "5db483c47f16ed99a01af92ea89aca4270c8146e33ca0aee4e3172b9960ef7f2"
+    sha256 cellar: :any_skip_relocation, monterey:       "aece7d8508b5dcda8746beb38e9d6e854d82f3a5a1231af77479df17e3063beb"
+    sha256 cellar: :any_skip_relocation, big_sur:        "66deed2c2da425b2443ac734e61b83cb55d7298179390b6ea3292fdfdca6f703"
+    sha256 cellar: :any_skip_relocation, catalina:       "fcc6afc722e5b3dc444c99f253d2424f82e3d40daf27524de03bcee09ec69c8e"
+    sha256 cellar: :any_skip_relocation, mojave:         "b83c086949a3fbbe51c4030db4ad3dccc0f4e48ad502eacbe26e4fe4286f4aef"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "974f2bf8c5dae80037aa68da36bb66fcea9571a0fa6ebb586cc262df705e28ec"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    prefix.install_metafiles
-    dir = buildpath/"src/github.com/jedisct1/dnscrypt-proxy"
-    dir.install buildpath.children
-
-    cd dir/"dnscrypt-proxy" do
+    cd "dnscrypt-proxy" do
       system "go", "build", "-ldflags", "-X main.version=#{version}", "-o",
              sbin/"dnscrypt-proxy"
       pkgshare.install Dir["example*"]
@@ -29,57 +32,35 @@ class DnscryptProxy < Formula
     end
   end
 
-  def caveats; <<~EOS
-    After starting dnscrypt-proxy, you will need to point your
-    local DNS server to 127.0.0.1. You can do this by going to
-    System Preferences > "Network" and clicking the "Advanced..."
-    button for your interface. You will see a "DNS" tab where you
-    can click "+" and enter 127.0.0.1 in the "DNS Servers" section.
+  def caveats
+    <<~EOS
+      After starting dnscrypt-proxy, you will need to point your
+      local DNS server to 127.0.0.1. You can do this by going to
+      System Preferences > "Network" and clicking the "Advanced..."
+      button for your interface. You will see a "DNS" tab where you
+      can click "+" and enter 127.0.0.1 in the "DNS Servers" section.
 
-    By default, dnscrypt-proxy runs on localhost (127.0.0.1), port 53,
-    balancing traffic across a set of resolvers. If you would like to
-    change these settings, you will have to edit the configuration file:
-      #{etc}/dnscrypt-proxy.toml
+      By default, dnscrypt-proxy runs on localhost (127.0.0.1), port 53,
+      balancing traffic across a set of resolvers. If you would like to
+      change these settings, you will have to edit the configuration file:
+        #{etc}/dnscrypt-proxy.toml
 
-    To check that dnscrypt-proxy is working correctly, open Terminal and enter the
-    following command. Replace en1 with whatever network interface you're using:
+      To check that dnscrypt-proxy is working correctly, open Terminal and enter the
+      following command. Replace en1 with whatever network interface you're using:
 
-      sudo tcpdump -i en1 -vvv 'port 443'
+        sudo tcpdump -i en1 -vvv 'port 443'
 
-    You should see a line in the result that looks like this:
+      You should see a line in the result that looks like this:
 
-     resolver.dnscrypt.info
-  EOS
+       resolver.dnscrypt.info
+    EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>KeepAlive</key>
-        <true/>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_sbin}/dnscrypt-proxy</string>
-          <string>-config</string>
-          <string>#{etc}/dnscrypt-proxy.toml</string>
-        </array>
-        <key>UserName</key>
-        <string>root</string>
-        <key>StandardErrorPath</key>
-        <string>/dev/null</string>
-        <key>StandardOutPath</key>
-        <string>/dev/null</string>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_sbin/"dnscrypt-proxy", "-config", etc/"dnscrypt-proxy.toml"]
+    keep_alive true
   end
 
   test do

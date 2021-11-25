@@ -1,22 +1,27 @@
 class Libexif < Formula
   desc "EXIF parsing library"
   homepage "https://libexif.github.io/"
-  url "https://downloads.sourceforge.net/project/libexif/libexif/0.6.21/libexif-0.6.21.tar.gz"
-  sha256 "edb7eb13664cf950a6edd132b75e99afe61c5effe2f16494e6d27bc404b287bf"
+  url "https://github.com/libexif/libexif/releases/download/v0.6.23/libexif-0.6.23.tar.xz"
+  sha256 "a740a99920eb81ae0aa802bb46e683ce6e0cde061c210f5d5bde5b8572380431"
+  license "LGPL-2.1"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "a7d7a67f11d7ef89666e589ec589cae59bfe7aa6502f5e4449ee518b124fcf47" => :catalina
-    sha256 "f2825b7f043b7e1128a8a234132622041669d6fd0b537c22dc0d06284a96c095" => :mojave
-    sha256 "c12c945c59d694f82b43e82a62eebec5e968d57746de8d017f251a2e857db750" => :high_sierra
-    sha256 "2d8c0924448d966dcbb963ab8e67ee0c24bfaa1ff45d77a2e7f6a705e547ee4f" => :sierra
-    sha256 "5990278735f835e2ab004ceac83616a3a71f6ae96c6f5eb0c0f1aa2af0452fb6" => :el_capitan
-    sha256 "cebb385c6f48fafa10b8731daec8ce38d8ee34ff7d3afc131edd553a2249662f" => :yosemite
-    sha256 "791e4c2073051f5e93fee0f30d1888f39b2873eacbfadbc4b3dd6328b80dfb51" => :mavericks
+    sha256 arm64_monterey: "07f9ad919f5bdbb2857580549cba37da0aee5c1fb88cd5eb410ac3ec857de11d"
+    sha256 arm64_big_sur:  "f2a133f663a82d1d39ba238692f6c56de3c6bae12add2107204a75af2f6d923a"
+    sha256 monterey:       "8765b62cdc2dd20a77ed83f8e4acdfbfea0cb1ad55a53b40372c912a796aa13d"
+    sha256 big_sur:        "17a348763e827089c2d2fb2b2c631f38df87d99234d81f2bbbe1c7219577522c"
+    sha256 catalina:       "5b2a8266f5236b9fe1921040976c07d9eda3cc178a2c2d82824254de82df0e2e"
+    sha256 mojave:         "85e039d08a8668365cd7f71a9012c587028e4e6d6dfe0a9cc082bcc99ca7b643"
+    sha256 x86_64_linux:   "6b20530c09fffe2d4dcda90dfd9b8c1869e1ff58fe94eb9e74763d2f705f1a9e"
   end
 
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
+  depends_on "gettext"
+
   def install
+    system "autoreconf", "-ivf"
     system "./configure", "--prefix=#{prefix}", "--disable-dependency-tracking"
     system "make", "install"
   end

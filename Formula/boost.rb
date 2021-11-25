@@ -1,24 +1,42 @@
 class Boost < Formula
   desc "Collection of portable C++ source libraries"
   homepage "https://www.boost.org/"
-  url "https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2"
-  sha256 "d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee"
-  head "https://github.com/boostorg/boost.git"
+  url "https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2"
+  sha256 "f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41"
+  license "BSL-1.0"
+  head "https://github.com/boostorg/boost.git", branch: "master"
+
+  livecheck do
+    url "https://www.boost.org/users/download/"
+    regex(/href=.*?boost[._-]v?(\d+(?:[._]\d+)+)\.t/i)
+    strategy :page_match do |page, regex|
+      page.scan(regex).map { |match| match.first.tr("_", ".") }
+    end
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "41a5d38f5a7c626a064f5c5a9f8d620b76e9b5f2cf7eda85a52998a86b33bc85" => :catalina
-    sha256 "9e026db92f0a38c7c222227c39d54c350490046e7e86920668f300ba4a773a32" => :mojave
-    sha256 "8bd88f7245f35545ea5b3091408660148e6e819effe29191161da4968f15800d" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "56cd220f6bed3263cda3deb79a569fcff8e583895d1ad6cc247fafa2ef9de010"
+    sha256 cellar: :any,                 arm64_big_sur:  "3a336c8b1a917f7d9c55abba2905be99dade914bf9b829aab9d5fb6069b6ffcc"
+    sha256 cellar: :any,                 monterey:       "971054f698fc1ce13e5897f8e0b0958755aa54b6660bb197f16bef3e22308e09"
+    sha256 cellar: :any,                 big_sur:        "35c726d8bea731d85af3d6ba173e95b1726cdfac04e020e259937c8e99c3d4e7"
+    sha256 cellar: :any,                 catalina:       "758658d7f1f8cf6c6790609f2a0b0f8349993653c8afce66869ea91d57b1f26f"
+    sha256 cellar: :any,                 mojave:         "1b45c1009cef2b67b2ec21f86e0ff743f2efdbcb5af510067cba3587d44967cb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "6203e3d6ae16a3e71d79ad67763a59733e84457253c1d44b01a15a72623b8a95"
   end
 
   depends_on "icu4c"
 
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
+
   def install
     # Force boost to compile with the desired compiler
     open("user-config.jam", "a") do |file|
-      file.write "using darwin : : #{ENV.cxx} ;\n"
+      if OS.mac?
+        file.write "using darwin : : #{ENV.cxx} ;\n"
+      else
+        file.write "using gcc : : #{ENV.cxx} ;\n"
+      end
     end
 
     # libdir should be set by --prefix but isn't
@@ -56,26 +74,11 @@ class Boost < Formula
     # Boost is using "clang++ -x c" to select C compiler which breaks C++14
     # handling using ENV.cxx14. Using "cxxflags" and "linkflags" still works.
     args << "cxxflags=-std=c++14"
-    if ENV.compiler == :clang
-      args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++"
-    end
+    args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++" if ENV.compiler == :clang
 
     system "./bootstrap.sh", *bootstrap_args
     system "./b2", "headers"
     system "./b2", *args
-  end
-
-  def caveats
-    s = ""
-    # ENV.compiler doesn't exist in caveats. Check library availability
-    # instead.
-    if Dir["#{lib}/libboost_log*"].empty?
-      s += <<~EOS
-        Building of Boost.Log is disabled because it requires newer GCC or Clang.
-      EOS
-    end
-
-    s
   end
 
   test do
@@ -98,7 +101,7 @@ class Boost < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-std=c++14", "-stdlib=libc++", "-o", "test"
+    system ENV.cxx, "test.cpp", "-std=c++14", "-o", "test"
     system "./test"
   end
 end

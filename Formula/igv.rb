@@ -1,30 +1,35 @@
 class Igv < Formula
   desc "Interactive Genomics Viewer"
   homepage "https://www.broadinstitute.org/software/igv"
-  url "https://data.broadinstitute.org/igv/projects/downloads/2.5/IGV_2.5.3.zip"
-  sha256 "d33f6e20aaf5158770c6154953b8b3df89ced0f9416b399502864d3ccd44f22a"
-  revision 1
+  url "https://data.broadinstitute.org/igv/projects/downloads/2.11/IGV_2.11.3.zip"
+  sha256 "38d97d319313f3d3d0da40f2c751708aaa47e58ca88718f8fcf47f18abfdcb48"
+  license "MIT"
 
-  bottle :unneeded
+  livecheck do
+    url "https://software.broadinstitute.org/software/igv/download"
+    regex(/href=.*?IGV[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  depends_on :java
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "22d591a38654ada55c259082571fcac1cfb1ac29bf117c8a5a85b41497b405c6"
+  end
+
+  depends_on "openjdk"
 
   def install
     inreplace ["igv.sh", "igvtools"], /^prefix=.*/, "prefix=#{libexec}"
-    inreplace "igvtools", "@igv.args", '@"${prefix}/igv.args"'
     bin.install "igv.sh" => "igv"
     bin.install "igvtools"
     libexec.install "igv.args", "lib"
-    bin.env_script_all_files libexec, Language::Java.java_home_env
+    bin.env_script_all_files libexec, Language::Java.overridable_java_home_env
   end
 
   test do
     assert_match "Usage:", shell_output("#{bin}/igvtools")
-    assert_match "org/broad/igv/ui/IGV.class", shell_output("jar tf #{libexec}/lib/igv.jar")
-    # Fails on Jenkins with Unhandled exception: java.awt.HeadlessException
-    unless ENV["CI"]
-      (testpath/"script").write "exit"
-      assert_match "Version", shell_output("#{bin}/igv -b script")
-    end
+    assert_match "org/broad/igv/ui/IGV.class", shell_output("#{Formula["openjdk"].bin}/jar tf #{libexec}/lib/igv.jar")
+
+    ENV.append "_JAVA_OPTIONS", "-Duser.home=#{testpath}"
+    (testpath/"script").write "exit"
+    assert_match "Version", shell_output("#{bin}/igv -b script")
   end
 end

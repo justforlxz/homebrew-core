@@ -1,51 +1,58 @@
 class Daq < Formula
   desc "Network intrusion prevention and detection system"
   homepage "https://www.snort.org/"
-  url "https://www.mirrorservice.org/sites/distfiles.macports.org/daq/daq-2.0.6.tar.gz"
-  mirror "https://fossies.org/linux/misc/daq-2.0.6.tar.gz"
-  sha256 "b40e1d1273e08aaeaa86e69d4f28d535b7e53bdb3898adf539266b63137be7cb"
+  url "https://github.com/snort3/libdaq/archive/v3.0.5.tar.gz"
+  mirror "https://fossies.org/linux/misc/libdaq-3.0.5.tar.gz"
+  sha256 "4281464c5502037669e69d314b628df863420f590c4999c5b567c8016cd1e658"
+  license "GPL-2.0-only"
+  head "https://github.com/snort3/libdaq.git"
 
   bottle do
-    cellar :any
-    sha256 "734f5ff5e9df559b6a807b88b6987376ed12b570fc06f59b60ff4ce71663d23e" => :catalina
-    sha256 "0cc2e4509d68cc4c8b59e0e398003d7f57d50d8c85e4f4c66fc943b215da4075" => :mojave
-    sha256 "d01c68e8ece0df01a1132b9591dad43a84381e601848915972fdbe9497ecada2" => :high_sierra
-    sha256 "f0be58035bc6f4764567cf186673035818e6025d027695795f959fdfc88c7806" => :sierra
-    sha256 "9c2720bd46954e9f2631801d8f8283974436a82827f01c9e954e319f0b9f7e88" => :el_capitan
-    sha256 "02d198f42f56471feaf127824230d7ea752490b3c7f5a34f8b50ff0a85062f01" => :yosemite
-    sha256 "8ce4fbbbb9f6189f6ee51d3223a81ebc7ea76069353bd284822989d6ccc364a5" => :mavericks
+    sha256 cellar: :any,                 arm64_monterey: "0d3e31e4c3f477da99af902e3d94041e525161ecb62ebf7035a6f0849df15385"
+    sha256 cellar: :any,                 arm64_big_sur:  "a381d5d506e129d22823f0993521b8f83f1bbba444d0eff6e42898830275959d"
+    sha256 cellar: :any,                 monterey:       "9bfe0e35170d0e414e2b71fca7bdd39620a91d3ffc2f7a108ee3d3f7e853bb45"
+    sha256 cellar: :any,                 big_sur:        "d9ce6e9dbbcdac7b64575ec19ede1197a23451fbb8c3da5aabfce2c96d14820d"
+    sha256 cellar: :any,                 catalina:       "5207b98bd7d7e2954a5600409bbd862c72e1f246363f1e81359fa9a3530fba22"
+    sha256 cellar: :any,                 mojave:         "4f9c630d968eef80ef96102a1f12ea0ed12f5e1c74bb1dfb484687cd8a3a2aa0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "15d0fd96bdd3973960ee0a6781bb7576db9b452762beb57029f7c001e096944b"
   end
 
-  # libpcap on >= 10.12 has pcap_lib_version() instead of pcap_version
-  # Reported 8 Oct 2017 to bugs AT snort DOT org
-  if MacOS.version >= :sierra
-    patch do
-      url "https://raw.githubusercontent.com/Homebrew/formula-patches/b345dac/daq/patch-pcap-version.diff"
-      sha256 "20d2bf6aec29824e2b7550f32251251cdc9d7aac3a0861e81a68cd0d1e513bf3"
-    end
-  end
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
+  depends_on "pkg-config" => :build
+
+  uses_from_macos "libpcap"
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+    system "./bootstrap"
+    system "./configure", *std_configure_args, "--disable-silent-rules"
     system "make", "install"
   end
 
   test do
     (testpath/"test.c").write <<~EOS
-      #include <daq.h>
+      #include <assert.h>
       #include <stdio.h>
+      #include <daq.h>
+      #include <daq_module_api.h>
+
+      extern const DAQ_ModuleAPI_t pcap_daq_module_data;
+      static DAQ_Module_h static_modules[] = { &pcap_daq_module_data, NULL };
 
       int main()
       {
-        DAQ_Module_Info_t* list;
-        int size = daq_get_module_list(&list);
-        daq_free_module_list(list, size);
+        int rval = daq_load_static_modules(static_modules);
+        assert(rval == 1);
+        DAQ_Module_h module = daq_modules_first();
+        assert(module != NULL);
+        printf("[%s] - Type: 0x%x", daq_module_get_name(module), daq_module_get_type(module));
+        module = daq_modules_next();
+        assert(module == NULL);
         return 0;
       }
     EOS
-    system ENV.cc, "test.c", "-L#{lib}", "-ldaq", "-o", "test"
-    system "./test"
+    system ENV.cc, "test.c", "-L#{lib}", "-ldaq", "-ldaq_static_pcap", "-lpcap", "-lpthread", "-o", "test"
+    assert_match "[pcap] - Type: 0xb", shell_output("./test")
   end
 end

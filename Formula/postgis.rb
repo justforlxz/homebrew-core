@@ -1,14 +1,21 @@
 class Postgis < Formula
   desc "Adds support for geographic objects to PostgreSQL"
   homepage "https://postgis.net/"
-  url "https://download.osgeo.org/postgis/source/postgis-3.0.0.tar.gz"
-  sha256 "c06fd2cd5cea0119106ffe17a7235d893c2bbe6f4b63c8617c767630973ba594"
+  url "https://download.osgeo.org/postgis/source/postgis-3.1.4.tar.gz"
+  sha256 "dc8e3fe8bc532e422f5d724c5a7c437f6555511716f6410d4d2db9762e1a3796"
+  license "GPL-2.0-or-later"
+  revision 1
+
+  livecheck do
+    url "https://download.osgeo.org/postgis/source/"
+    regex(/href=.*?postgis[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "905cd7340ca8db25ba0a3f400bc0dbd2ba2b307a41cadc8881d99987b7269f5f" => :catalina
-    sha256 "a42e4631bc90167895a13082a2fc215669097a034eb5bf57c0c0fc5c77fb71aa" => :mojave
-    sha256 "a2ba42858e1f2300411671d59b1ceece8eae1f66f7f1ed3f26421b574df63882" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "514c752c2b48150b312e276f5955745180263c75b3f1a498c8f6e0a49a6154a3"
+    sha256 cellar: :any, big_sur:       "0531be5a6e8c0bfc00047149f45daeeb2562b8f556f9786b49f7605f91ab6c32"
+    sha256 cellar: :any, catalina:      "4bda3d7aa8a02bb24e4f13de6eb1b3eefcb7d1c57bdd622c3a5bf07f0e5350a7"
+    sha256 cellar: :any, mojave:        "577d3091a205f8ce726a6d1da06315cc770f88fc2a22945d29b9758e14d27bf8"
   end
 
   head do
@@ -26,7 +33,7 @@ class Postgis < Formula
   depends_on "json-c" # for GeoJSON and raster handling
   depends_on "pcre"
   depends_on "postgresql"
-  depends_on "proj"
+  depends_on "proj@7"
   depends_on "protobuf-c" # for MVT (map vector tiles) support
   depends_on "sfcgal" # for advanced 2D/3D functions
 
@@ -34,7 +41,7 @@ class Postgis < Formula
     ENV.deparallelize
 
     args = [
-      "--with-projdir=#{Formula["proj"].opt_prefix}",
+      "--with-projdir=#{Formula["proj@7"].opt_prefix}",
       "--with-jsondir=#{Formula["json-c"].opt_prefix}",
       "--with-pgconfig=#{Formula["postgresql"].opt_bin}/pg_config",
       "--with-protobufdir=#{Formula["protobuf-c"].opt_bin}",
@@ -76,6 +83,10 @@ class Postgis < Formula
   end
 
   test do
+    pg_version = Formula["postgresql"].version.major
+    expected = /'PostGIS built for PostgreSQL % cannot be loaded in PostgreSQL %',\s+#{pg_version}\.\d,/
+    assert_match expected, (share/"postgis/postgis.sql").read
+
     require "base64"
     (testpath/"brew.shp").write ::Base64.decode64 <<~EOS
       AAAnCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoOgDAAALAAAAAAAAAAAAAAAA
@@ -109,7 +120,7 @@ class Postgis < Formula
       igAAABI=
     EOS
     result = shell_output("#{bin}/shp2pgsql #{testpath}/brew.shp")
-    assert_match(/Point/, result)
-    assert_match(/AddGeometryColumn/, result)
+    assert_match "Point", result
+    assert_match "AddGeometryColumn", result
   end
 end

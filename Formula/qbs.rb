@@ -1,22 +1,33 @@
 class Qbs < Formula
   desc "Build tool for developing projects across multiple platforms"
   homepage "https://wiki.qt.io/Qbs"
-  url "https://download.qt.io/official_releases/qbs/1.14.1/qbs-src-1.14.1.tar.gz"
-  sha256 "7cdb188e239853701debe96bcf1c6f636e677157f490e6305b87a03b892d9415"
-  head "https://code.qt.io/qbs/qbs.git"
+  url "https://download.qt.io/official_releases/qbs/1.20.1/qbs-src-1.20.1.tar.gz"
+  sha256 "3a3b486a68bc00a670101733cdcdce647cfdc36588366d8347bc28fd11cc6a0b"
+  license :cannot_represent
+  head "https://code.qt.io/qbs/qbs.git", branch: "master"
 
-  bottle do
-    cellar :any
-    sha256 "dd28d6202f3e8a1c60dd7bdbc66c3a3c7766e526b3b62bf64657ae4c80d7c359" => :catalina
-    sha256 "af4b91227aeef4de0e69b8324f9e6b3a40ad1df66e386a7ef10a496fb8518b5b" => :mojave
-    sha256 "59deb5b89f6b0334c23029801973f15a97f9a6ff8cf79b4672cff532c5d2b77c" => :high_sierra
+  livecheck do
+    url "https://download.qt.io/official_releases/qbs/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
   end
 
-  depends_on "qt"
+  bottle do
+    sha256 cellar: :any, arm64_monterey: "67dfbdb18377e3bba450d7e607a4a226ee0ddb813f1bf708508892f8d8468a59"
+    sha256 cellar: :any, arm64_big_sur:  "92aac9bdcf321990f97af795af823b02b0f3e747e32b96e2f55f2be34ba5e31f"
+    sha256 cellar: :any, big_sur:        "c3d85f2b1e1f08d4f1eafa5635f892d2fd30929b61b78a350904f2e94eb5ccb4"
+    sha256 cellar: :any, catalina:       "13e3ffaf58f1778c57fd83eb8da7949dfadd639a25ca259fab7197411cf16cdb"
+    sha256 cellar: :any, mojave:         "7e224f3dc560b76aef993ed1b72c8dd51a839928fa3351e77cec37b333b3d534"
+  end
+
+  depends_on "cmake" => :build
+  depends_on "qt@5"
 
   def install
-    system "qmake", "qbs.pro", "-r", "QBS_INSTALL_PREFIX=#{prefix}", "CONFIG+=qbs_disable_rpath"
-    system "make", "install", "INSTALL_ROOT=/"
+    qt5 = Formula["qt@5"].opt_prefix
+    system "cmake", ".", "-DQt5_DIR=#{qt5}/lib/cmake/Qt5", "-DQBS_ENABLE_RPATH=NO",
+                         *std_cmake_args
+    system "cmake", "--build", "."
+    system "cmake", "--install", "."
   end
 
   test do

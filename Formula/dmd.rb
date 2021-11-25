@@ -1,31 +1,34 @@
 class Dmd < Formula
   desc "D programming language compiler for macOS"
   homepage "https://dlang.org/"
+  license "BSL-1.0"
 
   stable do
-    url "https://github.com/dlang/dmd/archive/v2.088.1.tar.gz"
-    sha256 "cf73f12981155635f293790377fa82b6d0119535f92cdd33775b151cb4f747a2"
+    url "https://github.com/dlang/dmd/archive/v2.098.0.tar.gz"
+    sha256 "437e7abae7f747ce8a027e512d2f98f0c27badd623347141c3f6fb0834d85ad0"
 
     resource "druntime" do
-      url "https://github.com/dlang/druntime/archive/v2.088.1.tar.gz"
-      sha256 "aaaa379fa505622d30fae48d219c563b19631951325f919679233cd16be494fe"
+      url "https://github.com/dlang/druntime/archive/v2.098.0.tar.gz"
+      sha256 "f150400756c7940bc9d67a3ed7f89777e49b42a1ef2dff6f40727f83b3cea6f4"
     end
 
     resource "phobos" do
-      url "https://github.com/dlang/phobos/archive/v2.088.1.tar.gz"
-      sha256 "82bfccd2a32a17387e354d56d752e0f003301368a93b4189e2b8b8e2242910fa"
+      url "https://github.com/dlang/phobos/archive/v2.098.0.tar.gz"
+      sha256 "f91c6c7f2d5683af2804a183c287bf6991b99c49692759d7844e1919ca59e974"
     end
 
     resource "tools" do
-      url "https://github.com/dlang/tools/archive/v2.088.1.tar.gz"
-      sha256 "e2eb1afe24985096554c971059916bfad1573b85786529c0394009c8db967139"
+      url "https://github.com/dlang/tools/archive/v2.098.0.tar.gz"
+      sha256 "9466e62ed2cf80802158524fc4e7ff80cbefc0fadff23a8933f6f2892b42cb56"
     end
   end
 
   bottle do
-    sha256 "63dd323fd5b68377b86336a3a388ed8e629bb748e601467917e3bae396005f5c" => :catalina
-    sha256 "f7db8bcca1c5ce784461b5eaca167d14e43a6d37ed7a1a49885fed1a1fe64dc0" => :mojave
-    sha256 "087179a51d1f58703a9231d653dd9f87f49bfb80d787ef2c8ec8cfae1c41d469" => :high_sierra
+    sha256 monterey:     "8618eddb935558875b1c57bbf023334c6767b27d7e915bcfa07f38a91e2cdc47"
+    sha256 big_sur:      "b2c95835a1295b25169b3e96eacfddc479cd24efc6d58285e42a1436c2b097ce"
+    sha256 catalina:     "ec5dec4305424b179a815a4d15a8f85591bfb73d5cc92ca34b4ada0f05c34743"
+    sha256 mojave:       "82a178b02a4001d6a7f0e466d33bc6479be456b27bd29b124973164a164fde5f"
+    sha256 x86_64_linux: "1e65207b55d3c04987dd3679145db28e5952aa6cb2cc5bbf8aa227eb3cfd7b5a"
   end
 
   head do
@@ -44,18 +47,19 @@ class Dmd < Formula
     end
   end
 
+  depends_on arch: :x86_64
+
+  uses_from_macos "unzip" => :build
+  uses_from_macos "xz" => :build
+
   def install
-    # Older DMD version is used for bootstraping itself - unfortunately version used for that
-    # doesn't work on MacOS Catalina due to TLS related APIs missing on the system.
-    # We manually overwrite DMD version used for bootstraping until upstream catches up.
-    old_host_dmd_ver="2.079.1"
-    host_dmd_ver="2.088.0"
+    # DMD defaults to v2.088.0 to bootstrap as of DMD 2.090.0
+    # On MacOS Catalina, a version < 2.087.1 would not work due to TLS related symbols missing
 
     make_args = %W[
       INSTALL_DIR=#{prefix}
       MODEL=64
       BUILD=release
-      HOST_DMD_VER=#{host_dmd_ver}
       -f posix.mak
     ]
 
@@ -66,9 +70,6 @@ class Dmd < Formula
       ENABLE_RELEASE=1
     ]
 
-    # Even though we pass HOST_DMD_VER to makefile, build.d still has version hardcoded.
-    # We manually overwrite it until upstream catches up.
-    inreplace "src/build.d", old_host_dmd_ver, host_dmd_ver
     system "make", *dmd_make_args, *make_args
 
     make_args.unshift "DMD_DIR=#{buildpath}", "DRUNTIME_PATH=#{buildpath}/druntime", "PHOBOS_PATH=#{buildpath}/phobos"
@@ -84,13 +85,14 @@ class Dmd < Formula
       system "make", "install", *make_args
     end
 
-    bin.install "generated/osx/release/64/dmd"
+    kernel_name = OS.mac? ? "osx" : OS.kernel_name.downcase
+    bin.install "generated/#{kernel_name}/release/64/dmd"
     pkgshare.install "samples"
     man.install Dir["docs/man/*"]
 
     (include/"dlang/dmd").install Dir["druntime/import/*"]
     cp_r ["phobos/std", "phobos/etc"], include/"dlang/dmd"
-    lib.install Dir["druntime/lib/*", "phobos/**/libphobos2.a"]
+    lib.install Dir["druntime/**/libdruntime.*", "phobos/**/libphobos2.*"]
 
     (buildpath/"dmd.conf").write <<~EOS
       [Environment]

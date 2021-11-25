@@ -1,63 +1,35 @@
-require "language/haskell"
-
 class GitAnnex < Formula
-  include Language::Haskell::Cabal
-
   desc "Manage files with git without checking in file contents"
   homepage "https://git-annex.branchable.com/"
-  url "https://hackage.haskell.org/package/git-annex-7.20191114/git-annex-7.20191114.tar.gz"
-  sha256 "b53a48b6bf26d959af98a57865d461b7c9e4ea35f03a668d1d0ea0355eb1d9a9"
-  head "git://git-annex.branchable.com/"
+  url "https://hackage.haskell.org/package/git-annex-8.20211117/git-annex-8.20211117.tar.gz"
+  sha256 "edd2e46112a76ebe56d87a2507a9385c87ed8782be913a645f19568391948f4d"
+  license all_of: ["AGPL-3.0-or-later", "BSD-2-Clause", "BSD-3-Clause",
+                   "GPL-2.0-only", "GPL-3.0-or-later", "MIT"]
+  head "git://git-annex.branchable.com/", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "2ada65e0aecdc5e8e3fd0c240c5f6021125d2dd2c20065e2fa23d859f3c19a40" => :catalina
-    sha256 "38ca8303ef65b5a769bd16e276d0ad781d7c2f525ac70e26a76771894048b8a2" => :mojave
-    sha256 "a92b6eaa265d4fe9224a1cc1a32f5fc14e86681dd85640e5bad7a4668600f5ac" => :high_sierra
+    sha256 cellar: :any,                 monterey:     "8123037131098967d814465cce8e4a0958478a8362af0be4c06fd4f628f740a3"
+    sha256 cellar: :any,                 big_sur:      "44fd7789c159be02147eb424e6708f6832e3c52ec63beed36dc66e3a484c91be"
+    sha256 cellar: :any,                 catalina:     "14ad5c6640b1b9d641ef163631b579ea01becb1f23f2a244e3ee1dd59d7e8ab1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "1d68a8372c8855648fc8072117e84ef37abccf9586d4926944c79a4cf0f9782d"
   end
 
   depends_on "cabal-install" => :build
-  depends_on "ghc@8.6" => :build
+  depends_on "ghc" => :build
   depends_on "pkg-config" => :build
   depends_on "gsasl"
   depends_on "libmagic"
   depends_on "quvi"
-  depends_on "xdot"
 
   def install
-    # Reported 28 Feb 2018 to aws upstream https://github.com/aristidb/aws/issues/244
-    # This is already resolved in aws 0.20 but we can't move to 0.20 until
-    # esqueleto 2.6.0 ships. See https://github.com/bitemyapp/esqueleto/issues/88
-    # The network 2.7.0.1 issue has been fixed upstream but needs a new release.
-    install_cabal_package "--constraint", "http-conduit>=2.3",
-                          "--constraint", "network>=2.6.3.0",
-                          :using => ["alex", "happy", "c2hs"],
-                          :flags => ["s3", "webapp"]
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args,
+                    "--flags=+S3"
     bin.install_symlink "git-annex" => "git-annex-shell"
   end
 
-  plist_options :manual => "git annex assistant --autostart"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/git-annex</string>
-          <string>assistant</string>
-          <string>--autostart</string>
-        </array>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"git-annex", "assistant", "--autostart"]
   end
 
   test do
@@ -70,9 +42,14 @@ class GitAnnex < Formula
     system "git", "annex", "init"
     (testpath/"Hello.txt").write "Hello!"
     assert !File.symlink?("Hello.txt")
-    assert_match /^add Hello.txt.*ok.*\(recording state in git\.\.\.\)/m, shell_output("git annex add .")
+    assert_match(/^add Hello.txt.*ok.*\(recording state in git\.\.\.\)/m, shell_output("git annex add ."))
     system "git", "commit", "-a", "-m", "Initial Commit"
     assert File.symlink?("Hello.txt")
+
+    # make sure the various remotes were built
+    assert_match shell_output("git annex version | grep 'remote types:'").chomp,
+                 "remote types: git gcrypt p2p S3 bup directory rsync web bittorrent " \
+                 "webdav adb tahoe glacier ddar git-lfs httpalso borg hook external"
 
     # The steps below are necessary to ensure the directory cleanly deletes.
     # git-annex guards files in a way that isn't entirely friendly of automatically

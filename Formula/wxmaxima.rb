@@ -1,41 +1,55 @@
 class Wxmaxima < Formula
   desc "Cross platform GUI for Maxima"
   homepage "https://wxmaxima-developers.github.io/wxmaxima/"
-  url "https://github.com/wxMaxima-developers/wxmaxima/archive/Version-19.11.1.tar.gz"
-  sha256 "d3744fe7596f14dcbce550f592b3b699ce9ec216edecd2e4f5380b4b0d562fd6"
-  head "https://github.com/wxMaxima-developers/wxmaxima.git"
+  url "https://github.com/wxMaxima-developers/wxmaxima/archive/Version-21.11.0.tar.gz"
+  sha256 "167e412708e1ef6f68fe934e55844af25a6d4e6f176eb26d46858576b17a90dd"
+  license "GPL-2.0-or-later"
+  head "https://github.com/wxMaxima-developers/wxmaxima.git", branch: "main"
 
   bottle do
-    cellar :any
-    sha256 "6538212a18e24c5450ab5c78054089b22ae96b0affc58df57da435ca6463c0a4" => :catalina
-    sha256 "9045f4071191fdc2ab09f5c930f43251abe29d8ebb5e944f28574e651953830d" => :mojave
-    sha256 "7107a38f3a94689606f75d5d956af91c181d917ec580a7359eeed552a61bc37e" => :high_sierra
+    sha256 arm64_big_sur: "3ff95aeab04845455ec0962e48c65f71bf13bf4698303939c2f0ed633a64ed82"
+    sha256 big_sur:       "5bee4a8d0217dfadbb1f5f0340642b22b8543359c762d360ccfa14b80a322c5a"
+    sha256 catalina:      "d8ab32d2e42fd3b4ef2f72a0e72cc47c7367cf62b313189f1f549e8aa91721ea"
   end
 
   depends_on "cmake" => :build
   depends_on "gettext" => :build
-  depends_on "wxmac"
+  depends_on "ninja" => :build
+  depends_on "maxima"
+  depends_on "wxwidgets"
 
   def install
-    system "cmake", ".", *std_cmake_args
-    system "make", "install"
-    prefix.install "wxMaxima.app"
+    mkdir "build-wxm" do
+      system "cmake", "..", "-GNinja", *std_cmake_args
+      system "ninja"
+      system "ninja", "install"
+
+      prefix.install "src/wxMaxima.app" if OS.mac?
+    end
 
     bash_completion.install "data/wxmaxima"
+
+    bin.write_exec_script "#{prefix}/wxMaxima.app/Contents/MacOS/wxmaxima" if OS.mac?
   end
 
-  def caveats; <<~EOS
-    When you start wxMaxima the first time, set the path to Maxima
-    (e.g. #{HOMEBREW_PREFIX}/bin/maxima) in the Preferences.
+  def caveats
+    <<~EOS
+      When you start wxMaxima the first time, set the path to Maxima
+      (e.g. #{HOMEBREW_PREFIX}/bin/maxima) in the Preferences.
 
-    Enable gnuplot functionality by setting the following variables
-    in ~/.maxima/maxima-init.mac:
-      gnuplot_command:"#{HOMEBREW_PREFIX}/bin/gnuplot"$
-      draw_command:"#{HOMEBREW_PREFIX}/bin/gnuplot"$
-  EOS
+      Enable gnuplot functionality by setting the following variables
+      in ~/.maxima/maxima-init.mac:
+        gnuplot_command:"#{HOMEBREW_PREFIX}/bin/gnuplot"$
+        draw_command:"#{HOMEBREW_PREFIX}/bin/gnuplot"$
+    EOS
   end
 
   test do
+    on_linux do
+      # Error: Unable to initialize GTK+, is DISPLAY set properly
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     assert_match "algebra", shell_output("#{bin}/wxmaxima --help 2>&1")
   end
 end

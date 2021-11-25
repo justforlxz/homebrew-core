@@ -1,18 +1,37 @@
 class Botan < Formula
   desc "Cryptographic algorithms and formats library in C++"
   homepage "https://botan.randombit.net/"
-  url "https://botan.randombit.net/releases/Botan-2.12.1.tar.xz"
-  sha256 "7e035f142a51fca1359705792627a282456d49749bf62a37a8e48375d41baaa9"
-  head "https://github.com/randombit/botan.git"
+  url "https://botan.randombit.net/releases/Botan-2.18.2.tar.xz"
+  sha256 "541a3b13f1b9d30f977c6c1ae4c7bfdfda763cda6e44de807369dce79f42307e"
+  license "BSD-2-Clause"
+  head "https://github.com/randombit/botan.git", branch: "master"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?Botan[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "6e014274755eea746204793b4f6a1bbe1e338af984c23f9eedf51f2d631d17eb" => :catalina
-    sha256 "b014bfa6f440a8d06d2da28261e575b68e15cd1c2a34d42ae37777e97ce15827" => :mojave
-    sha256 "605df5ce325dcea0c6cb00349cf016b154f122e90fb1f7fcb791de9e6b0e48ae" => :high_sierra
+    sha256 arm64_monterey: "850adbef4b6df09cd0ccbe6488be7af07ca39eaa64579fefe025cd2e6f92c088"
+    sha256 arm64_big_sur:  "75e3663e0e99d0ef40a8a62d5f19b738b20f6024845b9f29fc355851a1f382a9"
+    sha256 monterey:       "d22f82dbd0196654270ed1d41e0f4894a6130bab963b9e8f7f44a1c1bbf2db69"
+    sha256 big_sur:        "53c1d23a7a5bcfda1378d970e6e3140a6f8721c84b92f87c417e01f3fb225124"
+    sha256 catalina:       "f934561950c879723f6fde7fb0a6973c7777c869b1dd54012674c99baf8b9584"
+    sha256 x86_64_linux:   "941492434980b6730375a8b6e5dec25a4781243740d3d532644a521a89a7ab31"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "openssl@1.1"
+  depends_on "python@3.10"
+  depends_on "sqlite"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
@@ -20,21 +39,18 @@ class Botan < Formula
     args = %W[
       --prefix=#{prefix}
       --docdir=share/doc
-      --cpu=#{MacOS.preferred_arch}
-      --cc=#{ENV.compiler}
-      --os=darwin
-      --with-openssl
       --with-zlib
       --with-bzip2
+      --with-sqlite3
     ]
 
-    system "./configure.py", *args
+    system "python3", "configure.py", *args
     system "make", "install"
   end
 
   test do
     (testpath/"test.txt").write "Homebrew"
-    (testpath/"testout.txt").write Utils.popen_read("#{bin}/botan base64_enc test.txt")
+    (testpath/"testout.txt").write shell_output("#{bin}/botan base64_enc test.txt")
     assert_match "Homebrew", shell_output("#{bin}/botan base64_dec testout.txt")
   end
 end

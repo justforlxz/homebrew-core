@@ -1,20 +1,27 @@
 class Fantom < Formula
   desc "Object oriented, portable programming language"
   homepage "https://fantom.org/"
-  url "https://bitbucket.org/fantom/fan-1.0/downloads/fantom-1.0.71.zip"
-  sha256 "68b2f238548b12a913012d86552e84dc7376e69dac09b56a0488a5330df2f875"
+  url "https://github.com/fantom-lang/fantom/releases/download/v1.0.77/fantom-1.0.77.zip"
+  sha256 "f53ed7d3f0fc1b406ae65bc841a66756076563b57c783e1b097ab94f72da6825"
+  license "AFL-3.0"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "8d089cb1de9383b0f1e7e247042da8e819554f20f231648b981b5207792cd3cc"
+  end
+
+  depends_on "openjdk"
 
   def install
     rm_f Dir["bin/*.exe", "bin/*.dll", "lib/dotnet/*"]
 
-    # Select the macOS JDK path in the config file
-    inreplace "etc/build/config.props", "//jdkHome=/System", "jdkHome=/System"
+    # Select OpenJDK path in the config file
+    java_home = Formula["openjdk"].opt_libexec/"openjdk.jdk/Contents/Home"
+    inreplace "etc/build/config.props", %r{//jdkHome=/System.*$}, "jdkHome=#{java_home}"
 
     libexec.install Dir["*"]
     chmod 0755, Dir["#{libexec}/bin/*"]
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    bin.install Dir["#{libexec}/bin/*"]
+    bin.env_script_all_files libexec/"bin", JAVA_HOME: java_home
   end
 
   test do

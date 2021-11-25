@@ -3,20 +3,23 @@ class Pygments < Formula
 
   desc "Generic syntax highlighter"
   homepage "https://pygments.org/"
-  url "https://files.pythonhosted.org/packages/7e/ae/26808275fc76bf2832deb10d3a3ed3107bc4de01b85dcccbe525f2cd6d1e/Pygments-2.4.2.tar.gz"
-  sha256 "881c4c157e45f30af185c1ffe8d549d48ac9127433f2c380c24b84572ad66297"
-
-  head "https://github.com/pygments/pygments.git"
+  url "https://files.pythonhosted.org/packages/b7/b3/5cba26637fe43500d4568d0ee7b7362de1fb29c0e158d50b4b69e9a40422/Pygments-2.10.0.tar.gz"
+  sha256 "f398865f7eb6874156579fdf36bc840a03cab64d1cde9e93d68f46a425ec52c6"
+  license "BSD-2-Clause"
+  revision 1
+  head "https://github.com/pygments/pygments.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d6d30984eae722a0bde57e6590e0c89121cf340f050f0ac8a995212d622173b5" => :catalina
-    sha256 "778197007f7c9dda3f9121d7ee3aa0014002665b40dae5dae14e07f504162062" => :mojave
-    sha256 "ab35a224a347be5ad296ac3ee12e69e917ca34f7f47a7ef948aa81ca1d40e710" => :high_sierra
-    sha256 "931c35edfec89042b2fc1c97256055060dd92fc60c699a883a204caf66930bae" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c625b002e4402b4c7fdecded981fa7ff87e1514d284e4057011d041d12ad093e"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "c625b002e4402b4c7fdecded981fa7ff87e1514d284e4057011d041d12ad093e"
+    sha256 cellar: :any_skip_relocation, monterey:       "7095fda62baec826a619282cd127e03eed82a02368eafcc4e22ea5fdb1a4ca10"
+    sha256 cellar: :any_skip_relocation, big_sur:        "7095fda62baec826a619282cd127e03eed82a02368eafcc4e22ea5fdb1a4ca10"
+    sha256 cellar: :any_skip_relocation, catalina:       "7095fda62baec826a619282cd127e03eed82a02368eafcc4e22ea5fdb1a4ca10"
+    sha256 cellar: :any_skip_relocation, mojave:         "7095fda62baec826a619282cd127e03eed82a02368eafcc4e22ea5fdb1a4ca10"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "bd675d1a3d161a05a82e0a4819eeb4464219e9eba491b6af816bff8820ce3e20"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
     bash_completion.install "external/pygments.bashcomp" => "pygmentize"

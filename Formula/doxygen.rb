@@ -1,28 +1,43 @@
 class Doxygen < Formula
   desc "Generate documentation for several programming languages"
-  homepage "http://www.doxygen.org/"
-  url "http://doxygen.nl/files/doxygen-1.8.16.src.tar.gz"
-  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.8.16/doxygen-1.8.16.src.tar.gz"
-  sha256 "ff981fb6f5db4af9deb1dd0c0d9325e0f9ba807d17bd5750636595cf16da3c82"
+  homepage "https://www.doxygen.org/"
+  url "https://doxygen.nl/files/doxygen-1.9.2.src.tar.gz"
+  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.9.2/doxygen-1.9.2.src.tar.gz"
+  sha256 "060f254bcef48673cc7ccf542736b7455b67c110b30fdaa33512a5b09bbecee5"
+  license "GPL-2.0-only"
   head "https://github.com/doxygen/doxygen.git"
 
+  livecheck do
+    url "https://www.doxygen.nl/download.html"
+    regex(/href=.*?doxygen[._-]v?(\d+(?:\.\d+)+)[._-]src\.t/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "709545ed8f509c407d1a8ac2f36f396f783bd732c98ed18d79e57aa26e79fd74" => :mojave
-    sha256 "882a5c055350590d2dfa31cbc786dab9760acfd222a05ecbabd7833cd09a66d9" => :high_sierra
-    sha256 "5d002c6ee6d2619c5c5c9752c65537b81a135361f2c99f566a3e178de4f448f8" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "e499b325b991b73028e5507e970d1cc32762b402c7eccf6f8c9c941ffdfe99d7"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "1a7ba50b992a11544f4a94ab93374eddeaef6aea5cfb2dfefb0c27a2976ef644"
+    sha256 cellar: :any_skip_relocation, monterey:       "336e7503dfa1a4448842cb02f829062b93972021179575db73f47867fea579dd"
+    sha256 cellar: :any_skip_relocation, big_sur:        "a3c10247d05fe6a007ad97b1131e522eec0729288bee680dfd3e5a4cca2ee5fb"
+    sha256 cellar: :any_skip_relocation, catalina:       "d4651ac184617629b57a0842ecb267adb25c34fc0b61b08296d80ee68928b66d"
+    sha256 cellar: :any_skip_relocation, mojave:         "cab7c99f874c1a498ce9b27ebd863a46dd9940b75a86da8782eef952d49e709a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "12a835bf9986bbbebd0f4441a9e64ffd15413fbcfb8cb199640f29721665d022"
   end
 
   depends_on "bison" => :build
   depends_on "cmake" => :build
 
-  def install
-    args = std_cmake_args + %W[
-      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=#{MacOS.version}
-    ]
+  uses_from_macos "flex" => :build
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  # Need gcc>=7.2. See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66297
+  fails_with gcc: "5"
+  fails_with gcc: "6"
+
+  def install
     mkdir "build" do
-      system "cmake", "..", *args
+      system "cmake", "..", *std_cmake_args
       system "make"
     end
     bin.install Dir["build/bin/*"]

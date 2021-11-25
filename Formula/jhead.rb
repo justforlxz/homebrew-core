@@ -1,26 +1,31 @@
 class Jhead < Formula
   desc "Extract Digicam setting info from EXIF JPEG headers"
-  homepage "http://www.sentex.net/~mwandel/jhead/"
-  url "http://www.sentex.net/~mwandel/jhead/jhead-3.03.tar.gz"
-  sha256 "82194e0128d9141038f82fadcb5845391ca3021d61bc00815078601619f6c0c2"
+  homepage "https://github.com/Matthias-Wandel/jhead"
+  url "https://github.com/Matthias-Wandel/jhead/archive/3.06.0.1.tar.gz"
+  sha256 "5c5258c3d7a840bf831e22174e4a24cb1de3baf442f7cb73d5ab31b4ae0b0058"
+  license :public_domain
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "449ddd95273bb9287758c6ba58aed81a2002f2eba95031027c97b615ce93ed49" => :catalina
-    sha256 "1fdaa2ab0e5066688f1d3ff80821447f0957f95ba37c4c1c8d8f40b6d3a38ee9" => :mojave
-    sha256 "d62f1ed9f99df061893021df1f5dc8928e52eb6ac73cfe47b41cf50bc2369f49" => :high_sierra
-    sha256 "b5af56763e92712207332e51208c918b71c1b46985cb9df44eb1d8a30f59348f" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "e473e54dcc077f4b803d1fa3acf390d8d74845f9c01e8316dbccf195844b5738"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "8ba17f494afc0590a876112f9f7f6b00664fbd1ad62ec3a9a21a5941188b9bbe"
+    sha256 cellar: :any_skip_relocation, monterey:       "cd587b58853b3f1adbdb7bf1cf7bf019d7f86354ffa4ba3de04ec60220858d6f"
+    sha256 cellar: :any_skip_relocation, big_sur:        "ff1612a2a1d386e153b934b790f6e3e4897a0cb9509805de91f0cf432a422f57"
+    sha256 cellar: :any_skip_relocation, catalina:       "57866edae4ac5a6b63988d3f7c9c1d261fa33eaff6dc1e6833a086fda2a7671f"
+    sha256 cellar: :any_skip_relocation, mojave:         "1d772617f005a7b1381d78c133e2745e9ca7e31cb6a5fd5428bd2f973bcfae45"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "15b04dc8681a47de34f7d95028ad979706403157d88bef21cdfc97b5f89393cf"
   end
 
-  # Patch to provide a proper install target to the Makefile. The patch has
-  # been submitted upstream through email. We need to carry this patch until
-  # upstream decides to incorporate it.
+  # Patch to provide a proper install target to the Makefile. A variation
+  # of this patch has been submitted upstream at
+  # https://github.com/Matthias-Wandel/jhead/pull/45. We need to
+  # carry this patch until upstream decides to incorporate it.
   patch do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/85fa66a9/jhead/3.00.patch"
-    sha256 "743811070c31424b2a0dab3b6ced7aa3cd40bff637fb2eab295b742586873b8f"
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/e3288f753931921027d0def5e8d2c3dbf7073b10/jhead/3.06.0.1.patch"
+    sha256 "520929fe37097fde24f36d7e0fd59ded889d1a3cbea684133398492b14628179"
   end
 
   def install
+    ENV.deparallelize
     system "make", "install", "PREFIX=#{prefix}"
   end
 

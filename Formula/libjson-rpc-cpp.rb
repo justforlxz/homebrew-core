@@ -1,17 +1,18 @@
 class LibjsonRpcCpp < Formula
   desc "C++ framework for json-rpc"
   homepage "https://github.com/cinemast/libjson-rpc-cpp"
-  url "https://github.com/cinemast/libjson-rpc-cpp/archive/v1.2.0.tar.gz"
-  sha256 "485556bd27bd546c025d9f9a2f53e89b4460bf820fd5de847ede2539f7440091"
-  revision 2
+  url "https://github.com/cinemast/libjson-rpc-cpp/archive/v1.4.0.tar.gz"
+  sha256 "8fef7628eadbc0271c685310082ef4c47f1577c3df2e4c8bd582613d1bd10599"
+  license "MIT"
   head "https://github.com/cinemast/libjson-rpc-cpp.git"
 
   bottle do
-    cellar :any
-    sha256 "d1466807a98b3ffbf6a2b538961e66c95ac3474460a98284583e4c0da058a7d3" => :catalina
-    sha256 "93aabc3290ac1f6f62783c97820a298f32bb6d2eb174eef66ebd26198c8e7f85" => :mojave
-    sha256 "3488b2b28b4b275aea373f5adf4bee029f21e1f59a6e4707b6b51c216d814db5" => :high_sierra
-    sha256 "dfb299c3e6d21e1e2966b61f53e43a462f1daf6beed1245054ed7dc43c26582c" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "2d5595ba06ed6242ea57d93dffc02fbdd17acf0a59ef9c49a3fd5b248e0fd6cc"
+    sha256 cellar: :any,                 arm64_big_sur:  "8f6b4c50f9a8ba7f677f13ee5c3b8edbe18595c738093483ca77ae081949e7d9"
+    sha256 cellar: :any,                 monterey:       "b55de462ab58927008ac9aab8dfd734f17fe3d2ae8c784cabcc8516f9c459e27"
+    sha256 cellar: :any,                 big_sur:        "2665a82edb0caedbfdc16db5c9737bf9ce7d010312e4ef6959cac058ee880030"
+    sha256 cellar: :any,                 catalina:       "168b837f3b9eb9000703524bb3b61a04db09707de52d5bb6891e3a03f558da19"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "388a0dfab5687e1031a4cf317aaae62c5e2673a58197da76547ac8b6e15cb1fc"
   end
 
   depends_on "cmake" => :build
@@ -20,8 +21,10 @@ class LibjsonRpcCpp < Formula
   depends_on "jsoncpp"
   depends_on "libmicrohttpd"
 
+  uses_from_macos "curl"
+
   def install
-    system "cmake", ".", *std_cmake_args
+    system "cmake", ".", *std_cmake_args, "-DCOMPILE_EXAMPLES=OFF", "-DCOMPILE_TESTS=OFF"
     system "make"
     system "make", "install"
   end

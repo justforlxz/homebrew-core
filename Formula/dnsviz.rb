@@ -3,50 +3,47 @@ class Dnsviz < Formula
 
   desc "Tools for analyzing and visualizing DNS and DNSSEC behavior"
   homepage "https://github.com/dnsviz/dnsviz/"
-  url "https://files.pythonhosted.org/packages/25/d2/0ebfe23440a1adfdca403d7773570d3c05a3a8c5bcbaa0c091b5114d0224/dnsviz-0.8.2.tar.gz"
-  sha256 "a81ff254c23718cd6f364b03bf6e9c80468fa4663fd5be66043de7b0bece1cab"
-  revision 2
+  url "https://files.pythonhosted.org/packages/a5/7c/b38750c866e7e29bc76450c75f61ede6c2560e75cfe36df81e9517612434/dnsviz-0.9.4.tar.gz"
+  sha256 "6448d4c6e7c1844aa2a394d60f7cc53721ad985e0e830c30265ef08a74a7aa28"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "cde386e003eb2d8112ef2e8e947b2c9919c275a3cc193315df1a7e0043a3402c" => :catalina
-    sha256 "4eca36bda18ba3969581ddc2cac1c15e33177afded24f12e8b46c89cfc5df2b2" => :mojave
-    sha256 "8ecd24e5b812a8945a182c255de5c50fcba01adfc23ec0dcb8ad2d3e166101f1" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "e70c11a9ccb3daf97c76cab2632520d2abac3678dd5712cba719e67d921e65cb"
+    sha256 cellar: :any, monterey:      "b80d337b9793d9de352301d1822278bff183099924dd36e920db62e4a8bba78c"
+    sha256 cellar: :any, big_sur:       "dfff42e474d4c0e7f26d2a87161f85478646745d2528fcffb38859401f1b6e6b"
+    sha256 cellar: :any, catalina:      "4323bcd148cdada2c26229d2bc0b9b63236d5ba4e1cae635272a7a599cfbd9d4"
+    sha256 cellar: :any, mojave:        "5580679f91243fb6d6823f2ba1d55e468983734e9753f94e70c455bd70c3b072"
   end
 
   depends_on "pkg-config" => :build
   depends_on "swig" => :build
   depends_on "bind" => :test
   depends_on "graphviz"
-  depends_on "libsodium"
   depends_on "openssl@1.1"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  on_linux do
+    # Fix build error of m2crypto, see https://github.com/crocs-muni/roca/issues/1#issuecomment-336893096
+    depends_on "swig"
+  end
 
   resource "dnspython" do
-    url "https://files.pythonhosted.org/packages/ec/c5/14bcd63cb6d06092a004793399ec395405edf97c2301dfdc146dfbd5beed/dnspython-1.16.0.zip"
-    sha256 "36c5e8e38d4369a08b6780b7f27d790a292b2b08eea01607865bf0936c558e01"
+    url "https://files.pythonhosted.org/packages/13/27/5277de856f605f3429d752a39af3588e29d10181a3aa2e2ee471d817485a/dnspython-2.1.0.zip"
+    sha256 "e4a87f0b573201a0f3727fa18a516b055fd1107e0e5477cded4a2de497df1dd4"
+  end
+
+  resource "M2Crypto" do
+    url "https://files.pythonhosted.org/packages/2c/52/c35ec79dd97a8ecf6b2bbd651df528abb47705def774a4a15b99977274e8/M2Crypto-0.38.0.tar.gz"
+    sha256 "99f2260a30901c949a8dc6d5f82cd5312ffb8abc92e76633baf231bbbcb2decb"
   end
 
   resource "pygraphviz" do
-    url "https://files.pythonhosted.org/packages/7e/b1/d6d849ddaf6f11036f9980d433f383d4c13d1ebcfc3cd09bc845bda7e433/pygraphviz-1.5.zip"
-    sha256 "50a829a305dc5a0fd1f9590748b19fece756093b581ac91e00c2c27c651d319d"
-  end
-
-  resource "M2crypto" do
-    url "https://files.pythonhosted.org/packages/74/18/3beedd4ac48b52d1a4d12f2a8c5cf0ae342ce974859fba838cbbc1580249/M2Crypto-0.35.2.tar.gz"
-    sha256 "4c6ad45ffb88670c590233683074f2440d96aaccb05b831371869fc387cbd127"
-  end
-
-  resource "typing" do
-    url "https://files.pythonhosted.org/packages/67/b0/b2ea2bd67bfb80ea5d12a5baa1d12bda002cab3b6c9b48f7708cd40c34bf/typing-3.7.4.1.tar.gz"
-    sha256 "91dfe6f3f706ee8cc32d38edbbf304e9b7583fb37108fef38229617f8b3eba23"
+    url "https://files.pythonhosted.org/packages/3a/d6/2c56f09ee83dbebb62c40487e4c972135661b9984fec9b30b77fb497090c/pygraphviz-1.7.zip"
+    sha256 "a7bec6609f37cf1e64898c59f075afd659106cf9356c5f387cecaa2e0cdb2304"
   end
 
   def install
     ENV["SWIG_FEATURES"]="-I#{Formula["openssl@1.1"].opt_include}"
-
-    # Fix building of M2Crypto on High Sierra https://github.com/Homebrew/homebrew-core/pull/45895#issuecomment-557200007
-    ENV.delete("HOMEBREW_SDKROOT") if MacOS.version == :high_sierra
 
     virtualenv_install_with_resources
   end

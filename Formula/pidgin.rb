@@ -1,26 +1,33 @@
 class Pidgin < Formula
   desc "Multi-protocol chat client"
   homepage "https://pidgin.im/"
-  url "https://downloads.sourceforge.net/project/pidgin/Pidgin/2.13.0/pidgin-2.13.0.tar.bz2"
-  sha256 "2747150c6f711146bddd333c496870bfd55058bab22ffb7e4eb784018ec46d8f"
-  revision 3
+  url "https://downloads.sourceforge.net/project/pidgin/Pidgin/2.14.8/pidgin-2.14.8.tar.bz2"
+  sha256 "3f8085c0211c4ca1ba9f8a03889b3d60738432c1673b57b0086070ef6e094cca"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://sourceforge.net/projects/pidgin/files/Pidgin/"
+    regex(%r{href=.*?/v?(\d+(?:\.\d+)+)/?["' >]}i)
+    strategy :page_match
+  end
 
   bottle do
-    rebuild 1
-    sha256 "8a3f1b5f6bbe3b68064460deb492a76cdd94640def0ea85b2bb3d13c631ba0e7" => :catalina
-    sha256 "5447d58ebdfdbb28a8488c9fa0d77e4aee6787955826e2674cf53ba903268638" => :mojave
-    sha256 "735db47d591766486801549430960db2e83651ee373add2901ef71333eefea75" => :high_sierra
-    sha256 "f862f996bd1a302d21b13182cc9ac2ba4a00b6a87b63f0a78c9d6a7c2f293b6a" => :sierra
+    sha256 arm64_monterey: "6d599427835355c185246b8280881ec639fd76b6a29b303fb88138bb468aacad"
+    sha256 arm64_big_sur:  "c848ea93d573f4104a7a7edf23c41d159ac5070e36f08d84e14d65af4a5a3bef"
+    sha256 monterey:       "8bdf97ea93acf5243579d8138ffcd76b8c426cc2d38440e895ec6993d9b52d65"
+    sha256 big_sur:        "309a8ac7ee4e09f884ad79985d23895d77ddec13197a71ed764f73f9984d9175"
+    sha256 catalina:       "fbea5ba3a0051d76282289dadc36ec61d0c466aa1dda6358ccae7a8f12f48b42"
+    sha256 mojave:         "10159d6af23b8603b31160d0eba5dd689693e1cf8a6486e032ee0fc34dbbc703"
   end
 
   depends_on "intltool" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "gettext"
-  depends_on "glib"
   depends_on "gnutls"
   depends_on "gtk+"
   depends_on "libgcrypt"
+  depends_on "libgnt"
   depends_on "libidn"
   depends_on "libotr"
   depends_on "pango"
@@ -54,6 +61,14 @@ class Pidgin < Formula
 
     ENV["ac_cv_func_perl_run"] = "yes" if MacOS.version == :high_sierra
 
+    # patch pidgin to read plugins and allow them to live in separate formulae which can
+    # all install their symlinks into these directories. See:
+    #   https://github.com/Homebrew/homebrew-core/pull/53557
+    inreplace "finch/finch.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/finch\""
+    inreplace "libpurple/plugin.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/purple-2\""
+    inreplace "pidgin/gtkmain.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/pidgin\""
+    inreplace "pidgin/gtkutils.c", "DATADIR", "\"#{HOMEBREW_PREFIX}/share\""
+
     system "./configure", *args
     system "make", "install"
 
@@ -67,5 +82,10 @@ class Pidgin < Formula
 
   test do
     system "#{bin}/finch", "--version"
+    system "#{bin}/pidgin", "--version"
+
+    pid = fork { exec "#{bin}/pidgin", "--config=#{testpath}" }
+    sleep 5
+    Process.kill "SIGTERM", pid
   end
 end

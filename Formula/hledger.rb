@@ -1,42 +1,74 @@
-require "language/haskell"
-
 class Hledger < Formula
-  include Language::Haskell::Cabal
-
-  desc "Command-line accounting tool"
+  desc "Easy plain text accounting with command-line, terminal and web UIs"
   homepage "https://hledger.org/"
-  url "https://hackage.haskell.org/package/hledger-1.16.1/hledger-1.16.1.tar.gz"
-  sha256 "aa764da8caea4d8937220d502020d6b8bc69bd05b9630874bed144f9a42680b7"
+  url "https://hackage.haskell.org/package/hledger-1.23/hledger-1.23.tar.gz"
+  sha256 "0ba5dabfd50a8c1a4a5b53adb7c7a5ea542ea19534180b6fb9a69bfe7e5ced68"
+  license "GPL-3.0-or-later"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "7632ee3eba6efc1421a1423b608d3d9594f2ea95fe5e48ecd6aa74f4f23a2fcf" => :catalina
-    sha256 "729176606235e133a78cb114eb445adbb6845156d52bf58cccbf59cace19e1cf" => :mojave
-    sha256 "8f64c97525829e500a89d9533d21b13413c96f8575730f4354d2a6b98ab1bf2f" => :high_sierra
+  # A new version is sometimes present on Hackage before it's officially
+  # released on the upstream homepage, so we check the first-party download
+  # page instead.
+  livecheck do
+    url "https://hledger.org/download.html"
+    regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+)["' >]}i)
   end
 
-  depends_on "cabal-install" => :build
-  depends_on "ghc" => :build
-  uses_from_macos "ncurses"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "66912c638ecc6308ab58e7222ef2c3387f59bd5a95dd805d9fd235c6a274fe90"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4fa3b58f845c0578cabe2df90e488b112bb42140232c67e6faf2be22a1559bcd"
+    sha256 cellar: :any_skip_relocation, catalina:      "95c44e6e6addf32e60aedc34281156593ce27e72aa006d66326f3b78c6c99c6a"
+    sha256 cellar: :any_skip_relocation, mojave:        "a24a74b41e073eed1ace75a20c2e7d1c97f47ccd338cff794d959f4ac0ec6058"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7b7e03270cdd22422f3854383bbff4108b5d431422cfb6e1bcf443dc12c1acb1"
+  end
 
-  resource "hledger-web" do
-    url "https://hackage.haskell.org/package/hledger-web-1.16.1/hledger-web-1.16.1.tar.gz"
-    sha256 "4517bedc6155c89c3cf7b7403190bcdd3969094e68220605fd6b2ab3c9acc3d6"
+  depends_on "ghc" => :build
+  depends_on "haskell-stack" => :build
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  resource "hledger-lib" do
+    url "https://hackage.haskell.org/package/hledger-lib-1.23/hledger-lib-1.23.tar.gz"
+    sha256 "2c54ed631a23ef05531327b93d334d5303edf9831b598b71f60bab4b5c5257a0"
   end
 
   resource "hledger-ui" do
-    url "https://hackage.haskell.org/package/hledger-ui-1.16.1/hledger-ui-1.16.1.tar.gz"
-    sha256 "c120bc9b968faccb827fcc19382e3c629f20772168a7606a3171d38332bfc132"
+    url "https://hackage.haskell.org/package/hledger-ui-1.23/hledger-ui-1.23.tar.gz"
+    sha256 "3a3bd1d91fe1145414be62c828a8510fbd6a0c26c4a0c115adb4ec4c25b89a13"
+  end
+
+  resource "hledger-web" do
+    url "https://hackage.haskell.org/package/hledger-web-1.23/hledger-web-1.23.tar.gz"
+    sha256 "9113f2c469bf9adbd086ffdafb4b63c801ed6a7b7b75d4b78b54b4416085f06a"
   end
 
   def install
-    install_cabal_package "hledger", "hledger-web", "hledger-ui", :using => ["happy", "alex"]
+    (buildpath/"../hledger-lib").install resource("hledger-lib")
+    (buildpath/"../hledger-ui").install resource("hledger-ui")
+    (buildpath/"../hledger-web").install resource("hledger-web")
+    cd ".." do
+      system "stack", "update"
+      (buildpath/"../stack.yaml").write <<~EOS
+        resolver: lts-17.5
+        compiler: ghc-#{Formula["ghc"].version}
+        compiler-check: newer-minor
+        packages:
+        - hledger-#{version}
+        - hledger-lib
+        - hledger-ui
+        - hledger-web
+      EOS
+      system "stack", "install", "--system-ghc", "--no-install-ghc", "--skip-ghc-check", "--local-bin-path=#{bin}"
+
+      man1.install Dir["hledger-*/*.1"]
+      man5.install Dir["hledger-lib/*.5"]
+      info.install Dir["hledger-*/*.info"]
+    end
   end
 
   test do
-    touch ".hledger.journal"
     system "#{bin}/hledger", "test"
-    system "#{bin}/hledger-web", "--version"
     system "#{bin}/hledger-ui", "--version"
+    system "#{bin}/hledger-web", "--test"
   end
 end

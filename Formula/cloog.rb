@@ -1,50 +1,47 @@
 class Cloog < Formula
   desc "Generate code for scanning Z-polyhedra"
-  homepage "https://www.bastoul.net/cloog/"
-  url "https://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.4.tar.gz"
+  homepage "http://www.bastoul.net/cloog/"
+  url "http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.4.tar.gz"
   sha256 "325adf3710ce2229b7eeb9e84d3b539556d093ae860027185e7af8a8b00a750e"
-  revision 3
+  revision 4
+
+  livecheck do
+    url "http://www.bastoul.net/cloog/download.php"
+    regex(/href=.*?cloog[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "4f21a763ea566aa97203b1823a659047c165df9b9d3144ed6df8e3038c054273" => :catalina
-    sha256 "f26e41c339aaf9d6207d9843f9e9a0c93d623d6cfb4e1b9d1f536afee85e25ea" => :mojave
-    sha256 "32b9d6ae3b69a1ac153d83997999add0a5836214c21d41fe18a0ef2dd44b3123" => :high_sierra
-    sha256 "f517f774f48f11a1fdcf7d0023bdeacbd919cb22085a539fba539fac80025826" => :sierra
-    sha256 "2e4ac62185b9291272f07381c19bba476eac505a40ff974aa8017b9ec4359b13" => :el_capitan
+    sha256 cellar: :any,                 arm64_monterey: "7e5820ebe53dcad85cc6cf960e5d645f2517a58d7869b573a884939ad995d51e"
+    sha256 cellar: :any,                 arm64_big_sur:  "e5ee84fdfaf5d6fd364c471d3b9093695b6e89dcb75fe46781b4d5c7ffa054b3"
+    sha256 cellar: :any,                 monterey:       "b93651ed59583b5ddaee5ab656942c03dff0423b5f5c150edb2421ce506cc4b9"
+    sha256 cellar: :any,                 big_sur:        "92e11cfb0e13ea056e037c3283cc41df3e89eb9f667868c6e2f03bdce52a9044"
+    sha256 cellar: :any,                 catalina:       "fda6ba25882ec08670819d042bbdd437266c968f18ce9a82effb944ca322664b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "fd6ad87a11d5161bc19777a133f8b22286ee2df3c4e7c7b48da7ae18b98bd9b1"
   end
 
   depends_on "pkg-config" => :build
   depends_on "gmp"
+  depends_on "isl@0.18"
 
-  resource "isl" do
-    url "http://isl.gforge.inria.fr/isl-0.18.tar.xz"
-    mirror "https://deb.debian.org/debian/pool/main/i/isl/isl_0.18.orig.tar.xz"
-    sha256 "0f35051cc030b87c673ac1f187de40e386a1482a0cfdf2c552dd6031b307ddc4"
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-pre-0.4.2.418-big_sur.diff"
+    sha256 "83af02f2aa2b746bb7225872cab29a253264be49db0ecebb12f841562d9a2923"
   end
 
   def install
-    resource("isl").stage do
-      system "./configure", "--disable-dependency-tracking",
-                            "--disable-silent-rules",
-                            "--prefix=#{libexec}",
-                            "--with-gmp=system",
-                            "--with-gmp-prefix=#{Formula["gmp"].opt_prefix}"
-      system "make", "install"
-    end
-
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
                           "--with-gmp=system",
                           "--with-gmp-prefix=#{Formula["gmp"].opt_prefix}",
                           "--with-isl=system",
-                          "--with-isl-prefix=#{libexec}"
+                          "--with-isl-prefix=#{Formula["isl@0.18"].opt_prefix}"
     system "make", "install"
   end
 
   test do
-    cloog_source = <<~EOS
+    (testpath/"test.cloog").write <<~EOS
       c
 
       0 2
@@ -60,7 +57,7 @@ class Cloog < Formula
       0
     EOS
 
-    output = pipe_output("#{bin}/cloog /dev/stdin", cloog_source)
-    assert_match %r{Generated from /dev/stdin by CLooG}, output
+    assert_match %r{Generated from #{testpath}/test.cloog by CLooG},
+                 shell_output("#{bin}/cloog #{testpath}/test.cloog")
   end
 end

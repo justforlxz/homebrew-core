@@ -1,24 +1,27 @@
 class Berglas < Formula
   desc "Tool for managing secrets on Google Cloud"
   homepage "https://github.com/GoogleCloudPlatform/berglas"
-  url "https://github.com/GoogleCloudPlatform/berglas/archive/v0.3.0.tar.gz"
-  sha256 "4b42a057cf950e001a995e5b9b9dcec51dbfde652a486e1a6bf75a942507fae8"
+  url "https://github.com/GoogleCloudPlatform/berglas/archive/v0.6.1.tar.gz"
+  sha256 "25896fa483895d4f79c30314df95c5afcbb1af2f92355ccabb5d58edb8c71ca5"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5f347e69919162e5abd4ee3f2e614527e1faa3cdcf2fe915e11b921b9c8a28b8" => :catalina
-    sha256 "8ee48f0d0a24874e5e9f7f3244875612a2f68de5e226dac7f90a1dfdff3fb425" => :mojave
-    sha256 "3ac1a5de0e26b07541ff87c24ffb62e1f04e5d5b1141d112ec8040569727c3ff" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "713a1f10c5cdf4ab9ad5a51ea28b2f63aabaf6237c902cc00664c874ae150e87"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "efff48b9ecaaddbec4acb42e734cd9d20ac69ff99cdcee9da1038f4f528f5f70"
+    sha256 cellar: :any_skip_relocation, monterey:       "f62bd04b32479c0a1b687adccf3e18329bb7a6d8eff68a1e71f2e1f7a9671d5d"
+    sha256 cellar: :any_skip_relocation, big_sur:        "3ad3b597268182525c38548ace467d29e38a3a321792b20ad6549818c2b36dc6"
+    sha256 cellar: :any_skip_relocation, catalina:       "462ce1785b8978e6d3e40529895277ffaab10e0b6a6a4b73bfd73c59f59368d8"
+    sha256 cellar: :any_skip_relocation, mojave:         "e415365e97979ea042b08f192621b660200cb184100a9fd28b58c1b2d0317113"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "7cdb430cc5aa32e9192a22b54bbc25bec925110be518cd9b87f8a70dda969ea3"
   end
 
   depends_on "go" => :build
 
   def install
-    system "go", "build", "-o", bin/"berglas"
+    system "go", "build", *std_go_args
   end
 
   test do
-    assert_match "#{version}\n", shell_output("#{bin}/berglas --version 2>&1")
     out = shell_output("#{bin}/berglas list homebrewtest 2>&1", 61)
     assert_match "could not find default credentials.", out
   end

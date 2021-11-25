@@ -3,89 +3,82 @@ class SvtplayDl < Formula
 
   desc "Download videos from https://www.svtplay.se/"
   homepage "https://svtplay-dl.se/"
-  url "https://files.pythonhosted.org/packages/0c/19/b590fd5ca34ca7cc0c2aa9e7d935d5c1330ef5a99e93136ce040667adac4/svtplay-dl-2.4.tar.gz"
-  sha256 "bfe3b61c3294e01ee17fa670a10204e8369393fbc2d9f0c917fdc73026355761"
-  revision 1
+  url "https://files.pythonhosted.org/packages/1a/bc/d74decb2cdb4277e5cbe51f24c751f45bbd387cb4f411079c8f2e23591a3/svtplay-dl-4.9.tar.gz"
+  sha256 "4e33a9e4cbca0b0504501f4de9cfc0b4066a61920515bc436269693eec2e7d28"
+  license "MIT"
 
   bottle do
-    cellar :any
-    sha256 "5054addea38e1d56e24af0a912b4612baf5ecd0fe6645d204d1e21396ad82698" => :catalina
-    sha256 "fe2d34b03008d6ddaee1dfe44addde500c339f22a236bc70b2e2f15b0b882f61" => :mojave
-    sha256 "77486e2f0cca24896a9371d278dd14802d4c89cd8b7fb75d7b1e152f70de3e07" => :high_sierra
-    sha256 "2c2897916c91781221e2954f1a896198f972137930d1c15cdf8a36d1df952725" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "60c3c11b9f6151cb5baff614a0cbbf9589da44b8329eb123c9e88a094f83fe5e"
+    sha256 cellar: :any,                 arm64_big_sur:  "241db303b7829668a3c40091b3df0dc1c6832467496ff103a13e10a3a913d817"
+    sha256 cellar: :any,                 monterey:       "b68527b13896dd6ddee8809a47917d4c06655036e1836ff1a6b589b208a0d4ee"
+    sha256 cellar: :any,                 big_sur:        "2a4938fd4cffbc63613446190ab161d3cbafbbc18b384798af2ef9251e11c1c1"
+    sha256 cellar: :any,                 catalina:       "2302f7657538de3bf58ba28aa7f2deef4f602b80ee2e4d8af44307655b01ce72"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "4a3c57e5a40dd667d449953899624e5a6208fc5d715c3b5769bf950a92dec25d"
   end
 
+  depends_on "rust" => :build
   depends_on "openssl@1.1"
-  depends_on "python"
+  depends_on "python@3.10"
 
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+  resource "certifi" do
+    url "https://files.pythonhosted.org/packages/6c/ae/d26450834f0acc9e3d1f74508da6df1551ceab6c2ce0766a593362d6d57f/certifi-2021.10.8.tar.gz"
+    sha256 "78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872"
   end
 
   resource "cffi" do
-    url "https://files.pythonhosted.org/packages/93/1a/ab8c62b5838722f29f3daffcc8d4bd61844aa9b5f437341cc890ceee483b/cffi-1.12.3.tar.gz"
-    sha256 "041c81822e9f84b1d9c401182e174996f0bae9991f33725d059b771744290774"
+    url "https://files.pythonhosted.org/packages/00/9e/92de7e1217ccc3d5f352ba21e52398372525765b2e0c4530e6eb2ba9282a/cffi-1.15.0.tar.gz"
+    sha256 "920f0d66a896c2d99f0adbb391f990a84091179542c205fa53ce5787aff87954"
   end
 
-  resource "asn1crypto" do
-    url "https://files.pythonhosted.org/packages/fc/f1/8db7daa71f414ddabfa056c4ef792e1461ff655c2ae2928a2b675bfed6b4/asn1crypto-0.24.0.tar.gz"
-    sha256 "9d5c20441baf0cb60a4ac34cc447c6c189024b6b4c6cd7877034f4965c464e49"
+  resource "charset-normalizer" do
+    url "https://files.pythonhosted.org/packages/9f/c5/334c019f92c26e59637bb42bd14a190428874b2b2de75a355da394cf16c1/charset-normalizer-2.0.7.tar.gz"
+    sha256 "e019de665e2bcf9c2b64e2e5aa025fa991da8720daa3c1138cadd2fd1856aed0"
   end
 
   resource "cryptography" do
-    url "https://files.pythonhosted.org/packages/c2/95/f43d02315f4ec074219c6e3124a87eba1d2d12196c2767fadfdc07a83884/cryptography-2.7.tar.gz"
-    sha256 "e6347742ac8f35ded4a46ff835c60e68c22a536a8ae5c4422966d06946b6d4c6"
-  end
-
-  resource "certifi" do
-    url "https://files.pythonhosted.org/packages/c5/67/5d0548226bcc34468e23a0333978f0e23d28d0b3f0c71a151aef9c3f7680/certifi-2019.6.16.tar.gz"
-    sha256 "945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695"
-  end
-
-  resource "chardet" do
-    url "https://files.pythonhosted.org/packages/fc/bb/a5768c230f9ddb03acc9ef3f0d4a3cf93462473795d18e9535498c8f929d/chardet-3.0.4.tar.gz"
-    sha256 "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"
+    url "https://files.pythonhosted.org/packages/10/91/90b8d4cd611ac2aa526290ae4b4285aa5ea57ee191c63c2f3d04170d7683/cryptography-35.0.0.tar.gz"
+    sha256 "9933f28f70d0517686bd7de36166dda42094eac49415459d9bdf5e7df3e0086d"
   end
 
   resource "idna" do
-    url "https://files.pythonhosted.org/packages/ad/13/eb56951b6f7950cadb579ca166e448ba77f9d24efc03edd7e55fa57d04b7/idna-2.8.tar.gz"
-    sha256 "c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407"
+    url "https://files.pythonhosted.org/packages/62/08/e3fc7c8161090f742f504f40b1bccbfc544d4a4e09eb774bf40aafce5436/idna-3.3.tar.gz"
+    sha256 "9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"
+  end
+
+  resource "pycparser" do
+    url "https://files.pythonhosted.org/packages/0f/86/e19659527668d70be91d0369aeaa055b4eb396b0f387a4f92293a20035bd/pycparser-2.20.tar.gz"
+    sha256 "2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"
   end
 
   resource "PySocks" do
-    url "https://files.pythonhosted.org/packages/15/ab/35824cfdee1aac662e3298275fa1e6cbedb52126d1785f8977959b769ccf/PySocks-1.7.0.tar.gz"
-    sha256 "d9031ea45fdfacbe59a99273e9f0448ddb33c1580fe3831c1b09557c5718977c"
+    url "https://files.pythonhosted.org/packages/bd/11/293dd436aea955d45fc4e8a35b6ae7270f5b8e00b53cf6c024c83b657a11/PySocks-1.7.1.tar.gz"
+    sha256 "3f8804571ebe159c380ac6de37643bb4685970655d3bba243530d6558b799aa0"
+  end
+
+  resource "PyYAML" do
+    url "https://files.pythonhosted.org/packages/36/2b/61d51a2c4f25ef062ae3f74576b01638bebad5e045f747ff12643df63844/PyYAML-6.0.tar.gz"
+    sha256 "68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2"
   end
 
   resource "requests" do
-    url "https://files.pythonhosted.org/packages/01/62/ddcf76d1d19885e8579acb1b1df26a852b03472c0e46d2b959a714c90608/requests-2.22.0.tar.gz"
-    sha256 "11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4"
+    url "https://files.pythonhosted.org/packages/e7/01/3569e0b535fb2e4a6c384bdbed00c55b9d78b5084e0fb7f4d0bf523d7670/requests-2.26.0.tar.gz"
+    sha256 "b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/4c/13/2386233f7ee40aa8444b47f7463338f3cbdf00c316627558784e3f542f07/urllib3-1.25.3.tar.gz"
-    sha256 "dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"
-  end
-
-  resource "pyyaml" do
-    url "https://files.pythonhosted.org/packages/e3/e8/b3212641ee2718d556df0f23f78de8303f068fe29cdaa7a91018849582fe/PyYAML-5.1.2.tar.gz"
-    sha256 "01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4"
-  end
-
-  resource "python-dateutil" do
-    url "https://files.pythonhosted.org/packages/ad/99/5b2e99737edeb28c71bcbec5b5dda19d0d9ef3ca3e92e3e925e7c0bb364c/python-dateutil-2.8.0.tar.gz"
-    sha256 "c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e"
+    url "https://files.pythonhosted.org/packages/80/be/3ee43b6c5757cabea19e75b8f46eaf05a2f5144107d7db48c7cf3a864f73/urllib3-1.26.7.tar.gz"
+    sha256 "4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece"
   end
 
   def install
     virtualenv_install_with_resources
   end
 
-  def caveats; <<~EOS
-    To use post-processing options:
-      `brew install ffmpeg` or `brew install libav`.
-  EOS
+  def caveats
+    <<~EOS
+      To use post-processing options:
+        `brew install ffmpeg` or `brew install libav`.
+    EOS
   end
 
   test do

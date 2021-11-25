@@ -1,33 +1,49 @@
 class Dnsdist < Formula
   desc "Highly DNS-, DoS- and abuse-aware loadbalancer"
   homepage "https://www.dnsdist.org/"
-  url "https://downloads.powerdns.com/releases/dnsdist-1.3.2.tar.bz2"
-  sha256 "0be7704e5a418a8ed6908fc110ecfb9bc23f270b5af8a5525f1fa934ef0e6bc4"
+  url "https://downloads.powerdns.com/releases/dnsdist-1.6.1.tar.bz2"
+  sha256 "29040a43982ae1ad5b7313f081e26519ab3a58af6bced438311da3a65370a3a5"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://downloads.powerdns.com/releases/"
+    regex(/href=.*?dnsdist[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "62320372f4328e35695e03165f4565a2a229ecbc6b9d4a9a8943fbe68a010ff9" => :high_sierra
-    sha256 "8665f0e58905c19d1270b14914b9373ba286abbc4891307f91c67e7ab1327e53" => :sierra
-    sha256 "02106300b645be33f32a0bd38dadabce717a5bea74a75dcd353854d3b629580c" => :el_capitan
+    sha256 arm64_monterey: "7d06f0eba9c36eec1d240c27d38dd00041d75142ea0e41c310036bbcc11f0296"
+    sha256 arm64_big_sur:  "869de3f18ef4fd38bf91b7c1c41d38c67e5f83bf58fd891f3360549c3b6523d3"
+    sha256 monterey:       "d5d75f9ecba7ded160def73c4d5af60a864a0b717a24126aa04d28c6bbcbbe7d"
+    sha256 big_sur:        "977b8f7e4fc0869f95b4cbee33446117eff314802034a2320523d8aefbbaf51e"
+    sha256 catalina:       "6701dd21d4fee82fa13705db5f4280bb63d5c7087fee38bdcb05b338fdf6556e"
+    sha256 mojave:         "13d58a2f2ff183ae418825f54c454bf960bd9dddc6d357ce5c08025f7d1c23be"
   end
 
   depends_on "boost" => :build
   depends_on "pkg-config" => :build
-  depends_on "lua"
+  depends_on "cdb"
+  depends_on "fstrm"
+  depends_on "h2o"
+  depends_on "libsodium"
+  depends_on "luajit-openresty"
+  depends_on "openssl@1.1"
+  depends_on "protobuf"
+  depends_on "re2"
+
+  uses_from_macos "libedit"
 
   def install
     # error: unknown type name 'mach_port_t'
     ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
 
-    if MacOS.version == :high_sierra
-      sdk = MacOS::CLT.installed? ? "" : MacOS.sdk_path
-      ENV["LIBEDIT_CFLAGS"] = "-I#{sdk}/usr/include -I#{sdk}/usr/include/editline"
-      ENV["LIBEDIT_LIBS"] = "-L/usr/lib -ledit -lcurses"
-    end
-
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
                           "--without-net-snmp",
+                          "--enable-dns-over-tls",
+                          "--enable-dns-over-https",
+                          "--enable-dnscrypt",
+                          "--with-re2",
                           "--sysconfdir=#{etc}/dnsdist"
     system "make", "install"
   end

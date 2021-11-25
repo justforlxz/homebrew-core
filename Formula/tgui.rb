@@ -1,15 +1,17 @@
 class Tgui < Formula
   desc "GUI library for use with sfml"
   homepage "https://tgui.eu"
-  url "https://github.com/texus/TGUI/archive/v0.8.5.tar.gz"
-  sha256 "10d3cc3747acc6c5d7e4fd7de2e56fb63c4af6741f51dae825bf69267a3c8479"
+  url "https://github.com/texus/TGUI/archive/v0.9.2.tar.gz"
+  sha256 "9f1835d9be1924694b6399fa1e7fe079e8abebb77ad602b8b2fea2572dfbe12b"
+  license "Zlib"
 
   bottle do
-    cellar :any
-    sha256 "2915a3f1a9ea5911aa740862361c4b5947c62e673dfd38ae6916821bdb39b63c" => :catalina
-    sha256 "bb4cb1abbe054e3a6111a1b6c6f94542dda6de5ed2a090b5089f1b7248d04aad" => :mojave
-    sha256 "811a11b144eaf8cd53701b61529cfe3429f5d2b25846ff861318375c180f10af" => :high_sierra
-    sha256 "28ccab66f83240703d4778a408576be56b1a212c520419b35bc9330c70ea5cee" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "a2dc6b2beeb76f9a4113c4c30e2c4bc7d1dfe3b98be347b8a53c29c230fc4aef"
+    sha256 cellar: :any,                 arm64_big_sur:  "e65da29f16e52a57c59fda7ccb42406476a7d18e9307d50f900aa97b583b5cd6"
+    sha256 cellar: :any,                 monterey:       "dfacffada3a7a402771586f74122028d6cf61046d80f235606e26d4b1114f97f"
+    sha256 cellar: :any,                 big_sur:        "0ae12484aca4b34565c55412f7eb601b172bacc21d5cbbedc78f62125b11ce11"
+    sha256 cellar: :any,                 catalina:       "2c8c3c3fa053c604ac358b46723b4b70dfd6fdfa58788f8b1e262de62c869411"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "0024c287753382190541a4184da147a56990ce911eb82e91e7a7f84c15ce8de5"
   end
 
   depends_on "cmake" => :build
@@ -17,7 +19,11 @@ class Tgui < Formula
 
   def install
     system "cmake", ".", *std_cmake_args,
-                    "-DTGUI_MISC_INSTALL_PREFIX=#{pkgshare}"
+                    "-DTGUI_MISC_INSTALL_PREFIX=#{pkgshare}",
+                    "-DTGUI_BUILD_FRAMEWORK=FALSE",
+                    "-DTGUI_BUILD_EXAMPLES=TRUE",
+                    "-DTGUI_BUILD_GUI_BUILDER=TRUE",
+                    "-DTGUI_BUILD_TESTS=FALSE"
     system "make", "install"
   end
 

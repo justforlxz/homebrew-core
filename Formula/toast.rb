@@ -1,21 +1,24 @@
 class Toast < Formula
   desc "Tool for running tasks in containers"
   homepage "https://github.com/stepchowfun/toast"
-  url "https://github.com/stepchowfun/toast/archive/v0.29.0.tar.gz"
-  sha256 "ca119d05c236900d8e99edc6ede52d77e8371b1ea5d85b597417a71cb567da3c"
+  url "https://github.com/stepchowfun/toast/archive/v0.45.2.tar.gz"
+  sha256 "9d1a4c785f62f68effa362c39eab1e0802fd40402416e8938ea7a7d4088945d0"
+  license "MIT"
+  head "https://github.com/stepchowfun/toast.git", branch: "main"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "27a91ad050b02fd4f8884e3a0c85691dafceaebf0783f5de62dc9e27c3e7e586" => :catalina
-    sha256 "650470211d7e7bebfc167b56d659929f7856fa94c39b960c2e6e4fb2a150c9be" => :mojave
-    sha256 "510be61a455f3098dab425d2fd3d6afdb8fb9d6c70f50d74749d34692e9c95e9" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "97161beba2abc503bc51f59c411ed9f86bd84edca8cdc04d40e514cf58249dca"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "245c20fd184e13be021424cc410ff4e7e406811aced31708bd96043648a8b20e"
+    sha256 cellar: :any_skip_relocation, monterey:       "1a14c3fc0f142010dda00b10e87cb540195101cf7a87645787fafd41998852e2"
+    sha256 cellar: :any_skip_relocation, big_sur:        "079c6bf9e5dca0b1c8e472f36852946c083f0a37a0bcb3694d83c0eed562c410"
+    sha256 cellar: :any_skip_relocation, catalina:       "300b34eb3f9a1aa01dc7264301a35a061575016b80b1d103b768e21eb86406fa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "c588647d27171b86a3515943a9bd473f841057262d748f840c8b3c2f45889212"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
@@ -23,6 +26,7 @@ class Toast < Formula
       image: alpine
       tasks:
         homebrew_test:
+          description: brewtest
           command: echo hello
     EOS
 

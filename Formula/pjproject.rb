@@ -1,30 +1,39 @@
 class Pjproject < Formula
   desc "C library for multimedia protocols such as SIP, SDP, RTP and more"
   homepage "https://www.pjsip.org/"
-  url "https://www.pjsip.org/release/2.9/pjproject-2.9.tar.bz2"
-  sha256 "d185ef7855c8ec07191dde92f54b65a7a4b7a6f7bf8c46f7af35ceeb1da2a636"
-  revision 1
-  head "https://svn.pjsip.org/repos/pjproject/trunk"
+  url "https://github.com/pjsip/pjproject/archive/2.11.1.tar.gz"
+  sha256 "45f6604372df3f49293749cd7c0b42cb21c4fb666c66f8ed9765de004d1eae38"
+  license "GPL-2.0-or-later"
+  head "https://github.com/pjsip/pjproject.git", branch: "master"
 
-  bottle do
-    cellar :any
-    sha256 "784718544f0553b52ffa60aa895d405a95401112164c72962242f4b801b168c4" => :catalina
-    sha256 "ea18f1105154234f2c89b17d5973fd96c4821910a3e902a70d79ba219b655a4b" => :mojave
-    sha256 "05291521fbceb75e3abf7a0c185cce9c491a00afde019a52ccbbc4b91a38710c" => :high_sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on :macos => :high_sierra # Uses Security framework API enum cases introduced in 10.13.4
+  bottle do
+    sha256 cellar: :any,                 monterey:     "dd65ff7722e647f5441aad3eba86a3493274f4850169b3332b7c2527ba38031d"
+    sha256 cellar: :any,                 big_sur:      "31319f83ddc57bc93650d5fc1890869b823ebc04f8584a9c280e23ab8d8e2caf"
+    sha256 cellar: :any,                 catalina:     "90b5e44910157070b4e1d9b494076c30cf16d9b1ef9790cfa080331348dfea89"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "51fbe4542de05e29af4379cc48b8702560032197b829033806c85a0c70e04928"
+  end
+
+  depends_on macos: :high_sierra # Uses Security framework API enum cases introduced in 10.13.4
   depends_on "openssl@1.1"
 
   def install
     system "./configure", "--prefix=#{prefix}"
+    ENV.deparallelize
     system "make", "dep"
     system "make"
     system "make", "install"
 
-    arch = Utils.popen_read("uname -m").chomp
-    rel = Utils.popen_read("uname -r").chomp
-    bin.install "pjsip-apps/bin/pjsua-#{arch}-apple-darwin#{rel}" => "pjsua"
+    arch = Utils.safe_popen_read("uname", "-m").chomp
+    if OS.mac?
+      bin.install "pjsip-apps/bin/pjsua-#{arch}-apple-darwin#{OS.kernel_version}" => "pjsua"
+    else
+      bin.install "pjsip-apps/bin/pjsua-#{arch}-unknown-linux-gnu" => "pjsua"
+    end
   end
 
   test do

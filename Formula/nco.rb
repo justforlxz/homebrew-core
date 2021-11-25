@@ -1,16 +1,15 @@
 class Nco < Formula
   desc "Command-line operators for netCDF and HDF files"
   homepage "https://nco.sourceforge.io/"
-  url "https://github.com/nco/nco/archive/4.8.1.tar.gz"
-  sha256 "ddae3fed46c266798ed1176d6a70b36376d2d320fa933c716a623172d1e13c68"
-  revision 2
+  url "https://github.com/nco/nco/archive/5.0.3.tar.gz"
+  sha256 "61b45cdfbb772718f00d40da1a4ce268201fd00a61ebb9515460b8dda8557bdb"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "14a92c2373cbdf2098264f099348223de2f5a507cd15a75889a8e62b8b82aa3a" => :catalina
-    sha256 "80a05916a67070e48074f1f49369d42dacb101dd50940d8f63e2ea16c88e0b8f" => :mojave
-    sha256 "cf39e1dc7236401cefc04ba2c59c8cbba2ab7b45f5ae0edb0f9a43c8ab1f3e17" => :high_sierra
-    sha256 "8840def4067075738ad92779f1b12069bb211bc3f156ab0f774528d6432535fa" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "e43069a0e3e4eace7956060d43cc913f736aaf0fa38fc28d80d640525ed3c23f"
+    sha256 cellar: :any, big_sur:       "8694bfb9e3ff0b6f9d5aa7936fbc03607e337e446013cbb5bdbfa3ab6affccfa"
+    sha256 cellar: :any, catalina:      "a44a5e35d6b8ca5a8cd4550cf81975f3f26d80df443d968b6d4a4ef019497456"
+    sha256 cellar: :any, mojave:        "3223dfa302dfe10af6db64d743285ae85aa212de7fb3e231c08ccf94bd4e711c"
   end
 
   head do
@@ -32,7 +31,6 @@ class Nco < Formula
 
   def install
     system "./autogen.sh" if build.head?
-
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--enable-netcdf4"

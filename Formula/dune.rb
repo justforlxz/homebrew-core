@@ -1,25 +1,28 @@
 class Dune < Formula
   desc "Composable build system for OCaml"
   homepage "https://dune.build/"
-  url "https://github.com/ocaml/dune/releases/download/2.0.0/dune-2.0.0.tbz"
-  sha256 "9f993b8263775a2236fd4308e2fe2413d3ee925a52858e4d9e18e7f170c4b3f6"
+  url "https://github.com/ocaml/dune/releases/download/2.9.1/dune-2.9.1.tbz"
+  sha256 "b374feb22b34099ccc6dd32128e18d088ff9a81837952b29f05110b308c09f26"
+  license "MIT"
   head "https://github.com/ocaml/dune.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d04ec439b7840934c4012fb2b6b77a314aa351ea6c01aab3b82a9cc64923c4e4" => :catalina
-    sha256 "fd485e948769c2e6359765a41c603d9c2e154f3fc1e2ca6f01c65969a35d6a60" => :mojave
-    sha256 "2ca309ec2e3a608f1c901a82274017fe96827b119fa97c5976e9ffde75f01017" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "3f3fc019e810f9a91b423e700f49983fd6d2f22b32b8c68d99a1cd7a2eee29eb"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "a272b312a8a6292184312151256f94eedd92f31919a0cae103230dc37c9051b3"
+    sha256 cellar: :any_skip_relocation, monterey:       "fa7e738c266953ec9cae9265c4b22e6846d2dbccf11dba60b0ecc8d728fa847a"
+    sha256 cellar: :any_skip_relocation, big_sur:        "5014448d4ccc8257e3b7edc05ae3d7ee4b7e3b552ea648090e5d2e1d6b11eadc"
+    sha256 cellar: :any_skip_relocation, catalina:       "e44461f150faf4ab772c7ecd2ac57bb6d42f48771a7a67b72da1a327ce38119d"
+    sha256 cellar: :any_skip_relocation, mojave:         "083e184745d8eac51f5035c3528a045e359cab971bc58ab662615128182acf4c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "7c976d3c7fe424a46b16b3aa0e68f1526ba8acc098ce453b7c958720d1d36a5b"
   end
 
   depends_on "ocaml" => [:build, :test]
 
   def install
-    system "ocaml", "configure.ml"
-    system "ocaml", "bootstrap.ml"
-    system "./dune.exe", "build", "-p", "dune", "--profile", "dune-bootstrap"
-    bin.install "_build/default/bin/dune.exe"
-    mv bin/"dune.exe", bin/"dune"
+    system "make", "release"
+    system "make", "PREFIX=#{prefix}", "install"
+    share.install prefix/"man"
+    elisp.install Dir[share/"emacs/site-lisp/*"]
   end
 
   test do

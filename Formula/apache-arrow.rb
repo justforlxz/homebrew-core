@@ -1,52 +1,76 @@
 class ApacheArrow < Formula
   desc "Columnar in-memory analytics layer designed to accelerate big data"
   homepage "https://arrow.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=arrow/arrow-0.15.1/apache-arrow-0.15.1.tar.gz"
-  sha256 "9a2c58c72310eafebb4997244cbeeb8c26696320d0ae3eb3e8512f75ef856fc9"
-  revision 3
-  head "https://github.com/apache/arrow.git"
+  url "https://www.apache.org/dyn/closer.lua?path=arrow/arrow-6.0.1/apache-arrow-6.0.1.tar.gz"
+  mirror "https://archive.apache.org/dist/arrow/arrow-6.0.1/apache-arrow-6.0.1.tar.gz"
+  sha256 "3786b3d2df954d078b3e68f98d2e5aecbaa3fa2accf075d7a3a13c187b9c5294"
+  license "Apache-2.0"
+  head "https://github.com/apache/arrow.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "51c5df916c795016199c9ccb96970cc6f7f2c5a2382aff716f106fd22e9ffe1a" => :catalina
-    sha256 "378e4e77e56c549db1676ed865b02ac18b2e03f68d2205b46af4b6ff243b2d48" => :mojave
-    sha256 "dc8780d6c8ad035d830c70917e4be9830aa01fc88b4a4a90cb07136bbaac56d2" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "aad3d3c707c3d6a485858adcadeee20b3a50c02318eafc8f1502787591c79ffb"
+    sha256 cellar: :any,                 monterey:      "b9256d2edba97e82b4ee7cd0dcd01b83703b6c5c34d9d8c39213898cabd0336b"
+    sha256 cellar: :any,                 big_sur:       "0d1454331b9d353d51224d37723a4765b0b2b2a0811aea7e7927d8cbf65dc07f"
+    sha256 cellar: :any,                 catalina:      "446994590544e4cbd08a58881e3dc9bc512a90d0432b79bb4489011935e4c1fa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bfa2358904ca72612b43b111ae10d666d7e0c6316d90062efbb0feb87cadefef"
   end
 
-  depends_on "autoconf" => :build
+  depends_on "boost" => :build
   depends_on "cmake" => :build
-  depends_on "boost"
+  depends_on "llvm" => :build
+  depends_on "aws-sdk-cpp"
   depends_on "brotli"
-  depends_on "double-conversion"
-  depends_on "flatbuffers"
   depends_on "glog"
   depends_on "grpc"
   depends_on "lz4"
   depends_on "numpy"
   depends_on "openssl@1.1"
   depends_on "protobuf"
-  depends_on "python"
+  depends_on "python@3.9"
   depends_on "rapidjson"
+  depends_on "re2"
   depends_on "snappy"
   depends_on "thrift"
+  depends_on "utf8proc"
   depends_on "zstd"
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+
   def install
-    ENV.cxx11
+    # https://github.com/Homebrew/homebrew-core/issues/76537
+    ENV.runtime_cpu_detection if Hardware::CPU.intel?
+
+    # link against system libc++ instead of llvm provided libc++
+    ENV.remove "HOMEBREW_LIBRARY_PATHS", Formula["llvm"].opt_lib
     args = %W[
+      -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=TRUE
       -DARROW_FLIGHT=ON
+      -DARROW_GANDIVA=ON
+      -DARROW_JEMALLOC=ON
       -DARROW_ORC=ON
       -DARROW_PARQUET=ON
       -DARROW_PLASMA=ON
       -DARROW_PROTOBUF_USE_SHARED=ON
       -DARROW_PYTHON=ON
-      -DARROW_JEMALLOC=OFF
+      -DARROW_S3=ON
+      -DARROW_WITH_BZ2=ON
+      -DARROW_WITH_ZLIB=ON
+      -DARROW_WITH_ZSTD=ON
+      -DARROW_WITH_LZ4=ON
+      -DARROW_WITH_SNAPPY=ON
+      -DARROW_WITH_BROTLI=ON
+      -DARROW_WITH_UTF8PROC=ON
       -DARROW_INSTALL_NAME_RPATH=OFF
-      -DPYTHON_EXECUTABLE=#{Formula["python"].bin/"python3"}
+      -DPython3_EXECUTABLE=#{Formula["python@3.9"].bin/"python3"}
     ]
 
-    mkdir "build"
-    cd "build" do
+    args << "-DARROW_MIMALLOC=ON" unless Hardware::CPU.arm?
+
+    mkdir "build" do
       system "cmake", "../cpp", *std_cmake_args, *args
       system "make"
       system "make", "install"

@@ -1,25 +1,33 @@
 class Proj < Formula
   desc "Cartographic Projections Library"
-  homepage "https://proj4.org/"
-  url "https://download.osgeo.org/proj/proj-6.2.1.tar.gz"
-  sha256 "7f2e0fe63312f1e766057cceb53dc9585c4a335ff6641de45696dbd40d17c340"
+  homepage "https://proj.org/"
+  url "https://github.com/OSGeo/PROJ/releases/download/8.2.0/proj-8.2.0.tar.gz"
+  sha256 "de93df9a4aa88d09459ead791f2dbc874b897bf67a5bbb3e4b68de7b1bdef13c"
+  license "MIT"
 
   bottle do
-    sha256 "afa15540ec072f6c577ad42fcf0cef6b0ea3d5fb25fe786c490cdbf1fcae918b" => :catalina
-    sha256 "47d58e22d2e01d1bbacd8abef95ccbe61935612c9a6b369c9065bd6a34cea26a" => :mojave
-    sha256 "f530ebfac70dc88a5fa1cab8094bf80000fc2e8229d87b60aeb4f424ad26f544" => :high_sierra
+    sha256 arm64_monterey: "49b63a1a1b2af8b28663788278b9ccfd4c5b85333f6fbcda4435114cc81b75f0"
+    sha256 arm64_big_sur:  "58ecbb4a293eefeddec447b1905b1b6afc0e75287032310390a14fb62b7f9e8f"
+    sha256 monterey:       "c5d228523ab9c1a755e8b50f75d97f44c1ea6b91d95de2bfe91d94ec26130e86"
+    sha256 big_sur:        "4545e76654386d639320ba48ec998ce531911c60a32a8a59d5c0d3709cc1b61e"
+    sha256 catalina:       "3285536e477a5a07a1f553947e47cfd535e6f425a01c1940006e98eacd8d186c"
+    sha256 x86_64_linux:   "a6edf32a6649083586286a4dd07ca9363d744035b8f233d86147cfd97517f2bd"
   end
 
   head do
-    url "https://github.com/OSGeo/proj.4.git"
+    url "https://github.com/OSGeo/proj.git"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
   depends_on "pkg-config" => :build
+  depends_on "libtiff"
 
-  conflicts_with "blast", :because => "both install a `libproj.a` library"
+  uses_from_macos "curl"
+  uses_from_macos "sqlite"
+
+  conflicts_with "blast", because: "both install a `libproj.a` library"
 
   skip_clean :la
 
@@ -31,7 +39,6 @@ class Proj < Formula
 
   def install
     (buildpath/"nad").install resource("datumgrid")
-
     system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"

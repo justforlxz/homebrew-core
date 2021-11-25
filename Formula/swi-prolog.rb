@@ -1,16 +1,23 @@
 class SwiProlog < Formula
   desc "ISO/Edinburgh-style Prolog interpreter"
   homepage "https://www.swi-prolog.org/"
-  url "https://www.swi-prolog.org/download/stable/src/swipl-8.0.3.tar.gz"
-  sha256 "cee59c0a477c8166d722703f6e52f962028f3ac43a5f41240ecb45dbdbe2d6ae"
-  revision 1
-  head "https://github.com/SWI-Prolog/swipl-devel.git"
+  url "https://www.swi-prolog.org/download/stable/src/swipl-8.4.1.tar.gz"
+  sha256 "30bb6542b7767e47b94bd92e8e8a7d7a8a000061044046edf45fc864841b69c4"
+  license "BSD-2-Clause"
+  head "https://github.com/SWI-Prolog/swipl-devel.git", branch: "master"
+
+  livecheck do
+    url "https://www.swi-prolog.org/download/stable/src/"
+    regex(/href=.*?swipl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "7c4d1bfaa974db039bdd7ec219d22206b63833b4c2a2d078db52c8f6742031ce" => :catalina
-    sha256 "587beb4ccaa5e7fb85d1c4465487fb315e4ef168a30ad674c614d8c0ba84ca6b" => :mojave
-    sha256 "fff29cb6a95e692fb68bda037ccef83164a91e550e784d643446f777a9cb8ccc" => :high_sierra
-    sha256 "3cbd050f46aef41c733b56ab49dc081c6bd39ad67c79d3a24381a01291c8a1ad" => :sierra
+    sha256 arm64_monterey: "4af9b87b533dbb62f3d3c258545c46bb63ee70ce6179664ec262326b71dbe6d8"
+    sha256 arm64_big_sur:  "c5a8c3feaa65511402f394196b865252e2f2a83183a3580efdb90c84697bde35"
+    sha256 monterey:       "263745a44d64ec8b046f17d2b1f4b3fcd3c0ff736e2810a571f0725c94c09ea3"
+    sha256 big_sur:        "7dc70f763a0996705c79131a7b0b2702fc420d80149374046b559a8ab22001ab"
+    sha256 catalina:       "90ccd979ddc504d65ffb98bca1662074b43f01073c68fc66b7978e5e0a0c591f"
+    sha256 x86_64_linux:   "d235fcf99631b69ba0c910c08152c884a1d72643f1d7aa34244d47e4dd32aefc"
   end
 
   depends_on "cmake" => :build
@@ -26,13 +33,19 @@ class SwiProlog < Formula
   depends_on "unixodbc"
 
   def install
+    # Remove shim paths from binary files `swipl-ld` and `libswipl.so.*`
+    if OS.linux?
+      inreplace "cmake/Params.cmake" do |s|
+        s.gsub! "${CMAKE_C_COMPILER}", "\"gcc\""
+        s.gsub! "${CMAKE_CXX_COMPILER}", "\"g++\""
+      end
+    end
+
     mkdir "build" do
       system "cmake", "..", *std_cmake_args,
                       "-DSWIPL_PACKAGES_JAVA=OFF",
                       "-DSWIPL_PACKAGES_X=OFF",
-                      "-DCMAKE_INSTALL_PREFIX=#{libexec}",
-                      "-DCMAKE_C_COMPILER=/usr/bin/clang",
-                      "-DCMAKE_CXX_COMPILER=/usr/bin/clang++"
+                      "-DCMAKE_INSTALL_PREFIX=#{libexec}"
       system "make", "install"
     end
 

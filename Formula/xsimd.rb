@@ -1,14 +1,12 @@
 class Xsimd < Formula
   desc "Modern, portable C++ wrappers for SIMD intrinsics"
   homepage "https://xsimd.readthedocs.io/en/latest/"
-  url "https://github.com/QuantStack/xsimd/archive/7.4.1.tar.gz"
-  sha256 "787b6c8b202d2d34d78335549bfc09f2268218e5923c2d463ab8ad6d691e5d63"
+  url "https://github.com/QuantStack/xsimd/archive/8.0.3.tar.gz"
+  sha256 "d1d41253c4f82eaf2f369d7fcb4142e35076cf8675b9d94caa06ecf883024344"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9648408a25af8d9781923ece9c2457f2c52cb0a011493dcb2d0200a6a6ad66ff" => :catalina
-    sha256 "9648408a25af8d9781923ece9c2457f2c52cb0a011493dcb2d0200a6a6ad66ff" => :mojave
-    sha256 "9648408a25af8d9781923ece9c2457f2c52cb0a011493dcb2d0200a6a6ad66ff" => :high_sierra
+    sha256 cellar: :any_skip_relocation, all: "b95adf40dec67840d8573859afc41ab39a6e9962e7fec53790ff9ef01b44a3a2"
   end
 
   depends_on "cmake" => :build
@@ -34,7 +32,7 @@ class Xsimd < Formula
 
       int main(void) {
         using u_vector_type = std::vector<double>;
-        using a_vector_type = std::vector<double, aligned_allocator<double, XSIMD_DEFAULT_ALIGNMENT>>;
+        using a_vector_type = std::vector<double, xsimd::default_allocator<double>>;
 
         using u_vector_align = container_alignment_t<u_vector_type>;
         using a_vector_align = container_alignment_t<a_vector_type>;

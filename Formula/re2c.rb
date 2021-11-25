@@ -1,14 +1,18 @@
 class Re2c < Formula
   desc "Generate C-based recognizers from regular expressions"
   homepage "https://re2c.org"
-  url "https://github.com/skvadrik/re2c/releases/download/1.2.1/re2c-1.2.1.tar.xz"
-  sha256 "1a4cd706b5b966aeffd78e3cf8b24239470ded30551e813610f9cd1a4e01b817"
+  url "https://github.com/skvadrik/re2c/releases/download/2.2/re2c-2.2.tar.xz"
+  sha256 "0fc45e4130a8a555d68e230d1795de0216dfe99096b61b28e67c86dfd7d86bda"
+  license :public_domain
 
   bottle do
-    sha256 "628da2992f2fdc6ac4ab38b6fdbcef1a52b4e8ccca3ee31735e97b05000baf52" => :catalina
-    sha256 "2d9f14907212e68580afa38eae450c8c0a9157169a1fd00e6faf27f872134433" => :mojave
-    sha256 "3a39e5869772c6774b53c22e59d5e4fd195349962aedcf65731cd6eb0cb54e9d" => :high_sierra
-    sha256 "20d4035575168abd66a65bfda9e93efa4d2aae6ef6597f1bd66ffa3028151dff" => :sierra
+    sha256 arm64_monterey: "4a95c3cdce967731404c853fe7c56f2e37c9602710af795987780acf5e30c383"
+    sha256 arm64_big_sur:  "9f32566ee362b6ebf98674a7bc9d642c03a120c105b32b28efd16ec1fdfe1dbc"
+    sha256 monterey:       "5ae23f0895217f59237686bdbfc4c2e4c40d4d0ac1e6e45f5032e874c9f9f3ba"
+    sha256 big_sur:        "622c04bf38ad6f7ff7f9ca272cf9dcbde186f0b16e3e51eed1ffc108db56adb7"
+    sha256 catalina:       "8dd19c7d8532026141d42d6893faf18e86b97053fd113f9f30a1271662108e25"
+    sha256 mojave:         "7092db76fdd568e0c162ffe2066e8318ec4102aab85b361098908ca49f535a0e"
+    sha256 x86_64_linux:   "f8ae38af6e0ef9a4131174fc66750498c1a3cca66e896ef2392632ef16a0e9a4"
   end
 
   def install

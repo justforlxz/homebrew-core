@@ -1,58 +1,84 @@
 class R < Formula
   desc "Software environment for statistical computing"
   homepage "https://www.r-project.org/"
-  url "https://cran.r-project.org/src/base/R-3/R-3.6.1.tar.gz"
-  sha256 "5baa9ebd3e71acecdcc3da31d9042fb174d55a42829f8315f2457080978b1389"
-  revision 1
+  url "https://cran.r-project.org/src/base/R-4/R-4.1.2.tar.gz"
+  sha256 "2036225e9f7207d4ce097e54972aecdaa8b40d7d9911cd26491fac5a0fab38af"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://cran.rstudio.com/banner.shtml"
+    regex(%r{href=(?:["']?|.*?/)R[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "daa26a653216abd86a51e09ce4e3ebedacbabb40f91aaec932dbe956d6f66909" => :catalina
-    sha256 "84d387b39408df62be83884fe70f4a6b40eb6f0154de1ab1d20398c1e2af2407" => :mojave
-    sha256 "910931f2feed30e33b8dd0044bf38e42bc85b57ea161d29ca25e80cfd22c4249" => :high_sierra
-    sha256 "5bcfa36f3be460d11af215712e3a9b00237d8fc6d4f963a1ef7b85091d465ba7" => :sierra
+    sha256 arm64_big_sur: "b74a59f79af6c5d1ce9508437a8cb5a2e7856b2107c2cf812f25177716040d3b"
+    sha256 monterey:      "46663a15e9762deaad72e5fb347c85edebc836fc071f5bd21b1948d90a9311bc"
+    sha256 big_sur:       "caf365bbc3764de78a390765b3b9c353c09bb7a26c8dd951d1dd6d01bf1f2889"
+    sha256 catalina:      "4a68b7c06e4582ac3e97785e0dabfd031235614d5451c7acc54c7f6957411e62"
+    sha256 x86_64_linux:  "9de6d636b0372e196b5a827f9107533d9d31159deefec9d839bd941608b6f737"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "cairo"
   depends_on "gcc" # for gfortran
   depends_on "gettext"
   depends_on "jpeg"
+  depends_on "libffi"
   depends_on "libpng"
   depends_on "openblas"
-  depends_on "pcre"
+  depends_on "pcre2"
   depends_on "readline"
+  depends_on "tcl-tk"
   depends_on "xz"
 
-  # needed to preserve executable permissions on files without shebangs
-  skip_clean "lib/R/bin"
+  uses_from_macos "curl"
 
-  resource "gss" do
-    url "https://cloud.r-project.org/src/contrib/gss_2.1-10.tar.gz", :using => :nounzip
-    mirror "https://mirror.las.iastate.edu/CRAN/src/contrib/gss_2.1-10.tar.gz"
-    sha256 "26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2"
+  on_linux do
+    depends_on "pango"
+    depends_on "libice"
+    depends_on "libx11"
+    depends_on "libxt"
+    depends_on "libtirpc"
   end
 
+  # needed to preserve executable permissions on files without shebangs
+  skip_clean "lib/R/bin", "lib/R/doc"
+
   def install
-    # Fix dyld: lazy symbol binding failed: Symbol not found: _clock_gettime
-    if MacOS.version == "10.11" && MacOS::Xcode.installed? &&
-       MacOS::Xcode.version >= "8.0"
-      ENV["ac_cv_have_decl_clock_gettime"] = "no"
-    end
+    # BLAS detection fails with Xcode 12 due to missing prototype
+    # https://bugs.r-project.org/bugzilla/show_bug.cgi?id=18024
+    ENV.append "CFLAGS", "-Wno-implicit-function-declaration"
 
     args = [
       "--prefix=#{prefix}",
       "--enable-memory-profiling",
-      "--without-cairo",
-      "--without-x",
-      "--with-aqua",
-      "--with-lapack",
-      "--enable-R-shlib",
-      "SED=/usr/bin/sed", # don't remember Homebrew's sed shim
-      "--disable-java",
+      "--with-tcl-config=#{Formula["tcl-tk"].opt_lib}/tclConfig.sh",
+      "--with-tk-config=#{Formula["tcl-tk"].opt_lib}/tkConfig.sh",
       "--with-blas=-L#{Formula["openblas"].opt_lib} -lopenblas",
+      "--enable-R-shlib",
+      "--disable-java",
+      "--with-cairo",
     ]
 
+    if OS.mac?
+      args << "--without-x"
+      args << "--with-aqua"
+    else
+      args << "--libdir=#{lib}" # avoid using lib64 on CentOS
+
+      # Avoid references to homebrew shims
+      args << "LD=ld"
+
+      # If LDFLAGS contains any -L options, configure sets LD_LIBRARY_PATH to
+      # search those directories. Remove -LHOMEBREW_PREFIX/lib from LDFLAGS.
+      ENV.remove "LDFLAGS", "-L#{HOMEBREW_PREFIX}/lib"
+
+      ENV.append "CPPFLAGS", "-I#{Formula["libtirpc"].opt_include}/tirpc"
+      ENV.append "LDFLAGS", "-L#{Formula["libtirpc"].opt_lib}"
+    end
+
     # Help CRAN packages find gettext and readline
-    ["gettext", "readline"].each do |f|
+    ["gettext", "readline", "xz"].each do |f|
       ENV.append "CPPFLAGS", "-I#{Formula[f].opt_include}"
       ENV.append "LDFLAGS", "-L#{Formula[f].opt_lib}"
     end
@@ -83,8 +109,10 @@ class R < Formula
     lib.install_symlink Dir[r_home/"lib/*"]
 
     # avoid triggering mandatory rebuilds of r when gcc is upgraded
+    check_replace = OS.mac?
     inreplace lib/"R/etc/Makeconf", Formula["gcc"].prefix.realpath,
-                                    Formula["gcc"].opt_prefix
+                                    Formula["gcc"].opt_prefix,
+                                    check_replace
   end
 
   def post_install
@@ -97,11 +125,21 @@ class R < Formula
 
   test do
     assert_equal "[1] 2", shell_output("#{bin}/Rscript -e 'print(1+1)'").chomp
-    assert_equal ".dylib", shell_output("#{bin}/R CMD config DYLIB_EXT").chomp
+    assert_equal shared_library(""), shell_output("#{bin}/R CMD config DYLIB_EXT").chomp
+    system bin/"Rscript", "-e", "if(!capabilities('cairo')) stop('cairo not available')"
 
-    testpath.install resource("gss")
-    system bin/"R", "CMD", "INSTALL", "--library=.", Dir["gss*"].first
+    system bin/"Rscript", "-e", "install.packages('gss', '.', 'https://cloud.r-project.org')"
     assert_predicate testpath/"gss/libs/gss.so", :exist?,
                      "Failed to install gss package"
+
+    winsys = "[1] \"aqua\""
+    on_linux do
+      # Fails in Linux CI with: no DISPLAY variable so Tk is not available
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
+      winsys = "[1] \"x11\""
+    end
+    assert_equal winsys,
+                 shell_output("#{bin}/Rscript -e 'library(tcltk)' -e 'tclvalue(.Tcl(\"tk windowingsystem\"))'").chomp
   end
 end

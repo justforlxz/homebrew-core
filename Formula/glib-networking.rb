@@ -1,22 +1,30 @@
 class GlibNetworking < Formula
   desc "Network related modules for glib"
-  homepage "https://launchpad.net/glib-networking"
-  url "https://download.gnome.org/sources/glib-networking/2.62/glib-networking-2.62.1.tar.xz"
-  sha256 "3c55ae6771ad7a79fa606a834f4686ed555c2774ed6e9ece6f3c0f6a3dab7110"
+  homepage "https://gitlab.gnome.org/GNOME/glib-networking"
+  url "https://download.gnome.org/sources/glib-networking/2.70/glib-networking-2.70.0.tar.xz"
+  sha256 "66b408e7afa86c582fe38963db56133869ab4b57d34e48ec56aba621940d6f35"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "f6a09b8032078f0485791a51ca632336212ee26685a507b9a26a4b2c99d17ac6" => :catalina
-    sha256 "7b61b9309af4d0d36d9c0eed39036d012954be77426101eaa737e1fa6fb241dd" => :mojave
-    sha256 "06fb6d19fbfdb79d37ccade73e9741be30305b782e8d2ff989609ed495b1a29b" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "08c801c005aa171ce6654a3a9ded3030b781a43eeb9dc719e8685d756ec13ce2"
+    sha256               arm64_big_sur:  "ba522c00fb66cdecb8ffd2a59097d40442e0d4855448a0ec35fa930511ecccb4"
+    sha256               monterey:       "c115eb3ee607478945b79058c22e63545b8f9cdcdfe750f3279f34d47f35a6c5"
+    sha256 cellar: :any, big_sur:        "eab028e138ec9fe2017f9dcf052c09469b906ccb2e5b147572487cacd9061777"
+    sha256 cellar: :any, catalina:       "a7002f6e071a68e70a0d5af8377bdcf4c9ab6f9606272cb94b94aaa0ce8a3be8"
+    sha256 cellar: :any, mojave:         "5a48d3f2012eb407b90c38ae8db334d516b53ec5d8127f58bac4ed2a571e09af"
+    sha256               x86_64_linux:   "ca7db942c847b82b7115b770d585ce8bf6791e0e09a0f06cdce9b47f8eeaadea"
   end
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "glib"
   depends_on "gnutls"
   depends_on "gsettings-desktop-schemas"
+
+  on_linux do
+    depends_on "libidn"
+  end
 
   link_overwrite "lib/gio/modules"
 
@@ -25,7 +33,7 @@ class GlibNetworking < Formula
     ENV["DESTDIR"] = "/"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}",
+      system "meson", *std_meson_args,
                       "-Dlibproxy=disabled",
                       "-Dopenssl=disabled",
                       "-Dgnome_proxy=disabled",

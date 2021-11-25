@@ -1,20 +1,29 @@
 class Binaryen < Formula
   desc "Compiler infrastructure and toolchain library for WebAssembly"
   homepage "https://webassembly.org/"
-  url "https://github.com/WebAssembly/binaryen/archive/version_89.tar.gz"
-  sha256 "e8b35e751cc9b90ce4c4a9d309595ee9c3afac2964fd0c4cc06c12ec43f6d55e"
-  head "https://github.com/WebAssembly/binaryen.git"
+  url "https://github.com/WebAssembly/binaryen/archive/version_102.tar.gz"
+  sha256 "6197a8d7220d1510bb0694a2984bfae4f8b38abd6bdf4c724551c831786992f6"
+  license "Apache-2.0"
+  head "https://github.com/WebAssembly/binaryen.git", branch: "main"
 
   bottle do
-    cellar :any
-    sha256 "6389d5a1ea8e005f4c4bc7201c97eafe92532578c8ff8ffc11e2a304fdc91d83" => :catalina
-    sha256 "ae2ec301300e14f81b8e25bf769e54aae7487a2758729bce24134444d63590d5" => :mojave
-    sha256 "972d54b6dd59ee9ba94eccb42b499e6c1c076edb4c487c9804933000e15c9f31" => :high_sierra
-    sha256 "e554c3403521e69dd691ad7af18cdf6120fcb3c06db0bedfa44c26228292c131" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "9b92858870c251ea32675c694f09f5329fd56843ce23c483c5de62e1456f6f1d"
+    sha256 cellar: :any,                 arm64_big_sur:  "e00fd13945ddfa707b35a2fd6b7bd20e5c1fa99fb4574ad7b52607160ead74f7"
+    sha256 cellar: :any,                 monterey:       "7b33c63d98d073301bd875ede941e05ab3b269d2fbcbe527f95fe41390cd44d2"
+    sha256 cellar: :any,                 big_sur:        "580bcfb61bdf0ef6fea0b92af3428ee3484b47a87eb2bf9cee4602a5aec5b3c8"
+    sha256 cellar: :any,                 catalina:       "8dc80e3e1d1a6de47acfd1d107cdea836d2a81ea0bee7fe117423052eacc4558"
+    sha256 cellar: :any,                 mojave:         "3fbf167d4e89a81d052375286fd46f8e8604ef5875f96336c9ed13fd4a8737a7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "c03a84244f36a2760d5789240aed5a05c121411d2b85cc933d7ce4aa6c947295"
   end
 
   depends_on "cmake" => :build
-  depends_on :macos => :el_capitan # needs thread-local storage
+  depends_on "python@3.9" => :build
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
@@ -26,7 +35,7 @@ class Binaryen < Formula
   end
 
   test do
-    system "#{bin}/wasm-opt", "#{pkgshare}/test/passes/O.wast"
-    system "#{bin}/asm2wasm", "#{pkgshare}/test/hello_world.asm.js"
+    system "#{bin}/wasm-opt", "-O", "#{pkgshare}/test/passes/O1_print-stack-ir.wast", "-o", "1.wast"
+    assert_match "stacky-help", File.read("1.wast")
   end
 end

@@ -1,29 +1,40 @@
 class Scipy < Formula
   desc "Software for mathematics, science, and engineering"
   homepage "https://www.scipy.org"
-  url "https://files.pythonhosted.org/packages/a7/5c/495190b8c7cc71977c3d3fafe788d99d43eeb4740ac56856095df6a23fbd/scipy-1.3.3.tar.gz"
-  sha256 "64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a"
-  head "https://github.com/scipy/scipy.git"
+  url "https://files.pythonhosted.org/packages/0e/23/58c4f995475a2a97cb5f4a032aedaf881ad87cd976a7180c55118d105a1d/scipy-1.7.2.tar.gz"
+  sha256 "fa2dbabaaecdb502641b0b3c00dec05fb475ae48655c66da16c9ed24eda1e711"
+  license "BSD-3-Clause"
+  head "https://github.com/scipy/scipy.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "90c66bb5eb57a751896a07b8a44fcaa9bd7440e5aa073b5c96a1df2e04e88894" => :catalina
-    sha256 "125d98ba98493a26d7e1f0466f941de4fd7a295af34ff628a6e8b623d7d5aba3" => :mojave
-    sha256 "a7dc8831f6566a55aa266cc20b6653015bf29a18d68f315ca0f001bd39b61480" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "65af74bafefaf1c73d8eb42bc801014acdf2b056a72d265f2f8095a73ce17c59"
+    sha256 cellar: :any, monterey:      "5f4a04454d7c814fedad32aff393913b9f7705f813be17365c5410a2e23cba1d"
+    sha256 cellar: :any, big_sur:       "c47075e0199e904b6aa0a6bdea43c4e8abbaffc9a416cbe72a3bb7e69d80cc89"
+    sha256 cellar: :any, catalina:      "5ac18b620b2ff0fddff90a01873fb0a3b4690cd62ea355e899186fec9d225cdc"
+    sha256               x86_64_linux:  "2bc3f9484913df5fcbc17432cd93520b97e48665eafa86887cf9d64f0414b8a3"
   end
 
+  depends_on "cython" => :build
+  depends_on "pythran" => :build
   depends_on "swig" => :build
   depends_on "gcc" # for gfortran
   depends_on "numpy"
   depends_on "openblas"
-  depends_on "python"
+  depends_on "pybind11"
+  depends_on "python@3.9"
 
   cxxstdlib_check :skip
 
+  fails_with gcc: "5"
+
   def install
+    # Fix for current GCC on Big Sur, which does not like 11 as version value
+    # (reported at https://github.com/iains/gcc-darwin-arm64/issues/31#issuecomment-750343944)
+    ENV["MACOSX_DEPLOYMENT_TARGET"] = "11.0" if MacOS.version == :big_sur
+
     openblas = Formula["openblas"].opt_prefix
     ENV["ATLAS"] = "None" # avoid linking against Accelerate.framework
-    ENV["BLAS"] = ENV["LAPACK"] = "#{openblas}/lib/libopenblas.dylib"
+    ENV["BLAS"] = ENV["LAPACK"] = "#{openblas}/lib/#{shared_library("libopenblas")}"
 
     config = <<~EOS
       [DEFAULT]
@@ -37,11 +48,15 @@ class Scipy < Formula
 
     Pathname("site.cfg").write config
 
-    version = Language::Python.major_minor_version "python3"
-    ENV["PYTHONPATH"] = Formula["numpy"].opt_lib/"python#{version}/site-packages"
-    ENV.prepend_create_path "PYTHONPATH", lib/"python#{version}/site-packages"
-    system "python3", "setup.py", "build", "--fcompiler=gnu95"
-    system "python3", *Language::Python.setup_install_args(prefix)
+    site_packages = Language::Python.site_packages("python3")
+    ENV.prepend_create_path "PYTHONPATH", Formula["cython"].opt_libexec/site_packages
+    ENV.prepend_create_path "PYTHONPATH", Formula["pythran"].opt_libexec/site_packages
+    ENV.prepend_create_path "PYTHONPATH", Formula["numpy"].opt_prefix/site_packages
+    ENV.prepend_create_path "PYTHONPATH", site_packages
+
+    system Formula["python@3.9"].opt_bin/"python3", "setup.py", "build",
+      "--fcompiler=gfortran", "--parallel=#{ENV.make_jobs}"
+    system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix)
   end
 
   # cleanup leftover .pyc files from previous installs which can cause problems
@@ -51,6 +66,6 @@ class Scipy < Formula
   end
 
   test do
-    system "python3", "-c", "import scipy"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import scipy"
   end
 end

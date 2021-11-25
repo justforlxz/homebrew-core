@@ -1,32 +1,42 @@
 class Maxima < Formula
   desc "Computer algebra system"
   homepage "https://maxima.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/maxima/Maxima-source/5.43.0-source/maxima-5.43.0.tar.gz"
-  sha256 "dcfda54511035276fd074ac736e97d41905171e43a5802bb820914c3c885ca77"
+  url "https://downloads.sourceforge.net/project/maxima/Maxima-source/5.45.1-source/maxima-5.45.1.tar.gz"
+  sha256 "fe9016276970bef214a1a244348558644514d7fdfaa4fc8b9d0e87afcbb4e7dc"
+  license "GPL-2.0-only"
+  revision 4
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "7e0dd3068febc291a3806eacb7501e739dbff8c26abbfb126388e0c61b4984c2" => :catalina
-    sha256 "aa7bf5470e9e6dc540338417bab19f9f30cce70d6d9c337e9277d7c1ff8162a0" => :mojave
-    sha256 "a1d945ec5aed4fe25d784cfdf0982cd5ebca17ea677a8b3c60685e0438932c66" => :high_sierra
-    sha256 "60ea4ce05f296dc1ffd595224eba11dabf13f7692ffb53289606241d80fc76fb" => :sierra
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/maxima[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
-  depends_on "sbcl" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f2b30807d9dc4138ad48a027c721d0f2efac636ba244abf81b76e3697e3c0482"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7eb3ed75bfe3a2786dc959724c99769c123e9fcc9ac2293ad887c2c280d7e974"
+    sha256 cellar: :any_skip_relocation, catalina:      "ffb175c92077e3d87cc659bc888113d656c37a0c3cb75d479a385627a9cd2ce0"
+    sha256 cellar: :any_skip_relocation, mojave:        "0d18434459d1c811395e78b2c08ad797332fd34b0d35fe22aa4f409ae6e3500b"
+  end
+
+  depends_on "gawk" => :build
+  depends_on "gnu-sed" => :build
+  depends_on "perl" => :build
+  depends_on "texinfo" => :build
   depends_on "gettext"
   depends_on "gnuplot"
   depends_on "rlwrap"
+  depends_on "sbcl"
 
   def install
     ENV["LANG"] = "C" # per build instructions
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--enable-gettext",
-                          "--enable-sbcl",
-                          "--enable-sbcl-exec",
-                          "--with-emacs-prefix=#{share}/emacs/site-lisp/#{name}",
-                          "--with-sbcl=#{Formula["sbcl"].opt_bin}/sbcl"
+    system "./configure",
+           "--disable-debug",
+           "--disable-dependency-tracking",
+           "--prefix=#{prefix}",
+           "--enable-gettext",
+           "--enable-sbcl",
+           "--with-emacs-prefix=#{share}/emacs/site-lisp/#{name}",
+           "--with-sbcl=#{Formula["sbcl"].opt_bin}/sbcl"
     system "make"
     system "make", "install"
   end

@@ -1,45 +1,51 @@
 class Gcovr < Formula
+  include Language::Python::Virtualenv
+
   desc "Reports from gcov test coverage program"
   homepage "https://gcovr.com/"
-  url "https://github.com/gcovr/gcovr/archive/4.1.tar.gz"
-  sha256 "1ad8042fd4dc4c355fd7e605d395eefa2a59b1677dfdc308e0ef00083e8b37ee"
+  url "https://files.pythonhosted.org/packages/83/0d/d8409c79412baa30717e6d18942251bc18d8cf43447b153f92056be99053/gcovr-5.0.tar.gz"
+  sha256 "1d80264cbaadff356b3dda71b8c62b3aa803e5b3eb6d526a24932cd6660a2576"
+  license "BSD-3-Clause"
+  revision 1
   head "https://github.com/gcovr/gcovr.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4c1f761c118737ad2f786b20433f8ffb62344ed0449ba4c57d3316c1e87dace4" => :catalina
-    sha256 "375d5736d80f9843b2a77d86b365d123a472325c6c8cd3c68d065bce99d8c9bf" => :mojave
-    sha256 "b5b3a5c643c84b547e6c2ae0c9db6cba7d53a8a081e080eb1efefcfd1f95b211" => :high_sierra
-    sha256 "7cf8abff45bbea6e268fe4674c5f8ff2be1d4df413abf3068def0f07c2bc0c09" => :sierra
-    sha256 "8044508fa650772d5d00cd83a8eacebf0cd910b2ced77e693809dbb8a0fdcb34" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "02cac4be3ce9887e5dd058e755ae3fe9698bb2088a26bf6a89a4e3552c6c9adb"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "b43ccf52aaf6e863ba53338b2d56858a8e90ad6be7d25c86514a6b3a4017953d"
+    sha256 cellar: :any_skip_relocation, monterey:       "a6db7f46eb7f0cb8f406c57a064fea54a8f005e4876a01795a0a531947f7d64e"
+    sha256 cellar: :any_skip_relocation, big_sur:        "f87e83edc1123b001b38e8d019c0490bac8372127db4059dedfd60041c27d3cd"
+    sha256 cellar: :any_skip_relocation, catalina:       "c93ac984925f0d92abe6eb310adff1e15c27f37899a82e8e27fe895047cdf44c"
+    sha256 cellar: :any_skip_relocation, mojave:         "941189cf0994e347c2a36dd844ff56e67c5b43c63cab9425dc7402d032242de0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "f55932c730770f1fb2d881429ba2055bb99f9d4f8c2372bad129b91207b68d8b"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
+
+  uses_from_macos "libxml2"
+  uses_from_macos "libxslt"
 
   resource "Jinja2" do
-    url "https://files.pythonhosted.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz"
-    sha256 "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4"
+    url "https://files.pythonhosted.org/packages/39/11/8076571afd97303dfeb6e466f27187ca4970918d4b36d5326725514d3ed3/Jinja2-3.0.1.tar.gz"
+    sha256 "703f484b47a6af502e743c9122595cc812b0271f661722403114f71a79d0f5a4"
+  end
+
+  resource "lxml" do
+    url "https://files.pythonhosted.org/packages/e5/21/a2e4517e3d216f0051687eea3d3317557bde68736f038a3b105ac3809247/lxml-4.6.3.tar.gz"
+    sha256 "39b78571b3b30645ac77b95f7c69d1bffc4cf8c3b157c435a34da72e78c82468"
   end
 
   resource "MarkupSafe" do
-    url "https://files.pythonhosted.org/packages/4d/de/32d741db316d8fdb7680822dd37001ef7a448255de9699ab4bfcbdf4172b/MarkupSafe-1.0.tar.gz"
-    sha256 "a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665"
+    url "https://files.pythonhosted.org/packages/bf/10/ff66fea6d1788c458663a84d88787bae15d45daa16f6b3ef33322a51fc7e/MarkupSafe-2.0.1.tar.gz"
+    sha256 "594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a"
+  end
+
+  resource "Pygments" do
+    url "https://files.pythonhosted.org/packages/ba/6e/7a7c13c21d8a4a7f82ccbfe257a045890d4dbf18c023f985f565f97393e3/Pygments-2.9.0.tar.gz"
+    sha256 "a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
-    resources.each do |r|
-      r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
-      end
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    virtualenv_install_with_resources
   end
 
   test do

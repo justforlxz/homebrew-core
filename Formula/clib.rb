@@ -1,15 +1,24 @@
 class Clib < Formula
   desc "Package manager for C programming"
   homepage "https://github.com/clibs/clib"
-  url "https://github.com/clibs/clib/archive/1.11.2.tar.gz"
-  sha256 "5f44c4ac8e2f59b38f7a639c6d842eacf8fc8f7c53ba9b88dc75ef2fb902f630"
-  head "https://github.com/clibs/clib.git"
+  url "https://github.com/clibs/clib/archive/2.8.0.tar.gz"
+  sha256 "be474f6697d9a9918cbe4d3cc65a16cba2fbe0aee35d40eaca7b67557e89bce4"
+  license "MIT"
+  head "https://github.com/clibs/clib.git", branch: "master"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d3b55a5ba14628e7f8b32377d93cb8164590085ba5cec16d2e30a070dd7b54b1" => :catalina
-    sha256 "0064c509f82dee2573c26f7b729c388d8ec5f933764ec6319273c9d0e7394890" => :mojave
-    sha256 "c0f0ea0743559f82cfbe4bc0437aec7a99653a8004d10930990b2e921e2f40ee" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "dd7b0294eee70146184cc38c4d0f177e98e37243def58d237279642d835019be"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "44f5920711c2eb79e334cd7bc4b5972c9b3010a0345607b8c59ee71b1e2391c1"
+    sha256 cellar: :any_skip_relocation, monterey:       "40549f7255b1cdbbefebe03deccd815fbbf6477c3b603703615a287b6329a054"
+    sha256 cellar: :any_skip_relocation, big_sur:        "8a4af428b5c74fed903aca3337334bf0d418fd9765ea50d73ac2f308c60f7061"
+    sha256 cellar: :any_skip_relocation, catalina:       "b1d926918eab64e133117b5089f17c51f0a0888d7ed33448fd3247e05a15e919"
+    sha256 cellar: :any_skip_relocation, mojave:         "277176751578539b28b96e3d18f1ca9efa576b270e6ee6a42a7f4fdea317c061"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "732a47d87de00dc02478feb7dede8ba1a5941ce10ededd895cf96f5111e71f4e"
   end
 
   uses_from_macos "curl"

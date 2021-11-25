@@ -1,10 +1,15 @@
 class Checkstyle < Formula
   desc "Check Java source against a coding standard"
   homepage "https://checkstyle.sourceforge.io/"
-  url "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.27/checkstyle-8.27-all.jar"
-  sha256 "54465af4d2761a878c6054cfba3c24f02e79a2cdb13a9c25a0b874c0b9a273f4"
+  url "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-9.1/checkstyle-9.1-all.jar"
+  sha256 "00c6bd2f9fc121f7437714e2c91a1f87d3a1c209568d94ac13aa1777a705d9b4"
+  license "LGPL-2.1-or-later"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "57579248b5a36eabdf097b217e5440096d0f6f76de2115c7aa5b89b57f6888ba"
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install "checkstyle-#{version}-all.jar"
@@ -15,7 +20,7 @@ class Checkstyle < Formula
     path = testpath/"foo.java"
     path.write "public class Foo{ }\n"
 
-    output = Utils.popen_read("#{bin}/checkstyle -c /sun_checks.xml #{path}")
+    output = shell_output("#{bin}/checkstyle -c /sun_checks.xml #{path}", 2)
     errors = output.lines.select { |line| line.start_with?("[ERROR] #{path}") }
     assert_match "#{path}:1:17: '{' is not preceded with whitespace.", errors.join(" ")
     assert_equal errors.size, $CHILD_STATUS.exitstatus

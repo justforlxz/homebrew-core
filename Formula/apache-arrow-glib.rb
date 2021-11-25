@@ -1,27 +1,42 @@
 class ApacheArrowGlib < Formula
   desc "GLib bindings for Apache Arrow"
   homepage "https://arrow.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=arrow/arrow-0.15.1/apache-arrow-0.15.1.tar.gz"
-  sha256 "9a2c58c72310eafebb4997244cbeeb8c26696320d0ae3eb3e8512f75ef856fc9"
-  revision 1
-  head "https://github.com/apache/arrow.git"
+  url "https://www.apache.org/dyn/closer.lua?path=arrow/arrow-6.0.1/apache-arrow-6.0.1.tar.gz"
+  mirror "https://archive.apache.org/dist/arrow/arrow-6.0.1/apache-arrow-6.0.1.tar.gz"
+  sha256 "3786b3d2df954d078b3e68f98d2e5aecbaa3fa2accf075d7a3a13c187b9c5294"
+  license "Apache-2.0"
+  head "https://github.com/apache/arrow.git", branch: "master"
+
+  livecheck do
+    formula "apache-arrow"
+  end
 
   bottle do
-    sha256 "40f8f387d085231e4196326e5077a0a2a57d26fba3cf1aad354e8b8ba12543da" => :catalina
-    sha256 "fd32a9689862003253b5508c00455cedf8ddb353a43307d258d124b12342312e" => :mojave
-    sha256 "6166b657fec8b598460df8b12428d60ac2c5c67cb08521cfd33e4d73578b5920" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "8c53f4079f63fdc6d499c5755528a4ce3505929d66a313dc6f329c341c402d0d"
+    sha256 cellar: :any, monterey:      "ddc063396bc6f048c60f879b13bb10d12b8ba54e2093e02206e6b246e603fa82"
+    sha256 cellar: :any, big_sur:       "f30c78e9f4ec073ed688663ccbb66f2a388bd075d12c2073a2b1946e712e23a6"
+    sha256 cellar: :any, catalina:      "c4f2d1d02e6da94dce987ca76315df11153e6a88357de0836b361d0c2cc10f5c"
+    sha256               x86_64_linux:  "1c32e471157af08284b5ad0c08f5b3ef9a720d8785c1e7c6022c1a4d44d3abb0"
   end
 
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "apache-arrow"
   depends_on "glib"
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+
   def install
-    cd "c_glib" do
-      system "./configure", "--prefix=#{prefix}"
-      system "make"
-      system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, "../c_glib"
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
     end
   end
 

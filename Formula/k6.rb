@@ -1,37 +1,33 @@
 class K6 < Formula
   desc "Modern load testing tool, using Go and JavaScript"
   homepage "https://k6.io"
-  url "https://github.com/loadimpact/k6.git",
-    :tag      => "v0.25.1",
-    :revision => "515452f1a93a271ed8a3785111726c7cfe92232d"
+  url "https://github.com/loadimpact/k6/archive/v0.35.0.tar.gz"
+  sha256 "52d81754f2d4e23f180eb094b0a203c9162dda177a23b8aa3b96bd84981a31a7"
+  license "AGPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e6a4f10a33ce1f4c5860643afcd1a3a5a1c23bb4f481c59d02bbd4f7a41836de" => :catalina
-    sha256 "a06505e1d2e7cc083acc511d6f1d9d710186561d9ae8a7dbf884b3a62f649ae4" => :mojave
-    sha256 "47718cefff5ce85d27e09914590b26c13f4a37d26096f971e0cff059cd74166e" => :high_sierra
-    sha256 "d88317a09fddc7343bfedc774decd5b679284298bcf37dac0f3372e76e429c38" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "5631dea2fcbc3123917e9dbe5422821ea22531d2c2b6a3e1e7361042b23e913f"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "2477ce7802131a835ef97796d8b63cef64773ed142596fa67107f64c4dccabfe"
+    sha256 cellar: :any_skip_relocation, monterey:       "becfd30c3ccd73eadc023a40b31a1f48e1cd1471f7a97647f084e1786f2141f4"
+    sha256 cellar: :any_skip_relocation, big_sur:        "3e43488892ec5677aeb1f105ae9097e7cbab728051c541e19ccc093f3a168d97"
+    sha256 cellar: :any_skip_relocation, catalina:       "b89dc3b9ad08f484ab674dd71ebd09147b5d942d5581ac0122843884d8665b33"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "cb180989175b4b757d7a671bfa531c6bea491d2787b78edf444aab7b365cb4cd"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/loadimpact/k6"
-    dir.install buildpath.children
-
-    cd dir do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-o", bin/"k6"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args(ldflags: "-s -w")
   end
 
   test do
-    output = "Test finished"
-    assert_match output, shell_output("#{bin}/k6 run github.com/loadimpact/k6/samples/http_get.js 2>&1")
+    (testpath/"whatever.js").write <<~EOS
+      export default function() {
+        console.log("whatever");
+      }
+    EOS
+
+    assert_match "whatever", shell_output("#{bin}/k6 run whatever.js 2>&1")
     assert_match version.to_s, shell_output("#{bin}/k6 version")
   end
 end

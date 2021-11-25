@@ -1,25 +1,41 @@
 class Glslviewer < Formula
   desc "Live-coding console tool that renders GLSL Shaders"
   homepage "http://patriciogonzalezvivo.com/2015/glslViewer/"
-  url "https://github.com/patriciogonzalezvivo/glslViewer/archive/1.5.5.tar.gz"
-  sha256 "28a784d701294fd335031ab293c5f4764a498f84714b1ae677dbc4e05ed94b23"
+  url "https://github.com/patriciogonzalezvivo/glslViewer/archive/1.7.0.tar.gz"
+  sha256 "4a03e989dc81587061714ccc130268cc06ddaff256ea24b7492ca28dc855e8d6"
+  license "BSD-3-Clause"
+  revision 1
   head "https://github.com/patriciogonzalezvivo/glslViewer.git"
 
   bottle do
-    cellar :any
-    sha256 "81841fc4594a7e06444a0ace80d8ad8c7ea3738325d86e968ba844bc27c8d085" => :catalina
-    sha256 "e39a6cd0133d664e812e5148d01a7da705d23253548cb7cd0bae58324f7757b8" => :mojave
-    sha256 "79145bf1417520ea637f08bc4b1cc3071f2cef6404ddec54fea7df701860eece" => :high_sierra
-    sha256 "c81f27a48b0fbbca9e091d76893d9e9e6064e25c5febce922b800318cb1bf1e8" => :sierra
-    sha256 "48f30017a20bbbe4835dfcba05f64b992ffd6a30e95f8f6676ab7ffd87077749" => :el_capitan
+    sha256 cellar: :any,                 arm64_monterey: "e1031838f5fa625dd142dd058a812aed71f7f7696fff345b46bec303a66a46df"
+    sha256 cellar: :any,                 arm64_big_sur:  "3fcd463c03fe4174fdf809d7fce0ec612e1148241d1974ce6424a47a8624e894"
+    sha256 cellar: :any,                 monterey:       "5a800f933f5c444247b7f2644578a0cfbd8c283853bee15387769cf6146268be"
+    sha256 cellar: :any,                 big_sur:        "3af1d9e5b62064c8e62f858f5f57759e3078c4f266650aaae5ef6d32d9d3e789"
+    sha256 cellar: :any,                 catalina:       "98b9ccf60ad6b4b7cb614064a6c83a4b531cf10949d1d26a5107902a0cb3ac63"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "9c5f389e38491eb889fdd306f89e07e2f54c4e75c2454290f31347231c31c1fa"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "ffmpeg"
   depends_on "glfw"
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5" # rubberband is built with GCC
+
+  # From miniaudio commit in https://github.com/patriciogonzalezvivo/glslViewer/tree/#{version}/include
+  resource "miniaudio" do
+    url "https://raw.githubusercontent.com/mackron/miniaudio/199d6a7875b4288af6a7b615367c8fdc2019b03c/miniaudio.h"
+    sha256 "ee0aa8668db130ed92956ba678793f53b0bbf744e3f8584d994f3f2a87054790"
+  end
+
   def install
+    (buildpath/"include/miniaudio").install resource("miniaudio")
     system "make"
-    bin.install Dir["bin/*"]
+    bin.install "glslViewer"
   end
 
   test do

@@ -1,41 +1,33 @@
 class Asciidoc < Formula
-  desc "Formatter/translator for text files to numerous formats. Includes a2x"
-  homepage "http://asciidoc.org/"
-  # This release is listed as final on GitHub, but not listed on asciidoc.org.
-  url "https://github.com/asciidoc/asciidoc/archive/8.6.10.tar.gz"
-  sha256 "9e52f8578d891beaef25730a92a6e723596ddbd07bfe0d2a56486fcf63a0b983"
-  revision 2
-  head "https://github.com/asciidoc/asciidoc.git"
+  include Language::Python::Virtualenv
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "d81d3b126c250069e1aad86adedb06fa8e18ff0d3c063d73d7b0698e24d51df4" => :catalina
-    sha256 "f89040aa055faab054a4b82e0cdfec724b57529844368c2f4fe81683ee2967f9" => :mojave
-    sha256 "0a021fbfe992e2357c6d6b9b940ca3b080911a6d156bd3fb52775c452a272075" => :high_sierra
-    sha256 "0a021fbfe992e2357c6d6b9b940ca3b080911a6d156bd3fb52775c452a272075" => :sierra
+  desc "Formatter/translator for text files to numerous formats"
+  homepage "https://asciidoc-py.github.io/"
+  url "https://files.pythonhosted.org/packages/c2/d0/5334f7d8205aa11f2e4751f4137466c8d8a36b148dcf3874db87b40ce72e/asciidoc-10.0.2.tar.gz"
+  sha256 "1800699c579038bcf68e760e9358304b69a19ef04c9bf0b4faa76b729dcf7dbf"
+  license "GPL-2.0-only"
+  head "https://github.com/asciidoc-py/asciidoc-py.git", branch: "main"
+
+  livecheck do
+    url :head
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "autoconf" => :build
-  depends_on "docbook-xsl" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "59bc4ac9a515e3b9fb04413170253db01735afda37468487bc7c4e05c56cda7d"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "59bc4ac9a515e3b9fb04413170253db01735afda37468487bc7c4e05c56cda7d"
+    sha256 cellar: :any_skip_relocation, monterey:       "03ab2d49198b047f011cdacdfbb9f08260d4ecab0657b3b74dc99034db6085c7"
+    sha256 cellar: :any_skip_relocation, big_sur:        "03ab2d49198b047f011cdacdfbb9f08260d4ecab0657b3b74dc99034db6085c7"
+    sha256 cellar: :any_skip_relocation, catalina:       "03ab2d49198b047f011cdacdfbb9f08260d4ecab0657b3b74dc99034db6085c7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "d64213d02fb9f66ef08fb25987477d3d1c0b3e876ba8a74ae2153610a269f1e3"
+  end
+
   depends_on "docbook"
+  depends_on "python@3.10"
   depends_on "source-highlight"
 
   def install
-    ENV.prepend_path "PATH", "/System/Library/Frameworks/Python.framework/Versions/2.7/bin"
-    ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
-
-    system "autoconf"
-    system "./configure", "--prefix=#{prefix}"
-
-    inreplace %w[a2x.py asciidoc.py filters/code/code-filter.py
-                 filters/graphviz/graphviz2png.py filters/latex/latex2img.py
-                 filters/music/music2png.py filters/unwraplatex.py],
-      "#!/usr/bin/env python2", "#!/usr/bin/python"
-
-    # otherwise macOS's xmllint bails out
-    inreplace "Makefile", "-f manpage", "-f manpage -L"
-    system "make", "install"
-    system "make", "docs"
+    virtualenv_install_with_resources
   end
 
   def caveats
@@ -55,7 +47,7 @@ class Asciidoc < Formula
 
   test do
     (testpath/"test.txt").write("== Hello World!")
-    system "#{bin}/asciidoc", "-b", "html5", "-o", "test.html", "test.txt"
-    assert_match %r{\<h2 id="_hello_world"\>Hello World!\</h2\>}, File.read("test.html")
+    system "#{bin}/asciidoc", "-b", "html5", "-o", testpath/"test.html", testpath/"test.txt"
+    assert_match %r{<h2 id="_hello_world">Hello World!</h2>}, File.read(testpath/"test.html")
   end
 end

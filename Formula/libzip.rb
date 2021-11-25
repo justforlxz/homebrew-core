@@ -1,24 +1,51 @@
 class Libzip < Formula
   desc "C library for reading, creating, and modifying zip archives"
   homepage "https://libzip.org/"
-  url "https://libzip.org/download/libzip-1.5.2.tar.gz"
-  sha256 "be694a4abb2ffe5ec02074146757c8b56084dbcebf329123c84b205417435e15"
+  url "https://libzip.org/download/libzip-1.8.0.tar.xz", using: :homebrew_curl
+  sha256 "f0763bda24ba947e80430be787c4b068d8b6aa6027a26a19923f0acfa3dac97e"
+  license "BSD-3-Clause"
+  revision 1
+
+  livecheck do
+    url "https://libzip.org/download/"
+    regex(/href=.*?libzip[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    rebuild 1
-    sha256 "48097805d906d0c6febd72e06e2ba4c7de3fb98408c98538b98a16bf1e7bc066" => :catalina
-    sha256 "7aad5ff734cec8f3c7f71540ee3d16f1423cc9526893d8e60d624f6d22f7dcbc" => :mojave
-    sha256 "c3e6bfd3be85c039d1ea40706ce9921a21a2856e2b709dae38c2efb0a3996c37" => :high_sierra
-    sha256 "237b9a980bef4463dc1f88c97093312292049f3e6184986179b7e2411337a8e6" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "e9e8c08f4a92b59d52825dd58414ef58b59561c02aa68a4081f59b8a426e78ab"
+    sha256 cellar: :any,                 arm64_big_sur:  "c5842b42b9cbec01d11657ce19789f78b3f07e0350add80e894e57682a7ea3ba"
+    sha256 cellar: :any,                 monterey:       "8ebe402be907386945c2479a5aab12d4ba08e39303837d7cf607ee226581ea91"
+    sha256 cellar: :any,                 big_sur:        "6f3266d5fd14899d3c67dcc693365fda4531f17dc414039c66a8ad4f0becc819"
+    sha256 cellar: :any,                 catalina:       "d708cee97ad3536abd1c4ab0fc4108477c04d944db47c9a427772bc23027d427"
+    sha256 cellar: :any,                 mojave:         "5e54afd324365a37e9d6f4adec4ac6ea727012eb7b23931c94e2cf59b95b1bc5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "095cf6867438b44257ea4c38e19ad1f26423ad64f9a76c4139983039ee4607ab"
   end
 
   depends_on "cmake" => :build
+  depends_on "zstd"
 
-  conflicts_with "libtcod", "minizip2",
-    :because => "libtcod, libzip and minizip2 install a `zip.h` header"
+  uses_from_macos "zip" => :test
+  uses_from_macos "bzip2"
+  uses_from_macos "xz"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "openssl@1.1"
+  end
+
+  conflicts_with "libtcod", "minizip-ng",
+    because: "libtcod, libzip and minizip-ng install a `zip.h` header"
 
   def install
-    system "cmake", ".", *std_cmake_args
+    crypto_args = %w[
+      -DENABLE_GNUTLS=OFF
+      -DENABLE_MBEDTLS=OFF
+    ]
+    crypto_args << "-DENABLE_OPENSSL=OFF" if OS.mac? # Use CommonCrypto instead.
+    system "cmake", ".", *std_cmake_args,
+                         *crypto_args,
+                         "-DBUILD_REGRESS=OFF",
+                         "-DBUILD_EXAMPLES=OFF"
     system "make", "install"
   end
 
@@ -27,6 +54,6 @@ class Libzip < Formula
     system "zip", "file1.zip", "file1"
     touch "file2"
     system "zip", "file2.zip", "file1", "file2"
-    assert_match /\+.*file2/, shell_output("#{bin}/zipcmp -v file1.zip file2.zip", 1)
+    assert_match(/\+.*file2/, shell_output("#{bin}/zipcmp -v file1.zip file2.zip", 1))
   end
 end

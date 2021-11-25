@@ -1,18 +1,24 @@
 class Cweb < Formula
   desc "Literate documentation system for C, C++, and Java"
   homepage "https://cs.stanford.edu/~knuth/cweb.html"
-  url "https://cs.stanford.edu/pub/cweb/cweb-3.64b.tar.gz"
-  mirror "https://www.ctan.org/tex-archive/web/c_cpp/cweb/cweb-3.64b.tar.gz"
-  sha256 "038b0bf4d8297f0a98051ca2b4664abbf9d72b0b67963a2c7700d2f11cd25595"
+  url "https://github.com/ascherer/cweb/archive/cweb-4.5.tar.gz"
+  sha256 "5afa2bad211b60e7a3e33cf72b1ea0873b66427d24c17ec12e211b20bd1ad4aa"
+
+  livecheck do
+    url :stable
+    regex(/^cweb[._-]v?(\d+(?:\.\d+)+[a-z]*?)$/i)
+  end
 
   bottle do
-    sha256 "3fdde2a4883a27e1ed296a89458821c848bcbac7daa7df5ab33160131f0e38e8" => :catalina
-    sha256 "77291255506b068cd1856498a048708baf94d29a60267fe5ab221e46cd1a383f" => :mojave
-    sha256 "e6888449565ebd6620ebc6851dbef48765a0654b3e5d429cfffb617ca33e2479" => :high_sierra
-    sha256 "377a987173b8274ab97de6d8978816372d6f380a0fe4c9e0b09cfcd7d27ab66e" => :sierra
-    sha256 "86ff3ceca459e8f087644249378a19a7f53f4ebbd5c74ddfbbe6ea795003a1a2" => :el_capitan
-    sha256 "27c017af8f2e004888240d99a14b29ea9ac8d1fa5339d228b6a79ecda8031e4e" => :yosemite
+    sha256                               arm64_monterey: "04ed26efc24fef95e690016410da0e987c64c86bbb44d7be14f57ffb51176be3"
+    sha256                               arm64_big_sur:  "90e531e4c475de1c1630fe17b0a41856abbe0aaff3f6edebdbc94deccc4b8bff"
+    sha256                               monterey:       "6353ada6affe616e9d5cfd57c860158cd238d40ae08a0f6906a2f9bd88595b47"
+    sha256                               big_sur:        "d289cbfd452407b42ed39ce37127e7c7d5187752ad8b286d5c06692460336bf3"
+    sha256                               catalina:       "65606687d8bfe11b2a441613123fa2fac30f9362e822f13695c1f168bc01b62f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "d164644aba2adcb257e9316d4627b94239ecfc90cc477e8715ca6284ac416363"
   end
+
+  conflicts_with "texlive", because: "both install `cweb` binaries"
 
   def install
     ENV.deparallelize

@@ -1,23 +1,45 @@
 class CargoC < Formula
   desc "Helper program to build and install c-like libraries"
   homepage "https://github.com/lu-zero/cargo-c"
-  url "https://github.com/lu-zero/cargo-c/archive/v0.3.1.tar.gz"
-  sha256 "a8e662539218728372f6b8fbbbd72ff2092ecb71fb4ffef7e6a3969a0734e58f"
+  url "https://github.com/lu-zero/cargo-c/archive/v0.9.5.tar.gz"
+  sha256 "83804d4e4c264c44372112d12c011b865b899696c16bc6a0e97bac5e12bd9112"
+  license "MIT"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "60ab4670d7d8954c1ebd134ed756f0e0746985f5dddff5fed384692695f337dc" => :catalina
-    sha256 "3de8001d223896ab8f6cb77a7ad0b831ae89cf110358b3d035e7ee931899369c" => :mojave
-    sha256 "03c13c18e514d066e9d959500325130d4d66f4d5c5997e7fed44117df4b3028b" => :high_sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "rust" => [:build, :test]
+  bottle do
+    sha256 cellar: :any,                 arm64_monterey: "154dcef48d8d950595ac0b7a3d8edbf0183996cccb225dc13fead3f9446bc024"
+    sha256 cellar: :any,                 arm64_big_sur:  "76521ebc563528b80a11904b4000e065d47fe1ea52d762dbdd2efb943188d729"
+    sha256 cellar: :any,                 monterey:       "87de59cfb988e6ccb543baf6334db2e30d575d118b5907a4382eef1f46a9c0af"
+    sha256 cellar: :any,                 big_sur:        "261152bdb386fefa8ae96446566511cc4e641ad68d0bf35176d310bd6d6c476a"
+    sha256 cellar: :any,                 catalina:       "2742d00e8f887a6cfb1c0d006159ed29f6b4e6acea56086b969f9023d5cfcff3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "dac3184fdb3315d6eed841246dec368796f708aa3f1e3b91126de90d2b803579"
+  end
+
+  depends_on "rust" => :build
+  depends_on "libgit2"
+  depends_on "libssh2"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+  end
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    ENV["LIBGIT2_SYS_USE_PKG_CONFIG"] = "1"
+    ENV["LIBSSH2_SYS_USE_PKG_CONFIG"] = "1"
+
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
-    system "cargo", "cinstall", "--version"
+    cargo_error = "could not find `Cargo.toml`"
+    assert_match cargo_error, shell_output("#{bin}/cargo-cinstall cinstall 2>&1", 1)
+    assert_match cargo_error, shell_output("#{bin}/cargo-cbuild cbuild 2>&1", 1)
   end
 end

@@ -2,23 +2,44 @@ class AwsSdkCpp < Formula
   desc "AWS SDK for C++"
   homepage "https://github.com/aws/aws-sdk-cpp"
   # aws-sdk-cpp should only be updated every 10 releases on multiples of 10
-  url "https://github.com/aws/aws-sdk-cpp/archive/1.7.240.tar.gz"
-  sha256 "3bbc39cc8c8c53bf487c858e5e6dbe4db342904abc7dbfd9d8c8f7d09e6e9ae5"
-  head "https://github.com/aws/aws-sdk-cpp.git"
+  url "https://github.com/aws/aws-sdk-cpp.git",
+      tag:      "1.9.150",
+      revision: "301a4f3f57eea2d80274b6656e36c79fad6fff1a"
+  license "Apache-2.0"
+  head "https://github.com/aws/aws-sdk-cpp.git", branch: "main"
 
   bottle do
-    cellar :any
-    sha256 "44d9c79d35d07bc9b1b1a5bcb9e55a93c93bb98659026c1ea6aab22dec6f5c02" => :catalina
-    sha256 "ee825cf162018066103e3b18a0144012f39702dacbd5f7514267e7e42709de59" => :mojave
-    sha256 "fc61b5961148580be5ebe8267167aecd3bf6cb206f9506bfdb08256e7bc04ec3" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "278a99f5def5e7a210f375637c0b9442accec3a3c1fb8318c7c6bae702f637bd"
+    sha256 cellar: :any,                 arm64_big_sur:  "8a4efbc0b986cea80dcbe0c5d57191ce6f7cb7a9d99dc89ebdf3554eef4d0e18"
+    sha256 cellar: :any,                 monterey:       "7e97a6348d524f2a4a1d0c5e76389fd723daacdd2fb1a72525767f0be6eb3294"
+    sha256 cellar: :any,                 big_sur:        "9922eaefea2fc94d11a215476211885ab98c7a60b0827ac3bb29cdf0fdf4db32"
+    sha256 cellar: :any,                 catalina:       "b32fa656275c8af177af5137a00d666eba3b315bb457fcad374e5edc5bc84954"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "55c771614c6e887a03b9568fc939a8c360b2472ff27386e6497203c7e8b826d1"
   end
 
   depends_on "cmake" => :build
+
   uses_from_macos "curl"
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+
+  # Patch for cmake 3.22 (pr-1810)
+  patch do
+    url "https://github.com/aws/aws-sdk-cpp/commit/2dfc61333.patch?full_index=1"
+    sha256 "9646624895be14a4e253a0ac71535dc12eb2b93bdfda9d98aab9736fd9370546"
+  end
+
   def install
+    ENV.append "LDFLAGS", "-Wl,-rpath,#{rpath}"
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args
+      args = %w[
+        -DENABLE_TESTING=OFF
+      ]
+      system "cmake", "..", *std_cmake_args, *args
       system "make"
       system "make", "install"
     end

@@ -1,129 +1,109 @@
 class Stormssh < Formula
+  include Language::Python::Virtualenv
+
   desc "Command-line tool to manage your ssh connections"
   homepage "https://github.com/emre/storm"
   url "https://files.pythonhosted.org/packages/0a/18/85d12be676ae0c1d98173b07cc289bbf9e0c67d6c7054b8df3e1003bf992/stormssh-0.7.0.tar.gz"
   sha256 "8d034dcd9487fa0d280e0ec855d08420f51d5f9f2249f932e3c12119eaa53453"
-  revision 2
-  head "https://github.com/emre/storm.git"
+  license "MIT"
+  revision 7
+  head "https://github.com/emre/storm.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "3dfc531e43e43e4af569dbcc0226f3a2f98886def75f8a6d96a7339bb9b13254" => :catalina
-    sha256 "bb637896cf459669199e861b092abc345195cdb73eb9db46f6f8d65e1a8a11e0" => :mojave
-    sha256 "bb917e99b7f5e775f71e1c2bd0eea10a0c8e4c189d4effe6a41a72db52401ffd" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "a75b8177eb8ca535665d4e6198b936b0c709c91a8bbc2274f49bbd22d394f677"
+    sha256 cellar: :any,                 arm64_big_sur:  "c9cc953d93d1534a753f07f088194514d75fc220f3ad34fc6a0e6324be1604ad"
+    sha256 cellar: :any,                 monterey:       "22a0178c38fd3644223aac5b7ba6f4e0c766e7aa6fef706a8b703eb9f76d6d5c"
+    sha256 cellar: :any,                 big_sur:        "ad691ed14359decd9760497aed20b6b0f6d4e54c978e3c191a52b59a8331bf32"
+    sha256 cellar: :any,                 catalina:       "d32420400831851cfc19a8512008eec8cf9d69f60b028a46455394408be367c5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "4c0a72be0bad9b3a4a023974ca99c0dea3579d3ba9d00a4c9d0d97201eed75f3"
   end
 
-  depends_on "python"
+  depends_on "rust" => :build
+  depends_on "python@3.10"
+  depends_on "six"
 
-  conflicts_with "storm", :because => "both install 'storm' binary"
+  uses_from_macos "libffi"
 
-  resource "click" do
-    url "https://files.pythonhosted.org/packages/95/d9/c3336b6b5711c3ab9d1d3a80f1a3e2afeb9d8c02a7166462f6cc96570897/click-6.7.tar.gz"
-    sha256 "f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"
+  on_linux do
+    depends_on "pkg-config" => :build
   end
 
-  resource "pycrypto" do
-    url "https://files.pythonhosted.org/packages/source/p/pycrypto/pycrypto-2.6.1.tar.gz"
-    sha256 "f2ce1e989b272cfcb677616763e0a2e7ec659effa67a88aa92b3a65528f60a3c"
-  end
+  conflicts_with "storm", because: "both install 'storm' binary"
 
-  resource "flask" do
-    url "https://files.pythonhosted.org/packages/4b/12/c1fbf4971fda0e4de05565694c9f0c92646223cff53f15b6eb248a310a62/Flask-1.0.2.tar.gz"
-    sha256 "2271c0070dbcb5275fad4a82e29f23ab92682dc45f9dfbc22c02ba9b9322ce48"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/16/d8/bc6316cf98419719bd59c91742194c111b6f2e85abac88e496adefaf7afe/six-1.11.0.tar.gz"
-    sha256 "70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9"
-  end
-
-  resource "termcolor" do
-    url "https://files.pythonhosted.org/packages/source/t/termcolor/termcolor-1.1.0.tar.gz"
-    sha256 "1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"
-  end
-
-  resource "markupsafe" do
-    url "https://files.pythonhosted.org/packages/4d/de/32d741db316d8fdb7680822dd37001ef7a448255de9699ab4bfcbdf4172b/MarkupSafe-1.0.tar.gz"
-    sha256 "a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665"
-  end
-
-  resource "jinja2" do
-    url "https://files.pythonhosted.org/packages/56/e6/332789f295cf22308386cf5bbd1f4e00ed11484299c5d7383378cf48ba47/Jinja2-2.10.tar.gz"
-    sha256 "f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4"
-  end
-
-  resource "werkzeug" do
-    url "https://files.pythonhosted.org/packages/9f/08/a3bb1c045ec602dc680906fc0261c267bed6b3bb4609430aff92c3888ec8/Werkzeug-0.14.1.tar.gz"
-    sha256 "c3fd7a7d41976d9f44db327260e263132466836cef6f91512889ed60ad26557c"
-  end
-
-  resource "itsdangerous" do
-    url "https://files.pythonhosted.org/packages/source/i/itsdangerous/itsdangerous-0.24.tar.gz"
-    sha256 "cbb3fcf8d3e33df861709ecaf89d9e6629cff0a217bc2848f1b41cd30d360519"
-  end
-
-  resource "ecdsa" do
-    url "https://files.pythonhosted.org/packages/source/e/ecdsa/ecdsa-0.13.tar.gz"
-    sha256 "64cf1ee26d1cde3c73c6d7d107f835fed7c6a2904aef9eac223d57ad800c43fa"
-  end
-
-  resource "pyasn1" do
-    url "https://files.pythonhosted.org/packages/10/46/059775dc8e50f722d205452bced4b3cc965d27e8c3389156acd3b1123ae3/pyasn1-0.4.4.tar.gz"
-    sha256 "f58f2a3d12fd754aa123e9fa74fb7345333000a035f3921dbdaa08597aa53137"
-  end
-
-  resource "pycparser" do
-    url "https://files.pythonhosted.org/packages/68/9e/49196946aee219aead1290e00d1e7fdeab8567783e83e1b9ab5585e6206a/pycparser-2.19.tar.gz"
-    sha256 "a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3"
+  resource "bcrypt" do
+    url "https://files.pythonhosted.org/packages/d8/ba/21c475ead997ee21502d30f76fd93ad8d5858d19a3fad7cd153de698c4dd/bcrypt-3.2.0.tar.gz"
+    sha256 "5b93c1726e50a93a033c36e5ca7fdcd29a5c7395af50a6892f5d9e7c6cfbfb29"
   end
 
   resource "cffi" do
-    url "https://files.pythonhosted.org/packages/93/1a/ab8c62b5838722f29f3daffcc8d4bd61844aa9b5f437341cc890ceee483b/cffi-1.12.3.tar.gz"
-    sha256 "041c81822e9f84b1d9c401182e174996f0bae9991f33725d059b771744290774"
+    url "https://files.pythonhosted.org/packages/00/9e/92de7e1217ccc3d5f352ba21e52398372525765b2e0c4530e6eb2ba9282a/cffi-1.15.0.tar.gz"
+    sha256 "920f0d66a896c2d99f0adbb391f990a84091179542c205fa53ce5787aff87954"
   end
 
-  resource "PyNaCl" do
-    url "https://files.pythonhosted.org/packages/61/ab/2ac6dea8489fa713e2b4c6c5b549cc962dd4a842b5998d9e80cf8440b7cd/PyNaCl-1.3.0.tar.gz"
-    sha256 "0c6100edd16fefd1557da078c7a31e7b7d7a52ce39fdca2bec29d4f7b6e7600c"
-  end
-
-  resource "bcrypt" do
-    url "https://files.pythonhosted.org/packages/f3/ec/bb6b384b5134fd881b91b6aa3a88ccddaad0103857760711a5ab8c799358/bcrypt-3.1.4.tar.gz"
-    sha256 "67ed1a374c9155ec0840214ce804616de49c3df9c5bc66740687c1c9b1cd9e8d"
-  end
-
-  resource "asn1crypto" do
-    url "https://files.pythonhosted.org/packages/c1/a9/86bfedaf41ca590747b4c9075bc470d0b2ec44fb5db5d378bc61447b3b6b/asn1crypto-1.2.0.tar.gz"
-    sha256 "87620880a477123e01177a1f73d0f327210b43a3cdbd714efcd2fa49a8d7b384"
-  end
-
-  resource "idna" do
-    url "https://files.pythonhosted.org/packages/65/c4/80f97e9c9628f3cac9b98bfca0402ede54e0563b56482e3e6e45c43c4935/idna-2.7.tar.gz"
-    sha256 "684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"
+  resource "click" do
+    url "https://files.pythonhosted.org/packages/f4/09/ad003f1e3428017d1c3da4ccc9547591703ffea548626f47ec74509c5824/click-8.0.3.tar.gz"
+    sha256 "410e932b050f5eed773c4cda94de75971c89cdb3155a72a0831139a79e5ecb5b"
   end
 
   resource "cryptography" do
-    url "https://files.pythonhosted.org/packages/22/21/233e38f74188db94e8451ef6385754a98f3cad9b59bedf3a8e8b14988be4/cryptography-2.3.1.tar.gz"
-    sha256 "8d10113ca826a4c29d5b85b2c4e045ffa8bad74fb525ee0eceb1d38d4c70dfd6"
+    url "https://files.pythonhosted.org/packages/10/91/90b8d4cd611ac2aa526290ae4b4285aa5ea57ee191c63c2f3d04170d7683/cryptography-35.0.0.tar.gz"
+    sha256 "9933f28f70d0517686bd7de36166dda42094eac49415459d9bdf5e7df3e0086d"
+  end
+
+  resource "Flask" do
+    url "https://files.pythonhosted.org/packages/95/40/b976286b5e7ba01794a7e7588e7e7fa27fb16c6168fa849234840bf0f61d/Flask-2.0.2.tar.gz"
+    sha256 "7b2fb8e934ddd50731893bdcdb00fc8c0315916f9fcd50d22c7cc1a95ab634e2"
+  end
+
+  resource "itsdangerous" do
+    url "https://files.pythonhosted.org/packages/58/66/d6c5859dcac92b442626427a8c7a42322068c5cd5d4a463ce78b93f730b7/itsdangerous-2.0.1.tar.gz"
+    sha256 "9e724d68fc22902a1435351f84c3fb8623f303fffcc566a4cb952df8c572cff0"
+  end
+
+  resource "Jinja2" do
+    url "https://files.pythonhosted.org/packages/f8/86/7c0eb6e8b05385d1ce682abc0f994abd1668e148fb52603fa86e15d4c110/Jinja2-3.0.2.tar.gz"
+    sha256 "827a0e32839ab1600d4eb1c4c33ec5a8edfbc5cb42dafa13b81f182f97784b45"
+  end
+
+  resource "MarkupSafe" do
+    url "https://files.pythonhosted.org/packages/bf/10/ff66fea6d1788c458663a84d88787bae15d45daa16f6b3ef33322a51fc7e/MarkupSafe-2.0.1.tar.gz"
+    sha256 "594c67807fb16238b30c44bdf74f36c02cdf22d1c8cda91ef8a0ed8dabf5620a"
   end
 
   resource "paramiko" do
-    url "https://files.pythonhosted.org/packages/a4/57/86681372e7a8d642718cadeef38ead1c24c4a1af21ae852642bf974e37c7/paramiko-2.4.2.tar.gz"
-    sha256 "a8975a7df3560c9f1e2b43dc54ebd40fd00a7017392ca5445ce7df409f900fcb"
+    url "https://files.pythonhosted.org/packages/dd/67/6b3a5f3d730b15b5ff77d13e6f05f9189ae44d8a8bad4967d16694eaac8b/paramiko-2.8.0.tar.gz"
+    sha256 "e673b10ee0f1c80d46182d3af7751d033d9b573dd7054d2d0aa46be186c3c1d2"
+  end
+
+  resource "pycparser" do
+    url "https://files.pythonhosted.org/packages/0f/86/e19659527668d70be91d0369aeaa055b4eb396b0f387a4f92293a20035bd/pycparser-2.20.tar.gz"
+    sha256 "2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"
+  end
+
+  resource "PyNaCl" do
+    url "https://files.pythonhosted.org/packages/cf/5a/25aeb636baeceab15c8e57e66b8aa930c011ec1c035f284170cacb05025e/PyNaCl-1.4.0.tar.gz"
+    sha256 "54e9a2c849c742006516ad56a88f5c74bf2ce92c9f67435187c3c5953b346505"
+  end
+
+  resource "termcolor" do
+    url "https://files.pythonhosted.org/packages/8a/48/a76be51647d0eb9f10e2a4511bf3ffb8cc1e6b14e9e4fab46173aa79f981/termcolor-1.1.0.tar.gz"
+    sha256 "1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"
+  end
+
+  resource "Werkzeug" do
+    url "https://files.pythonhosted.org/packages/83/3c/ecdb36f49ab06defb0d5a466cfeb4ae90a55d02cfef379f781da2801a45d/Werkzeug-2.0.2.tar.gz"
+    sha256 "aa2bb6fc8dee8d6c504c0ac1e7f5f7dc5810a9903e793b6f715a9f015bdadb9a"
+  end
+
+  # Support python 3.10, remove when upstream patch is merged/released
+  # https://github.com/emre/storm/pull/176
+  patch do
+    url "https://github.com/emre/storm/commit/5a4306b90060f6109611df49ac480f1300e35acd.patch?full_index=1"
+    sha256 "38e44cff45aef6549574777fb4fdbc065604d0a8918d26a3de02f1570ae1bb92"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
-    resources.each do |r|
-      r.stage { system "python3", *Language::Python.setup_install_args(libexec/"vendor") }
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    virtualenv_install_with_resources
   end
 
   test do

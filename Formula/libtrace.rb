@@ -1,14 +1,22 @@
 class Libtrace < Formula
   desc "Library for trace processing supporting multiple inputs"
   homepage "https://research.wand.net.nz/software/libtrace.php"
-  url "https://research.wand.net.nz/software/libtrace/libtrace-4.0.10.tar.bz2"
-  sha256 "4169b4d67980b56aae9b610c4f5c4491a82bf68cfe06bc010c85e68c923cb01d"
+  url "https://research.wand.net.nz/software/libtrace/libtrace-4.0.17.tar.bz2"
+  sha256 "5db6572467122581c44ce505327d7882bc21d9bad4bee8c57a147cc93a29d1ac"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?libtrace[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "e1af5f82a2d411736383474d3a3d745c2ac35746fcf0eee6cf6656de80f39341" => :catalina
-    sha256 "5bb2bd9162d0c470ba2b75e9e8a11b14a366d558971aafc98dacea8de9d4d49b" => :mojave
-    sha256 "b6f8bee8321bc76ba3fab5ee94aee11f545f0e11a9f5c8c042bd41610e5b7e6c" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "b1b7949b37538a37dd582e68bb5dad9f81e4f1f4046747e7752479aff77e97f6"
+    sha256 cellar: :any, arm64_big_sur:  "1939f5eff2012583d368e417ea50ea1e324c99a7f4f91285ad788183ecdce8fa"
+    sha256 cellar: :any, monterey:       "46b90e5450699e230f8927681a4aa14afa2384a07e5688f7328cef16ae266aa3"
+    sha256 cellar: :any, big_sur:        "3ea87a19d8421ff02650581699caeccc9cff21aeb309dee19a7b74bdd47c63ff"
+    sha256 cellar: :any, catalina:       "89febb4122bbe7cd16fc3607ec8cebb242a097603db98da65f05ee733e794bd0"
+    sha256 cellar: :any, mojave:         "4148146586b780f70814f23aeaeb28ce0a07ddd26ca9abedd77f8673e5b75e0a"
   end
 
   depends_on "openssl@1.1"
@@ -17,6 +25,12 @@ class Libtrace < Formula
   resource "8021x.pcap" do
     url "https://github.com/LibtraceTeam/libtrace/raw/9e82eabc39bc491c74cc4215d7eda5f07b85a8f5/test/traces/8021x.pcap"
     sha256 "aa036e997d7bec2fa3d387e3ad669eba461036b9a89b79dcf63017a2c4dac725"
+  end
+
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
   end
 
   def install

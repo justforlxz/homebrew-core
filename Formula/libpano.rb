@@ -1,24 +1,34 @@
 class Libpano < Formula
   desc "Build panoramic images from a set of overlapping images"
   homepage "https://panotools.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/panotools/libpano13/libpano13-2.9.19/libpano13-2.9.19.tar.gz"
-  version "13-2.9.19"
-  sha256 "037357383978341dea8f572a5d2a0876c5ab0a83dffda431bd393357e91d95a8"
-  revision 2
+  url "https://downloads.sourceforge.net/project/panotools/libpano13/libpano13-2.9.20/libpano13-2.9.20.tar.gz"
+  version "13-2.9.20"
+  sha256 "3b532836c37b8cd75cd2227fd9207f7aca3fdcbbd1cce3b9749f056a10229b89"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/libpano(\d+-\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "446728639c2cdf06291df1ecd510da3dcb0550163d73560eec6d13b0e3b28351" => :catalina
-    sha256 "0df8e9b94be82d01f9371286fa934b03ea957fc3d14fea8e2b71e5254c4077b4" => :mojave
-    sha256 "2f41d44eeb64fce3d6451e4010a90a088f2db1c0bc1fb61d90f869f5eb6dd247" => :high_sierra
-    sha256 "ee3a892768cab28490d0c5719d503faec655ed274b42d21cd93413c269430bfa" => :sierra
-    sha256 "cde19367882bcb0f1ef6aa389a56fad271dbe956055b8c3e7cafe9c27a559478" => :el_capitan
-    sha256 "d78f4a20ee2b3a55e91cb04f9655f719631fe8b3ac9ffed162e88a337a6e3a08" => :yosemite
+    sha256 cellar: :any,                 arm64_monterey: "6d384b4a21347cea34a2fec5e6f360f06e066c175a09818eb9278356f2975f9a"
+    sha256 cellar: :any,                 arm64_big_sur:  "62acefefae0a9e7773c8040bd41706263f85563dc6533ed922d2cf4ff565f7c2"
+    sha256 cellar: :any,                 monterey:       "f3405fc554fc285e20958abb8dc920ac61a205bcbd03ab8eabde83b76c1e9a48"
+    sha256 cellar: :any,                 big_sur:        "b1cb70b0d3ec17309a8c71f4d30ead3cee9c72f4efd8d15b85c9a5821de6fea6"
+    sha256 cellar: :any,                 catalina:       "07de3b8c00569f6d7fe5c813eec7e72708ee12022d85003a64c0959d87057a1e"
+    sha256 cellar: :any,                 mojave:         "8ed168e1c4b45fdc7815d6c275c0831f3b8450481cbd6b8ff8654d84f0486cba"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "4c9f6180154f15419ba4f2486eddd5f110098ebc3150b2007f867e9459c24b4b"
   end
 
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
+
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+  end
 
   def install
     system "./configure", "--disable-dependency-tracking",

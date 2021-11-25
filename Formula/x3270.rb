@@ -1,19 +1,33 @@
 class X3270 < Formula
   desc "IBM 3270 terminal emulator for the X Window System and Windows"
   homepage "http://x3270.bgp.nu/"
-  url "https://downloads.sourceforge.net/project/x3270/x3270/3.6ga8/suite3270-3.6ga8-src.tgz"
-  sha256 "a174114ba42fd1644e39adc532d893da8c40692cf46fd5ef02bb83d5704c66bf"
+  url "http://x3270.bgp.nu/download/04.01/suite3270-4.1ga10-src.tgz"
+  sha256 "8216572d0a14d4d18e65db97f6e2dd1aeb66eed02b4d544c79ed8d34ea54be71"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url "https://x3270.miraheze.org/wiki/Downloads"
+    regex(/href=.*?suite3270[._-]v?(\d+(?:\.\d+)+(?:ga\d+)?)(?:-src)?\.t/i)
+  end
 
   bottle do
-    sha256 "89d86a2b2bd54b97779d62ce7254f229dc7bde386ecea33487dcf3ef62523f6c" => :catalina
-    sha256 "548f8a42e7d672bb6235aa20852e48d9d6a8d09be07017b57f859bcb1e69872a" => :mojave
-    sha256 "99c09d8e8adb73201ce8d3f806a82c0e926deb0a7ca6136086bcbedebce42ae3" => :high_sierra
-    sha256 "02656ba9619eb9b2bec85d17d542ab9e80e9d9b53932d9ec128bb04a3bdfad25" => :sierra
+    sha256 arm64_monterey: "18f101d5a808cd1991be3966a1e535c9d205a566f73e7a6255b4f0886eaa2c8b"
+    sha256 arm64_big_sur:  "9fae3a8f2ddbeceefda9f0db432c690d3a4e3bc60449b2652318a4eac46452a8"
+    sha256 monterey:       "6664d1024a700607cf84b5775c71e58ee9ebe6cd890cdf40f27b125ece8c8293"
+    sha256 big_sur:        "a7fcecb572d154289a3482fd1bf482018b0056446ea9c854c86c185bd8754eb0"
+    sha256 catalina:       "99f3c5d17ddcfeffd43a88c4e55116dd5a0ba59c1fc69ed214e36d70dd95aa78"
+    sha256 x86_64_linux:   "aac22fe73d7d53a70811bbfeea8ca25a5c45f86212024bc345b308bc4003a5c1"
   end
 
   depends_on "readline"
 
+  uses_from_macos "tcl-tk"
+
   def install
+    # use BSD date options on macOS
+    # https://sourceforge.net/p/x3270/bugs/24/
+    inreplace "Common/mkversion.sh", "date -d@", "date -r" if OS.mac?
+
     args = %W[
       --prefix=#{prefix}
       --enable-c3270
@@ -21,7 +35,6 @@ class X3270 < Formula
       --enable-s3270
       --enable-tcl3270
     ]
-
     system "./configure", *args
     system "make", "install"
     system "make", "install.man"

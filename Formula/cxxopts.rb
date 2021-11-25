@@ -1,16 +1,13 @@
 class Cxxopts < Formula
   desc "Lightweight C++ command-line option parser"
   homepage "https://github.com/jarro2783/cxxopts"
-  url "https://github.com/jarro2783/cxxopts/archive/v2.2.0.tar.gz"
-  sha256 "447dbfc2361fce9742c5d1c9cfb25731c977b405f9085a738fbd608626da8a4d"
-  head "https://github.com/jarro2783/cxxopts.git"
+  url "https://github.com/jarro2783/cxxopts/archive/v3.0.0.tar.gz"
+  sha256 "36f41fa2a46b3c1466613b63f3fa73dc24d912bc90d667147f1e43215a8c6d00"
+  license "MIT"
+  head "https://github.com/jarro2783/cxxopts.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "eac0f746cf84e2b1a88cba6da3686269b7f71d05492eec886cd36f388989cb6c" => :catalina
-    sha256 "0d218ecd42f83ea5e0fac4c6d8e36d5acf555133c7d52fed9657107edffef917" => :mojave
-    sha256 "0d218ecd42f83ea5e0fac4c6d8e36d5acf555133c7d52fed9657107edffef917" => :high_sierra
-    sha256 "36f6ff18ae628891ca7d188c749fea2a097db1b9d83181bfd123ce09adddebb3" => :sierra
+    sha256 cellar: :any_skip_relocation, all: "a66fdf03d937520c595c69027c2eede3be5d892f1dadc0888900d84eac0cdd5d"
   end
 
   depends_on "cmake" => :build

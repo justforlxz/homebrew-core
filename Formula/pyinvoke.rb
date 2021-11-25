@@ -3,20 +3,23 @@ class Pyinvoke < Formula
 
   desc "Pythonic task management & command execution"
   homepage "https://www.pyinvoke.org/"
-  url "https://github.com/pyinvoke/invoke/archive/1.2.0.tar.gz"
-  sha256 "266003d33a8b3a565268e33aa0f9767b9441cf1476a20258f929768ee5acd390"
+  url "https://files.pythonhosted.org/packages/37/b3/0b88358ee07789688d17ec7074a656da68ced50a122183187be12928b535/invoke-1.6.0.tar.gz"
+  sha256 "374d1e2ecf78981da94bfaf95366216aaec27c2d6a7b7d5818d92da55aa258d3"
+  license "BSD-2-Clause"
   revision 1
-  head "https://github.com/pyinvoke/invoke.git"
+  head "https://github.com/pyinvoke/invoke.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b542b3b704df6c5426c73b0eb5bb488450e98eabcb732acbaf2b5efc65e0b971" => :catalina
-    sha256 "381a13898c676f211ae0866eda70d51d4b500fa470e198c9cb32a57483f71b71" => :mojave
-    sha256 "6f242a9c102fbd1e02c86e7c5e26eb4053b5ef50c9d0530393158662998538e6" => :high_sierra
-    sha256 "e581b8aade463fae2f82209a2ef250cbaa5c346c6826b13770141b3551457d34" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c658b67c5c75300ad6c9de3753943b807e545e62bb1024e74add694ad3634f20"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "c658b67c5c75300ad6c9de3753943b807e545e62bb1024e74add694ad3634f20"
+    sha256 cellar: :any_skip_relocation, monterey:       "3f3952a15e8edb2422ebdcea9c4524df46ce45f1b4e0bacc5e1547995aec07c2"
+    sha256 cellar: :any_skip_relocation, big_sur:        "3f3952a15e8edb2422ebdcea9c4524df46ce45f1b4e0bacc5e1547995aec07c2"
+    sha256 cellar: :any_skip_relocation, catalina:       "3f3952a15e8edb2422ebdcea9c4524df46ce45f1b4e0bacc5e1547995aec07c2"
+    sha256 cellar: :any_skip_relocation, mojave:         "3f3952a15e8edb2422ebdcea9c4524df46ce45f1b4e0bacc5e1547995aec07c2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "2090caea6c04415c99277cc5c6fd9e9156015f3f4b390f34665eb2b8eeb6b847"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
     virtualenv_install_with_resources

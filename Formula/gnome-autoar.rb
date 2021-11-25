@@ -1,31 +1,37 @@
 class GnomeAutoar < Formula
   desc "GNOME library for archive handling"
   homepage "https://github.com/GNOME/gnome-autoar"
-  url "https://download.gnome.org/sources/gnome-autoar/0.2/gnome-autoar-0.2.3.tar.xz"
-  sha256 "5de9db0db028cd6cab7c2fec46ba90965474ecf9cd68cfd681a6488cf1fb240a"
-  revision 2
+  url "https://download.gnome.org/sources/gnome-autoar/0.4/gnome-autoar-0.4.1.tar.xz"
+  sha256 "646bd50ebad92d91c1be89097a15364156157442cac1471ded7ecb27d9a9150e"
+  license "LGPL-2.1-or-later"
 
-  bottle do
-    cellar :any
-    sha256 "0d7698b746f7d95db0f74f8a9e52143e547b6f931f5879d1ee0ec5bddbb95dc9" => :catalina
-    sha256 "d4eb4086335d897d68ee5a0d09947f500e18a93161429473d44d6cb81b962bf1" => :mojave
-    sha256 "007d55df1aea731560ecef0221251db7285e6b4fdd5b266680e6e5e55a6c2074" => :high_sierra
-    sha256 "0bf8f1ccb106a998b22d7f0da8636ba355a9f984d81b4282db04b021db2c9ce9" => :sierra
+  # gnome-autoar doesn't seem to follow the typical GNOME version format where
+  # even-numbered minor versions are stable, so we override the default regex
+  # from the `Gnome` strategy.
+  livecheck do
+    url :stable
+    regex(/gnome-autoar[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "pkg-config" => :build
+  bottle do
+    sha256 cellar: :any, arm64_monterey: "6083f2fef0c5265a0146e05ab241fb4dce7f09442ca0a53898712fa9b022af83"
+    sha256 cellar: :any, arm64_big_sur:  "92a5874a1c8f8c6a27465c8ca186b7813898ce65154c73e6c62f00192619a3eb"
+    sha256 cellar: :any, monterey:       "f52638834f3691698469188275254f8cdb647e1bbe040c7421f716d85e0801c7"
+    sha256 cellar: :any, big_sur:        "b59d4adb70998430549c885e7557eb3e6d46efba9e33120dcac861fa1fa4f2e5"
+    sha256 cellar: :any, catalina:       "ec90973e8d6910e5d0296f4a40cf6c4e759ce678ddc9e2aa59669ee6c60c7603"
+  end
+
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "gtk+3"
   depends_on "libarchive"
 
   def install
-    ENV.delete "SDKROOT"
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--disable-glibtest",
-                          "--disable-schemas-compile"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   def post_install

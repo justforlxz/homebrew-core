@@ -1,20 +1,22 @@
 class Googler < Formula
+  include Language::Python::Shebang
+
   desc "Google Search and News from the command-line"
   homepage "https://github.com/jarun/googler"
-  url "https://github.com/jarun/googler/archive/v4.0.tar.gz"
-  sha256 "f72593ca2a3dccd7301c0fed55effd223cc38f6c21910bffbbfba1360c985cd3"
+  url "https://github.com/jarun/googler/archive/v4.3.2.tar.gz"
+  sha256 "bd59af407e9a45c8a6fcbeb720790cb9eccff21dc7e184716a60e29f14c68d54"
+  license "GPL-3.0-or-later"
+  revision 1
   head "https://github.com/jarun/googler.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1ee5b39a9a4e7bbdb32c85e59303b8d77e31b2e75acb218151d48fb2a7fd5fac" => :catalina
-    sha256 "1ee5b39a9a4e7bbdb32c85e59303b8d77e31b2e75acb218151d48fb2a7fd5fac" => :mojave
-    sha256 "1ee5b39a9a4e7bbdb32c85e59303b8d77e31b2e75acb218151d48fb2a7fd5fac" => :high_sierra
+    sha256 cellar: :any_skip_relocation, all: "18cddbd924b8544fa84dce44221443c08053e1939f4b638538e0da04a696df03"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
+    rewrite_shebang detected_python_shebang, "googler"
     system "make", "disable-self-upgrade"
     system "make", "install", "PREFIX=#{prefix}"
     bash_completion.install "auto-completion/bash/googler-completion.bash"

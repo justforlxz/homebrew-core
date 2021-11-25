@@ -1,21 +1,29 @@
 class Neon < Formula
   desc "HTTP and WebDAV client library with a C interface"
-  homepage "https://web.archive.org/web/webdav.org/neon/"
-  url "https://mirrorservice.org/sites/distfiles.macports.org/neon/neon-0.30.2.tar.gz"
-  mirror "https://fossies.org/linux/www/neon-0.30.2.tar.gz"
-  sha256 "db0bd8cdec329b48f53a6f00199c92d5ba40b0f015b153718d1b15d3d967fbca"
-  revision 1
+  homepage "https://notroj.github.io/neon/"
+  url "https://notroj.github.io/neon/neon-0.32.1.tar.gz"
+  mirror "https://fossies.org/linux/www/neon-0.32.1.tar.gz"
+  sha256 "05c54bc115030c89e463a4fb28d3a3f8215879528ba5ca70d676d3d21bf3af52"
+  license "LGPL-2.0-or-later"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?neon[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d87da64331ca21f48fa61b518e701654781008d46c5ca33840a34c41dda4a9e2" => :catalina
-    sha256 "4c264a2164f7bb4f080a701b4fcc31c2bba54031ad574f25c33931abf7f205f0" => :mojave
-    sha256 "96799d3568d37f8c2da6333d4bccaa23fa13e75d6ef1e75f993f18c53e525306" => :high_sierra
-    sha256 "5f173cc83a291cb756046e94f09eb4031d5ec316988a757a6b5e2a92c310037d" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "86e0ca2c11f4882900d48f5c6c87f29ed437c0fd4c311d06174c9bd10ef3542c"
+    sha256 cellar: :any,                 big_sur:       "86819110b5eacedd6be7e53d202b532c4b956062217685ae98bb96e547ad58cd"
+    sha256 cellar: :any,                 catalina:      "f5385868f91943383ca9674f2589280e30b55f4156086db05efa160411738467"
+    sha256 cellar: :any,                 mojave:        "de9f23227aac7ec30b4a412d783e5dfdb788a51c51e66689f01705207270805e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "07b5a9528950d32639c71726cd22bf01e6dc9df7dea38d4dccc17ab7844798a7"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "xmlto" => :build
   depends_on "openssl@1.1"
+
+  uses_from_macos "libxml2"
 
   # Configure switch unconditionally adds the -no-cpp-precomp switch
   # to CPPFLAGS, which is an obsolete Apple-only switch that breaks
@@ -24,6 +32,10 @@ class Neon < Formula
   patch :DATA
 
   def install
+    # Work around configure issues with Xcode 12
+    ENV.append "CFLAGS", "-Wno-implicit-function-declaration"
+    ENV["XML_CATALOG_FILES"] = etc/"xml/catalog"
+
     system "./configure", "--disable-debug",
                           "--prefix=#{prefix}",
                           "--enable-shared",

@@ -1,14 +1,21 @@
 class Pgroonga < Formula
   desc "PostgreSQL plugin to use Groonga as index"
   homepage "https://pgroonga.github.io/"
-  url "https://packages.groonga.org/source/pgroonga/pgroonga-2.2.2.tar.gz"
-  sha256 "d5a010c8adc68e026b5e8298fc0d707c81ec0c847c9a97cb4a36bc132f15bf5d"
+  url "https://packages.groonga.org/source/pgroonga/pgroonga-2.3.4.tar.gz"
+  sha256 "5c4ebaf4a7c71326394e084c502d06708a9d3d3b1d02cd38a40fedf3893e8b61"
+  license "PostgreSQL"
+
+  livecheck do
+    url "https://packages.groonga.org/source/pgroonga/"
+    regex(/href=.*?pgroonga[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "b44a4ace1580f94346ef0e14a2194ebe47246e023c42e5a7f2571b52ec2b156b" => :catalina
-    sha256 "53a14b9e8754907ebce4b69b3906f49186bebd8c61f1b875ce62e0c5ef987e5b" => :mojave
-    sha256 "4f1bd67d861b575979c957edeb9dc2cbd4a310cdfc9be4cfdf4019737a01cdf9" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "2ad9ea45831ae3ffac67788c2a2d72b0be9bfd6c9214b0e2e725060bb4bb203a"
+    sha256 cellar: :any, arm64_big_sur:  "a53e679d4d9c3e982ee1317fc721bc79c07197059854f4c230be316ad47cc02a"
+    sha256 cellar: :any, monterey:       "84d2e269d422f9e2038f90b176c9a34c80533467f79f7f6961413d9ee7142a4b"
+    sha256 cellar: :any, big_sur:        "3b5fff0d0bc8e26d42b1cfbfae8510735bcf1d2ad5c87cb367c12be1c774b450"
+    sha256 cellar: :any, catalina:       "08050d1ffe39254ee2d27b5cdf61abc31c924ef4b8f335664b39d3f1fdfc3b5b"
   end
 
   depends_on "pkg-config" => :build
@@ -22,22 +29,5 @@ class Pgroonga < Formula
 
     lib.install Dir["stage/**/lib/*"]
     (share/"postgresql/extension").install Dir["stage/**/share/postgresql/extension/*"]
-  end
-
-  test do
-    pg_bin = Formula["postgresql"].opt_bin
-    pg_port = "55561"
-    system "#{pg_bin}/initdb", testpath/"test"
-    pid = fork { exec "#{pg_bin}/postgres", "-D", testpath/"test", "-p", pg_port }
-
-    begin
-      sleep 2
-      system "#{pg_bin}/createdb", "-p", pg_port
-      system "#{pg_bin}/psql", "-p", pg_port, "--command", "CREATE DATABASE test;"
-      system "#{pg_bin}/psql", "-p", pg_port, "-d", "test", "--command", "CREATE EXTENSION pgroonga;"
-    ensure
-      Process.kill 9, pid
-      Process.wait pid
-    end
   end
 end

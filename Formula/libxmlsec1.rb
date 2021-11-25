@@ -1,14 +1,22 @@
 class Libxmlsec1 < Formula
   desc "XML security library"
   homepage "https://www.aleksey.com/xmlsec/"
-  url "https://www.aleksey.com/xmlsec/download/xmlsec1-1.2.29.tar.gz"
-  sha256 "b1d1deba966019930f608d1f2b95c40ca3450f1393bcd3a3c001a8ba1d2839ab"
+  url "https://www.aleksey.com/xmlsec/download/xmlsec1-1.2.33.tar.gz"
+  sha256 "26041d35a20a245ed5a2fb9ee075f10825664d274220cb5190340fa87a4d0931"
+  license "MIT"
+
+  livecheck do
+    url "https://www.aleksey.com/xmlsec/download/"
+    regex(/href=.*?xmlsec1[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "a088dc56791af25f57b43c6ef1e95bce4da78793d071d781ce4289ec8e343266" => :catalina
-    sha256 "d10ed21c6a9abd0fb2b97a29b4c3ff78346faa0bdb3d7b6149f736ac47716fd6" => :mojave
-    sha256 "f50347e52ba30d4a231af5060c9eda68eef945171306fd4433c5717b4c53e5dd" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "dec6fd5829e865122d129980ef2ed3744ca8bbf5bb8e20aeccbb7ca39a0ba6d5"
+    sha256 cellar: :any,                 arm64_big_sur:  "5f7287fd477e8c9db54ca60d3ba0baccbaaa8f1223c69b468c7c3f5cea51901c"
+    sha256 cellar: :any,                 monterey:       "f95fc9af05605a1746f83322b2772e6623a560184814971473f124da8c21e3fe"
+    sha256 cellar: :any,                 big_sur:        "fe86e0105c779a17c87ff23e9d676097f01bd6c29c0e8034e523bfa502c7f02f"
+    sha256 cellar: :any,                 catalina:       "12f5f73d58175419bf06ff8d0b93da1f47638a279659609e2e2afe29f1061d3a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "3f9db3f53634ffdbcc8234968e3bce2c42a32f731625506777ac1831f43735df"
   end
 
   depends_on "pkg-config" => :build
@@ -17,8 +25,18 @@ class Libxmlsec1 < Formula
   depends_on "libxml2"
   depends_on "openssl@1.1"
 
+  on_macos do
+    depends_on xcode: :build
+  end
+
   # Add HOMEBREW_PREFIX/lib to dl load path
   patch :DATA
+
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+  end
 
   def install
     args = ["--disable-dependency-tracking",

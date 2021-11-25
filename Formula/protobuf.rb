@@ -1,27 +1,37 @@
 class Protobuf < Formula
   desc "Protocol buffers (Google's data interchange format)"
   homepage "https://github.com/protocolbuffers/protobuf/"
-  url "https://github.com/protocolbuffers/protobuf.git",
-      :tag      => "v3.11.1",
-      :revision => "7bb8b108d16252d0ed053673d70ea6d2020ec7ff"
-  head "https://github.com/protocolbuffers/protobuf.git"
+  url "https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-all-3.17.3.tar.gz"
+  sha256 "77ad26d3f65222fd96ccc18b055632b0bfedf295cb748b712a98ba1ac0b704b2"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "34e7c02caf05fc97635455eee47e4e716b035d4dbc964d197a748b455100e5cd" => :catalina
-    sha256 "cb1180ca363ab6d4f5ffe1f70fcff67244edffcfd3c0eb49395f637da0f8f846" => :mojave
-    sha256 "60c8ae71f4c515837bae61f5c5b6c9f4a2b0d664b0787921a5377f628bfffa70" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "a501c2a8db322b604ae4426e784f0d2050fc21e36f69f825ab61ad63d6923668"
+    sha256 cellar: :any,                 arm64_big_sur:  "ef7a56961e918e7626e099d18ad87d2ad5414ccc2086211d5dd4f6509d7f4de5"
+    sha256 cellar: :any,                 monterey:       "1e94ea6a18487309aaf24c25c0be5b7d95d1f1e04aa4aaf00e9b55618a063815"
+    sha256 cellar: :any,                 big_sur:        "d1060a6f73000c9c46a1954397a6375fb41c409d7b3cb7206fc69488313b4855"
+    sha256 cellar: :any,                 catalina:       "2f25a4051028d54de1b5527826f39815858b89040f39f14866472c8aa6bfb4e1"
+    sha256 cellar: :any,                 mojave:         "7e6d2eb1baee925d8a0776e9dc9fbcb267e1de5c45d2b648b6a60457f0519667"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "1a7178716cb915c19725d6e21bde91b8c7059e0cf6ffd7e3ab2cd1746a1a2d32"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
-  depends_on "python" => [:build, :test]
+  head do
+    url "https://github.com/protocolbuffers/protobuf.git"
 
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/94/3e/edcf6fef41d89187df7e38e868b2dd2182677922b600e880baad7749c865/six-1.13.0.tar.gz"
-    sha256 "30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66"
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
   end
+
+  depends_on "python@3.9" => [:build, :test]
+  depends_on "six"
+
+  uses_from_macos "zlib"
 
   def install
     # Don't build in debug mode. See:
@@ -30,7 +40,7 @@ class Protobuf < Formula
     ENV.prepend "CXXFLAGS", "-DNDEBUG"
     ENV.cxx11
 
-    system "./autogen.sh"
+    system "./autogen.sh" if build.head?
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}", "--with-zlib"
     system "make"
@@ -38,23 +48,16 @@ class Protobuf < Formula
     system "make", "install"
 
     # Install editor support and examples
-    doc.install "editors", "examples"
+    pkgshare.install "editors/proto.vim", "examples"
+    elisp.install "editors/protobuf-mode.el"
 
     ENV.append_to_cflags "-I#{include}"
     ENV.append_to_cflags "-L#{lib}"
 
-    resource("six").stage do
-      system "python3", *Language::Python.setup_install_args(libexec)
-    end
     chdir "python" do
-      system "python3", *Language::Python.setup_install_args(libexec),
+      system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix),
                         "--cpp_implementation"
     end
-
-    version = Language::Python.major_minor_version "python3"
-    site_packages = "lib/python#{version}/site-packages"
-    pth_contents = "import site; site.addsitedir('#{libexec/site_packages}')\n"
-    (prefix/site_packages/"homebrew-protobuf.pth").write pth_contents
   end
 
   test do
@@ -70,6 +73,6 @@ class Protobuf < Formula
     EOS
     (testpath/"test.proto").write testdata
     system bin/"protoc", "test.proto", "--cpp_out=."
-    system "python3", "-c", "import google.protobuf"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import google.protobuf"
   end
 end

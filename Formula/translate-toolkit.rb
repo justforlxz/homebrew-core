@@ -3,38 +3,28 @@ class TranslateToolkit < Formula
 
   desc "Toolkit for localization engineers"
   homepage "https://toolkit.translatehouse.org/"
-  url "https://github.com/translate/translate/archive/2.4.0.tar.gz"
-  sha256 "7f1d6a9566bb512fd88d51bd8bc920f42e379c91a4686761dbe89762f8a3a51d"
-  head "https://github.com/translate/translate.git"
+  url "https://files.pythonhosted.org/packages/08/a5/876e2407d0d405fde31524e04f6ea2d068e06f53afc7b5c857a2fde51612/translate-toolkit-3.5.1.tar.gz"
+  sha256 "3b51f548ef9d27b4f47a33b7d4eb299119d0fff71ba41f48eb5bd9bbeeb91708"
+  license "GPL-2.0-or-later"
+  head "https://github.com/translate/translate.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f4f17c576810fd6b87c8569e37965297655fce06d7bee4538168ec28cbda22aa" => :catalina
-    sha256 "895d0f333b3aba84ff5fa8b39292e0f62d7c1c6e1102e9fb9bbbecdf3b0218e5" => :mojave
-    sha256 "25748d80d983a92f58d888ffda612c5a4f5d63bb3c98b9043a5de5737db035fd" => :high_sierra
-    sha256 "b22388e34bf4e0abdc73502967d6d6242f7c7d17e10f6b6cd55d3561ff696ee6" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c726d06e80789183673ad4e7eb2ceaa034db6cae0ae4dc0a67fc2e9e75d57cf2"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "ae5e78a300e148813bdaf3bf2b14587d139895b5aaea2464e8b582221d79e108"
+    sha256 cellar: :any_skip_relocation, monterey:       "97e55fa37ebeb0a7ad63d4f8837717ed668e4904e1ec759182a4c3ed82ffb655"
+    sha256 cellar: :any_skip_relocation, big_sur:        "62b23fd44d5cb971ea36b064561e35ec58159c4f843f4eaf98a76030969c6622"
+    sha256 cellar: :any_skip_relocation, catalina:       "cbaddedfdae37dcf7e7c7d385ba334b3ca57620ed36ecf2462f709fe242e605c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "b8aa19e9bd58947456946af18af710b0877d6e7b946811c229ea2627946bd311"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
-  resource "argparse" do
-    url "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz"
-    sha256 "62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"
-  end
+  uses_from_macos "libxml2"
+  uses_from_macos "libxslt"
 
-  resource "diff-match-patch" do
-    url "https://files.pythonhosted.org/packages/f0/2a/5ba07def0e9107d935aba62cf632afbd0f7c723a98af47ccbcab753d2452/diff-match-patch-20181111.tar.gz"
-    sha256 "a809a996d0f09b9bbd59e9bbd0b71eed8c807922512910e05cbd3f9480712ddb"
-  end
-
-  resource "Python-Levenshtein" do
-    url "https://files.pythonhosted.org/packages/42/a9/d1785c85ebf9b7dfacd08938dd028209c34a0ea3b1bcdb895208bd40a67d/python-Levenshtein-0.12.0.tar.gz"
-    sha256 "033a11de5e3d19ea25c9302d11224e1a1898fe5abd23c61c7c360c25195e3eb1"
-  end
-
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+  resource "lxml" do
+    url "https://files.pythonhosted.org/packages/fe/4c/a4dbb4e389f75e69dbfb623462dfe0d0e652107a95481d40084830d29b37/lxml-4.6.4.tar.gz"
+    sha256 "daf9bd1fee31f1c7a5928b3e1059e09a8d683ea58fb3ffc773b6c88cb8d1399c"
   end
 
   def install
@@ -43,5 +33,6 @@ class TranslateToolkit < Formula
 
   test do
     system bin/"pretranslate", "-h"
+    system bin/"podebug", "-h"
   end
 end

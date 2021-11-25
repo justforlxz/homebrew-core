@@ -1,22 +1,33 @@
 class StanfordCorenlp < Formula
   desc "Java suite of core NLP tools"
   homepage "https://stanfordnlp.github.io/CoreNLP/"
-  url "https://nlp.stanford.edu/software/stanford-corenlp-full-2018-10-05.zip"
-  version "3.9.2"
-  sha256 "833f0f5413a33e7fbc98aeddcb80eb0a55b672f67417b8d956ed9c39abe8d26c"
+  url "https://nlp.stanford.edu/software/stanford-corenlp-4.3.2.zip"
+  sha256 "2432016930c0180f31eb411d6d64757fe11720d9fedef437b346d8ae2bb9c630"
+  license "GPL-2.0-or-later"
 
-  bottle :unneeded
+  # The first-party website only links to an unversioned archive file from
+  # nlp.stanford.edu (stanford-corenlp-latest.zip), so we match the version
+  # in the Maven link instead.
+  livecheck do
+    url :homepage
+    regex(%r{href=.*?/stanford-corenlp/v?(\d+(?:\.\d+)+)/jar}i)
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "e02517aab8c6cf1a2de00f0ff9ae17c88f33237ae556706d35e3edc36d411cec"
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install Dir["*"]
-    bin.write_exec_script Dir["#{libexec}/*.sh"]
+    bin.install Dir["#{libexec}/*.sh"]
+    bin.env_script_all_files libexec, JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
   test do
     (testpath/"test.txt").write("Stanford is a university, founded in 1891.")
-    system "#{bin}/corenlp.sh", "-annotators tokenize,ssplit,pos", "-file test.txt"
-    assert_predicate (testpath/"test.txt.xml"), :exist?
+    system "#{bin}/corenlp.sh", "-annotators tokenize,ssplit,pos", "-file test.txt", "-outputFormat json"
+    assert_predicate (testpath/"test.txt.json"), :exist?
   end
 end

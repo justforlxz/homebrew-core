@@ -1,10 +1,20 @@
 class Bnd < Formula
-  desc "The Swiss Army Knife for OSGi bundles"
+  desc "Swiss Army Knife for OSGi bundles"
   homepage "https://bnd.bndtools.org/"
-  url "https://search.maven.org/remotecontent?filepath=biz/aQute/bnd/biz.aQute.bnd/4.3.1/biz.aQute.bnd-4.3.1.jar"
-  sha256 "b28e916e58dbc0290b0cd75bde4648eb6bf96e5e9b77eda37eb23b7a1cd1d074"
+  url "https://search.maven.org/remotecontent?filepath=biz/aQute/bnd/biz.aQute.bnd/6.1.0/biz.aQute.bnd-6.1.0.jar"
+  sha256 "63a280427cda7bdf7de764eb05b1083b5e625cb5e1e13bfebd2e4b74481d8571"
+  license any_of: ["Apache-2.0", "EPL-2.0"]
 
-  bottle :unneeded
+  livecheck do
+    url "https://search.maven.org/remotecontent?filepath=biz/aQute/bnd/biz.aQute.bnd/maven-metadata.xml"
+    regex(%r{<version>v?(\d+(?:\.\d+)+)</version>}i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "c235bd7855a309d8d8bbb24c0765502be2d7a99e2cc41456e626dcb776aefee7"
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install "biz.aQute.bnd-#{version}.jar"
@@ -44,6 +54,6 @@ class Bnd < Formula
     EOS
 
     output = shell_output("#{bin}/bnd resolve resolve -b launch.bndrun")
-    assert_match /BUNDLES\s+#{test_bsn};version='\[#{test_version},#{test_version_next}\)'/, output
+    assert_match(/BUNDLES\s+#{test_bsn};version='\[#{test_version},#{test_version_next}\)'/, output)
   end
 end

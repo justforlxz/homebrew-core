@@ -1,29 +1,36 @@
-# Note that odd release numbers indicate unstable releases.
-# Please only submit PRs for [x.x.even] version numbers:
+# NOTE: Odd release numbers indicate unstable releases.
+# Please only submit PRs for [x.even.x] version numbers:
 # https://github.com/djcb/mu/commit/23f4a64bdcdee3f9956a39b9a5a4fd0c5c2370ba
 class Mu < Formula
   desc "Tool for searching e-mail messages stored in the maildir-format"
   homepage "https://www.djcbsoftware.nl/code/mu/"
-  url "https://github.com/djcb/mu/releases/download/1.2/mu-1.2.0.tar.xz"
-  sha256 "f634c7f244dc6844ff71dc3c3e1893e48e193caa9e0e747eba616309775f053a"
-  revision 1
+  url "https://github.com/djcb/mu/releases/download/1.6.8/mu-1.6.8.tar.xz"
+  sha256 "d175272bec399c956393c8e2afa5e16f503b65417edc7e3224b50edd6d1f9750"
+  license "GPL-3.0-or-later"
+
+  # We restrict matching to versions with an even-numbered minor version number,
+  # as an odd-numbered minor version number indicates a development version:
+  # https://github.com/djcb/mu/commit/23f4a64bdcdee3f9956a39b9a5a4fd0c5c2370ba
+  livecheck do
+    url :stable
+    regex(/^v?(\d+\.\d*[02468](?:\.\d+)*)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "c2b2f55ab9d1743afcece35be56a8dece9dbc8a970c19fdd15c36da2c5581dc9" => :catalina
-    sha256 "a8c766c5cfa0951ea3a683ddac460e2c66daa231fb586c2b73f91ddabccdb798" => :mojave
-    sha256 "b005381a23edee1bd9a7f02d5dae3cf4bb4e3bdfb494c17e0b44a817af40dd3a" => :high_sierra
-    sha256 "3cdc7db8c5adafc23cdce44aa0592afe203d770d4c1e226a5bf9e6243b9ed3ff" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "abbbacf5eb2983c03fc209bd497bb828cf0c0077f0e1ec2d02710e86145db41a"
+    sha256 cellar: :any,                 big_sur:       "3babbb7a81106cce91530c94be1e66f7184a65e67119d06d14e1641146487eea"
+    sha256 cellar: :any,                 catalina:      "fb0ee00fbe19850a2edf6f88514a7179392f674fff26246a067ea60d2e570626"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "db2624e44332ca7e4a4916786db3129394f21f963f10e7b1c4320df4b6f3a21a"
   end
 
   head do
     url "https://github.com/djcb/mu.git"
 
+    depends_on "autoconf" => :build
     depends_on "autoconf-archive" => :build
+    depends_on "automake" => :build
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
   depends_on "emacs" => :build
   depends_on "libgpg-error" => :build
   depends_on "libtool" => :build
@@ -33,20 +40,22 @@ class Mu < Formula
   depends_on "gmime"
   depends_on "xapian"
 
+  uses_from_macos "texinfo" => :build
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+
   def install
-    system "autoreconf", "-ivf"
+    system "autoreconf", "-ivf" if build.head?
     system "./configure", "--disable-dependency-tracking",
+                          "--disable-guile",
                           "--prefix=#{prefix}",
                           "--with-lispdir=#{elisp}"
     system "make"
     system "make", "install"
-  end
-
-  def caveats; <<~EOS
-    Existing mu users are recommended to run the following after upgrading:
-
-      mu index --rebuild
-  EOS
   end
 
   # Regression test for:
@@ -75,17 +84,17 @@ class Mu < Formula
       This used to happen outdoors. It was more fun then.
     EOS
 
-    system "#{bin}/mu", "index",
-                        "--muhome",
-                        testpath,
-                        "--maildir=#{testpath}"
+    system "#{bin}/mu", "init", "--muhome=#{testpath}", "--maildir=#{testpath}"
+    system "#{bin}/mu", "index", "--muhome=#{testpath}"
 
-    mu_find = "#{bin}/mu find --muhome #{testpath} "
+    mu_find = "#{bin}/mu find --muhome=#{testpath} "
     find_message = "#{mu_find} msgid:2222222222@example.com"
     find_message_and_related = "#{mu_find} --include-related msgid:2222222222@example.com"
 
     assert_equal 1, shell_output(find_message).lines.count
-    assert_equal 2, shell_output(find_message_and_related).lines.count,
-                 "You tripped over https://github.com/djcb/mu/issues/380\n\t--related doesn't work. Everything else should"
+    assert_equal 2, shell_output(find_message_and_related).lines.count, <<~EOS
+      You tripped over https://github.com/djcb/mu/issues/380
+        --related doesn't work. Everything else should
+    EOS
   end
 end

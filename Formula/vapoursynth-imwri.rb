@@ -1,46 +1,50 @@
 class VapoursynthImwri < Formula
   desc "VapourSynth filters - ImageMagick HDRI writer/reader"
-  homepage "http://www.vapoursynth.com"
-  url "https://github.com/vapoursynth/vapoursynth/archive/R48.tar.gz"
-  sha256 "3e98d134e16af894cf7040e4383e4ef753cafede34d5d77c42a2bb89790c50a8"
-  head "https://github.com/vapoursynth/vapoursynth.git"
+  homepage "https://github.com/vapoursynth/vs-imwri"
+  url "https://github.com/vapoursynth/vs-imwri/archive/R1.tar.gz"
+  sha256 "6eed24a7fda9e4ff80f5f866fa87a63c5ba9ad600318d05684eec18e40ad931f"
+  license "LGPL-2.1-or-later"
+  version_scheme 1
+
+  head "https://github.com/vapoursynth/vs-imwri.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "4e7d54dff9c16d7065706c1a45e234345b02843318cb350647c3d062c1702fdc" => :catalina
-    sha256 "34dffc0e96bd5ee14577c227aa76ae5f41db46837e5172e361d6e48522a83c0e" => :mojave
-    sha256 "7da1b0a97f2f2766b850927bf8e55db18d7ced470be6e47cc2df9d8f139847ee" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "af2367f974a7cf578dc1570fdf03722baf54b9846d6c35748c805a5c4903843e"
+    sha256 cellar: :any, arm64_big_sur:  "080c31181821b981cf47e913b5b91d99e36ed648c5c0bfc8a8ea7200e297f9ab"
+    sha256 cellar: :any, monterey:       "03f768ac9fc321dc96d4fda5165d967dbffd55067e7fb82ec5094de65b067620"
+    sha256 cellar: :any, big_sur:        "ef9f021e687b36a382c2f589b60c5c21fec61a25b687d555162be857a607b04e"
+    sha256 cellar: :any, catalina:       "6041a275aaf72e45651a334d8cbaef9f9ecccc054b2fd32d9454c1aa82ee1fc7"
+    sha256 cellar: :any, mojave:         "0ece8962763da6ebc44b85e22907ae218841be3b311d6062047ce59803c6ec3d"
+    sha256               x86_64_linux:   "dd97dc5792768f831374845c07b347de5cd09d1f1f68a72f72c01fb4872deab1"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
-  depends_on "nasm" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-
   depends_on "imagemagick"
   depends_on "vapoursynth"
 
-  def install
-    system "./autogen.sh"
-    inreplace "Makefile.in", "pkglibdir = $(libdir)", "pkglibdir = $(exec_prefix)"
-    system "./configure", "--prefix=#{prefix}",
-                          "--disable-core",
-                          "--disable-vsscript",
-                          "--disable-plugins",
-                          "--enable-imwri"
-    system "make", "install"
-    rm prefix/"vapoursynth/libimwri.la"
+  on_linux do
+    depends_on "gcc"
   end
 
-  def post_install
-    (HOMEBREW_PREFIX/"lib/vapoursynth").mkpath
-    (HOMEBREW_PREFIX/"lib/vapoursynth").install_symlink prefix/"vapoursynth/libimwri.dylib" => "libimwri.dylib"
+  fails_with gcc: "5"
+
+  def install
+    # Upstream build system wants to install directly into vapoursynth's libdir and does not respect
+    # prefix, but we want it in a Cellar location instead.
+    inreplace "meson.build",
+              "install_dir = vapoursynth_dep.get_variable(pkgconfig: 'libdir') / 'vapoursynth'",
+              "install_dir = '#{lib}/vapoursynth'"
+
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
-    py3 = Language::Python.major_minor_version "python3"
-    ENV.prepend_path "PYTHONPATH", lib/"python#{py3}/site-packages"
-    system "python3", "-c", "from vapoursynth import core; core.imwri"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "from vapoursynth import core; core.imwri"
   end
 end

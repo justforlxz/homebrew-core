@@ -1,29 +1,30 @@
 class Dnscontrol < Formula
   desc "It is system for maintaining DNS zones"
   homepage "https://github.com/StackExchange/dnscontrol"
-  url "https://github.com/StackExchange/dnscontrol/archive/v2.9.tar.gz"
-  sha256 "6c3e739b56c64e2e41a0cb23f4debc3db6889aca0a78016c730ef8d1e42709e8"
+  url "https://github.com/StackExchange/dnscontrol/archive/v3.12.0.tar.gz"
+  sha256 "2927696096e4b58ef21427fdbecc8aed99e4bfe19a03f63e25bec067734d0c5b"
+  license "MIT"
+  version_scheme 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "01e6fcbd2b3447ba107ec54f3b716c12bf79b8e183c0a74eb40a0e2717673fc9" => :catalina
-    sha256 "98e5230bf0b1ea268e30c79567231d9fdeb9ead2afab1d66d3a6a225dbaca365" => :mojave
-    sha256 "fd72608a2ba25ded69086be111de8712ca2815252bc1706a4371b1c37e70cd54" => :high_sierra
-    sha256 "0895b13b50fec182649a62617a29b9084d05aa38f8f6013b9847a76a174b4b48" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c92f0076429b5fea9878b86bef4e337fdb762016e41bd59b1832a01893f34ed6"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "0ab5d25f2efb3be5eb8a0048dd55561f7433d8a46aeb1aa7619b80eb58f2e8d6"
+    sha256 cellar: :any_skip_relocation, monterey:       "073d7c106085d085df4e2fa18671012191226642885ed6bfe90a507ab88289ea"
+    sha256 cellar: :any_skip_relocation, big_sur:        "e7bec68821ca3a9387aff4cfd8e87ccdb18c89f171da2a5aea51e0aeba26715d"
+    sha256 cellar: :any_skip_relocation, catalina:       "cf7f2cdaf988b0ae9601f3b05a3dc14d5ce03f398b0a02839488e664508e7be6"
+    sha256 cellar: :any_skip_relocation, mojave:         "c0de2e718b6850ae391642f8a271a0b5105e447deee72ddc95915541930d775e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "63cf1329d922e2c5265c23bbb5e30b9ded6913e248fe328de420aca6dd0b1d8a"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    srcpath = buildpath/"src/github.com/StackExchange/dnscontrol"
-    srcpath.install buildpath.children
-
-    cd srcpath do
-      system "go", "build", "-o", bin/"dnscontrol"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args(ldflags: "-s -w")
   end
 
   test do

@@ -3,47 +3,41 @@ class Pygitup < Formula
 
   desc "Nicer 'git pull'"
   homepage "https://github.com/msiemens/PyGitUp"
-  url "https://files.pythonhosted.org/packages/46/45/32dc0bf07c620644a8ed899e381309f4f25b50f20a91e555285522592833/git-up-1.6.1.tar.gz"
-  sha256 "ea83441e7ab05011624e2e7333ef875c263124db5eed74507acd32b07c48473f"
+  url "https://files.pythonhosted.org/packages/89/a3/35f7460cfaf7353ceb23442e5c250fda249cb9b8e26197cf801fa4f63786/git-up-2.1.0.tar.gz"
+  sha256 "6e677d91aeb4de37e62bdc166042243313ec873c3caf9938911ac2e7f52a0652"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "827103ed2b7d4bed1fa778edf4edc404f7c7a70fdb999a8843564a1274d90cb1" => :catalina
-    sha256 "a5234c02ac78373479e0158a18da087750f30da501ddae29899ec0e8e2b93a54" => :mojave
-    sha256 "be1a8770fa5fe2ad6b06ad090bf5ef490d6df59afb802703799fa4c99ef08955" => :high_sierra
-    sha256 "3ca5dc9d6443ec789e54686ee3d71662e69db2da877749bbb1e5ba7b562279ff" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c1fc3d05c9426628db3014aad4ca9f54c3ea8ed709187e532c5e0a33ff3cec24"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "691cecd76ff02753813853585aa00200c059a91cc729def69d4b3249b8045989"
+    sha256 cellar: :any_skip_relocation, monterey:       "6dd2171b041258c2674f34efb02a3f0a4e261defac4ff126f623c1d84def433e"
+    sha256 cellar: :any_skip_relocation, big_sur:        "a420f93c1cadfb852e6e38735b0990ee3981bfe9a7daa413e0a2a5901e07ded9"
+    sha256 cellar: :any_skip_relocation, catalina:       "0bb8b6b27418770fd4073ba87ca325aff9402bade15bd914dbdbb0b6181f0a65"
+    sha256 cellar: :any_skip_relocation, mojave:         "1728a7aaeaef7bb0f4fd323df92427d81a7fb274443cd9624a5e3009463ae563"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "6f56cfd288b6c4c06519cfd4502adb34803da2a30beb6de0535ec5e5a6d54a49"
   end
 
-  depends_on "python"
-
-  resource "click" do
-    url "https://files.pythonhosted.org/packages/f8/5c/f60e9d8a1e77005f664b76ff8aeaee5bc05d0a91798afd7f53fc998dbc47/Click-7.0.tar.gz"
-    sha256 "5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"
-  end
+  depends_on "poetry" => :build
+  depends_on "python@3.9"
 
   resource "colorama" do
-    url "https://files.pythonhosted.org/packages/76/53/e785891dce0e2f2b9f4b4ff5bc6062a53332ed28833c7afede841f46a5db/colorama-0.4.1.tar.gz"
-    sha256 "05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d"
+    url "https://files.pythonhosted.org/packages/1f/bb/5d3246097ab77fa083a61bd8d3d527b7ae063c7d8e8671b1cf8c4ec10cbe/colorama-0.4.4.tar.gz"
+    sha256 "5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"
   end
 
-  resource "gitdb2" do
-    url "https://files.pythonhosted.org/packages/c4/5c/579abccd59187eaf6b3c8a4a6ecd86fce1dfd818155bfe4c52ac28dca6b7/gitdb2-2.0.5.tar.gz"
-    sha256 "83361131a1836661a155172932a13c08bda2db3674e4caa32368aa6eb02f38c2"
+  resource "gitdb" do
+    url "https://files.pythonhosted.org/packages/34/fe/9265459642ab6e29afe734479f94385870e8702e7f892270ed6e52dd15bf/gitdb-4.0.7.tar.gz"
+    sha256 "96bf5c08b157a666fec41129e6d327235284cca4c81e92109260f353ba138005"
   end
 
   resource "GitPython" do
-    url "https://files.pythonhosted.org/packages/4d/e8/98e06d3bc954e3c5b34e2a579ddf26255e762d21eb24fede458eff654c51/GitPython-2.1.11.tar.gz"
-    sha256 "8237dc5bfd6f1366abeee5624111b9d6879393d84745a507de0fda86043b65a8"
+    url "https://files.pythonhosted.org/packages/34/cc/aaa7a0d066ac9e94fbffa5fcf0738f5742dd7095bdde950bd582fca01f5a/GitPython-3.1.24.tar.gz"
+    sha256 "df83fdf5e684fef7c6ee2c02fc68a5ceb7e7e759d08b694088d0cacb4eba59e5"
   end
 
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
-  end
-
-  resource "smmap2" do
-    url "https://files.pythonhosted.org/packages/3b/ba/e49102b3e8ffff644edded25394b2d22ebe3e645f3f6a8139129c4842ffe/smmap2-2.0.5.tar.gz"
-    sha256 "29a9ffa0497e7f2be94ca0ed1ca1aa3cd4cf25a1f6b4f5f87f74b46ed91d609a"
+  resource "smmap" do
+    url "https://files.pythonhosted.org/packages/dd/d4/2b4f196171674109f0fbb3951b8beab06cd0453c1b247ec0c4556d06648d/smmap-4.0.0.tar.gz"
+    sha256 "7e65386bd122d45405ddf795637b7f7d2b532e7e401d46bbe3fb49b9986d5182"
   end
 
   resource "termcolor" do
@@ -51,8 +45,16 @@ class Pygitup < Formula
     sha256 "1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"
   end
 
+  resource "typing-extensions" do
+    url "https://files.pythonhosted.org/packages/ed/12/c5079a15cf5c01d7f4252b473b00f7e68ee711be605b9f001528f0298b98/typing_extensions-3.10.0.2.tar.gz"
+    sha256 "49f75d16ff11f1cd258e1b988ccff82a3ca5570217d7ad8c5f48205dd99a677e"
+  end
+
   def install
-    virtualenv_install_with_resources
+    venv = virtualenv_create(libexec, "python3")
+    venv.pip_install resources
+    system Formula["poetry"].opt_bin/"poetry", "build", "--format", "wheel", "--verbose", "--no-interaction"
+    venv.pip_install_and_link Dir["dist/git_up-*.whl"].first
   end
 
   test do

@@ -1,23 +1,27 @@
 class Libspectre < Formula
   desc "Small library for rendering Postscript documents"
   homepage "https://wiki.freedesktop.org/www/Software/libspectre/"
-  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.8.tar.gz"
-  sha256 "65256af389823bbc4ee4d25bfd1cc19023ffc29ae9f9677f2d200fa6e98bc7a8"
-  revision 9
+  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.9.tar.gz"
+  sha256 "49ae9c52b5af81b405455c19fe24089d701761da2c45d22164a99576ceedfbed"
+  license "GPL-2.0-or-later"
+  revision 3
+
+  livecheck do
+    url "https://libspectre.freedesktop.org/releases/"
+    regex(/href=.*?libspectre[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d551192bf058b808f379b2d03bd4a94a47dca0b0301e12e994ec672141b370a2" => :catalina
-    sha256 "60d21fc1ce243a3f9d715f620977125380ee3d3b123a36bedff450c777b9a439" => :mojave
-    sha256 "8c62d8a24f6d20220811dd7eb9fed9e52963ffdba540e75f84f67f2757e559d7" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "0c25377b7059c38ad35ba5cff9764113e46ff101341854cf0003d4886cf40063"
+    sha256 cellar: :any,                 arm64_big_sur:  "3d5c0d07bfb27f55e4cd938e5e12ced37b0fa8b0776460bfa8748e8d113ca0af"
+    sha256 cellar: :any,                 monterey:       "5a3f63e8e02536ba3ba0e2c1347fc69806cc9ab87029451f97be99d5251ecf54"
+    sha256 cellar: :any,                 big_sur:        "0690d94faad89f7c1bacf2729dbcc0f965475080cc94be1bebcfa352d605507f"
+    sha256 cellar: :any,                 catalina:       "7b2dbf0cce05aba6282aa3090b519c95584dc2021eaccecfc97b6c66c67ba4bd"
+    sha256 cellar: :any,                 mojave:         "aa33dcb97455ec208315f8a3d57b904bfa98e219b705f3992776f167b08b35bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "467c578adafbc5e93ae51017635192aa8696a642fe6ec458afce221092fc6049"
   end
 
   depends_on "ghostscript"
-
-  patch do
-    url "https://github.com/Homebrew/formula-patches/raw/master/libspectre/libspectre-0.2.7-gs918.patch"
-    sha256 "e4c186ddc6cebc92ee0aee24bc79c7f5fff147a0c0d9cadf7ebdc3906d44711c"
-  end
 
   def install
     ENV.append "CFLAGS", "-I#{Formula["ghostscript"].opt_include}/ghostscript"

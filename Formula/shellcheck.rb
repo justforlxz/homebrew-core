@@ -1,19 +1,18 @@
-require "language/haskell"
-
 class Shellcheck < Formula
-  include Language::Haskell::Cabal
-
   desc "Static analysis and lint tool, for (ba)sh scripts"
   homepage "https://www.shellcheck.net/"
-  url "https://github.com/koalaman/shellcheck/archive/v0.7.0.tar.gz"
-  sha256 "946cf3421ffd418f0edc380d1184e4cb08c2ec7f098c79b1c8a2c482fe91d877"
-  head "https://github.com/koalaman/shellcheck.git"
+  url "https://github.com/koalaman/shellcheck/archive/v0.8.0.tar.gz"
+  sha256 "dad3a2140389f5032996e6d381a47074ddbad6e5d9155f72ef732952c8861a3b"
+  license "GPL-3.0-or-later"
+  head "https://github.com/koalaman/shellcheck.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "be8e084d55379a4b5a8bfba78ad298f966f0888e6c3eb7e5202527d3938f3501" => :mojave
-    sha256 "a4e12db223139c82649fdc16a2d04184cbaf5fc413c1135b0a1100a16e33290b" => :high_sierra
-    sha256 "770a22a491ae6316f7b6e56d8039d30693d857336ccc608de865750798480899" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "625466bcd245a36da12ee088877d582c7e9fec1622418d1165a7d7d8f204ecc3"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "883ba5ee45554568cd1ce106dc6c090ec0745f576a4a6708332de951b03c7423"
+    sha256 cellar: :any_skip_relocation, monterey:       "cfd8c8e8d8927dfd4b83593f539690a6083b075b0a1ff8a66578e8bb810d3db9"
+    sha256 cellar: :any_skip_relocation, big_sur:        "d88edc1ae7db555ec5da01d4a1272da8260eb62073d2cdfa5fa3dce37d51fbe6"
+    sha256 cellar: :any_skip_relocation, catalina:       "24a67cd4f2b66a02cb77a1c705d7dcf25b4410209435a0b1136398da1fa6f766"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "961b2f3d75cf86dd5bc767cf689eee8f8e88bb30d716cf208b4bb89d61e5a553"
   end
 
   depends_on "cabal-install" => :build
@@ -21,7 +20,8 @@ class Shellcheck < Formula
   depends_on "pandoc" => :build
 
   def install
-    install_cabal_package
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
     system "pandoc", "-s", "-f", "markdown-smart", "-t", "man",
                      "shellcheck.1.md", "-o", "shellcheck.1"
     man1.install "shellcheck.1"

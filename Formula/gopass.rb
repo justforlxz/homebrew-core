@@ -1,33 +1,28 @@
 class Gopass < Formula
-  desc "The slightly more awesome Standard Unix Password Manager for Teams"
+  desc "Slightly more awesome Standard Unix Password Manager for Teams"
   homepage "https://github.com/gopasspw/gopass"
-  url "https://github.com/gopasspw/gopass/releases/download/v1.8.6/gopass-1.8.6.tar.gz"
-  sha256 "fbffe0f72e51d9e30a10103f00dd12f04bca6572f55976c6dc7049c73c65b715"
-  head "https://github.com/gopasspw/gopass.git"
+  url "https://github.com/gopasspw/gopass/releases/download/v1.13.0/gopass-1.13.0.tar.gz"
+  sha256 "af51f9a34851c5d6f9982466ef973d28098b77e241520ee452994592baf6cb64"
+  license "MIT"
+  head "https://github.com/gopasspw/gopass.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "156881b1bcc49f61b6224d5c52eca6ac19432623a0ab8202dff08f965cb48c4d" => :catalina
-    sha256 "b52d40f659774f56428959c273fd9118f0387d7859fe15067233687dfcd9d421" => :mojave
-    sha256 "288b95912064115d781f45500c99ca3c4ef9de5cc207e10ef3e9ceeda5a144c7" => :high_sierra
-    sha256 "3e048b47d532f1d530c1396a5776564815625232b717eb6ed39f73741b1b5c05" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "7b3a2d21f42becfe8debdf2ad9d07a9e10fc1b0091f4d2412d0f409a868ec481"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "e5789a0d9e09bac19377872ac407726adeebeaf1e70cf2151e97449da37f0048"
+    sha256 cellar: :any_skip_relocation, monterey:       "28b1abc7fb231fc86173ad55dfa9a1a18929720269d35e2c3f3e4e97a1c7f9ce"
+    sha256 cellar: :any_skip_relocation, big_sur:        "561cbbe9cf4b0cb65956e6ad470556b3537f39ae4a63121431c7a6f29fc33b4b"
+    sha256 cellar: :any_skip_relocation, catalina:       "3abcdfb41a3c82b11982149a06cdcf56604db71837cdf3949cd308347e739191"
   end
 
   depends_on "go" => :build
   depends_on "gnupg"
 
+  on_macos do
+    depends_on "terminal-notifier"
+  end
+
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/gopasspw/gopass").install buildpath.children
-
-    cd "src/github.com/gopasspw/gopass" do
-      prefix.install_metafiles
-      ENV["PREFIX"] = prefix
-      system "make", "install"
-    end
-
-    output = Utils.popen_read("#{bin}/gopass completion bash")
-    (bash_completion/"gopass-completion").write output
+    system "make", "install", "PREFIX=#{prefix}/"
   end
 
   test do
@@ -47,9 +42,9 @@ class Gopass < Formula
     begin
       system Formula["gnupg"].opt_bin/"gpg", "--batch", "--gen-key", "batch.gpg"
 
-      system bin/"gopass", "init", "--rcs", "noop", "testing@foo.bar"
+      system bin/"gopass", "init", "--path", testpath, "noop", "testing@foo.bar"
       system bin/"gopass", "generate", "Email/other@foo.bar", "15"
-      assert_predicate testpath/".password-store/Email/other@foo.bar.gpg", :exist?
+      assert_predicate testpath/"Email/other@foo.bar.gpg", :exist?
     ensure
       system Formula["gnupg"].opt_bin/"gpgconf", "--kill", "gpg-agent"
       system Formula["gnupg"].opt_bin/"gpgconf", "--homedir", "keyrings/live",

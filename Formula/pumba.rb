@@ -1,29 +1,30 @@
 class Pumba < Formula
   desc "Chaos testing tool for Docker"
   homepage "https://github.com/alexei-led/pumba"
-  url "https://github.com/alexei-led/pumba/archive/0.6.5.tar.gz"
-  sha256 "d3f19bba5520ec2b26554b807e31596a1cf16da60cf34d945399cf45a369300d"
-  head "https://github.com/alexei-led/pumba.git"
+  url "https://github.com/alexei-led/pumba/archive/0.8.0.tar.gz"
+  sha256 "052ece6984a0533d7f93b2b64c66d5e89516bbf93e4cb732a2743322b4eef9da"
+  license "Apache-2.0"
+  head "https://github.com/alexei-led/pumba.git", branch: "master"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5639041fbd2e4653fe922f419332e28255fb7d32ec7f76c63839324738cfffb4" => :catalina
-    sha256 "257ef1308a0e73183d0aba22aee88c5e1cf7dc8ab8f673b556e63c43652a03bc" => :mojave
-    sha256 "c6c4c6181cd79cbb52c0e52b4b952163427f66125d03028b40ac38a497896613" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "d4e195c3e36f7dde3821a76612e9ec9a7eff6ac764e6e11b37970824d17e39a6"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "3c06d9a93dafd07b20b289c16a233757e195796c58bf6fb4e37485cb73641e83"
+    sha256 cellar: :any_skip_relocation, monterey:       "002f19f642435422f482e87bb784209ebad478026f23cf3f2622456ad8e145d2"
+    sha256 cellar: :any_skip_relocation, big_sur:        "c110eb1c6fd9553ccee5327c4c3d556e9c58d120c9a8a3ed7eb1f901e43d25e6"
+    sha256 cellar: :any_skip_relocation, catalina:       "f007ae66a3b66626df7f25c83788728db253f255805920c16db32e1319a6a172"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "a9c9e8801b3949b92250902db1fe9cf35913ab937d4aae83504b87f8a9917488"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    src = buildpath/"src/github.com/alexei-led/pumba"
-    src.install buildpath.children
-    src.cd do
-      system "go", "build", "-o", bin/"pumba", "-ldflags",
-             "-X main.Version=#{version}", "./cmd"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.Version=#{version}",
+           "-trimpath", "-o", bin/"pumba", "./cmd"
   end
 
   test do

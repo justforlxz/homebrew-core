@@ -1,17 +1,31 @@
 class Nss < Formula
   desc "Libraries for security-enabled client and server applications"
-  homepage "https://developer.mozilla.org/docs/NSS"
-  url "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_47_1_RTM/src/nss-3.47.1.tar.gz"
-  sha256 "1ae3d1cb1de345b258788f2ef6b10a460068034c3fd64f42427a183d8342a6fb"
+  homepage "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS"
+  url "https://ftp.mozilla.org/pub/security/nss/releases/NSS_3_72_RTM/src/nss-3.72.tar.gz"
+  sha256 "6ea60a9ff113e493ea2ab25f41ea75a9fbd10af7903f26f703dac8680732d02e"
+  license "MPL-2.0"
+
+  livecheck do
+    url "https://ftp.mozilla.org/pub/security/nss/releases/"
+    regex(%r{href=.*?NSS[._-]v?(\d+(?:[._]\d+)+)[._-]RTM/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "4846b7c4ace8ef8aef508f033ac7f469f735585a7ae71ffd1b3cb8ac7ddcc3fa" => :catalina
-    sha256 "34f810fe40095377254dc3a388131f736f3711a3526ba475fd8f661c1738b106" => :mojave
-    sha256 "71db0fcc573796d7b0aaf2d5c23469e7ca19cbf23ec035814b7b1ffed4b3abe5" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "8a8f3a6b078b4298f3e2f0367bc45ea3c1101e408540c9e6e5c18edc7601e1cd"
+    sha256 cellar: :any,                 arm64_big_sur:  "f2f7231408a2185ca2c3809f0a99aeb3b3db9711821c6f0544270f8d17d427b4"
+    sha256 cellar: :any,                 monterey:       "df6b5bd7c454ec4be22d4dd69e29ca28dc1ca056aaafa2ce4ed3e4242879144c"
+    sha256 cellar: :any,                 big_sur:        "60d618d629dcf4ff0ffabcc7c99da016c128789b97e6e3948a1c800fbab07926"
+    sha256 cellar: :any,                 catalina:       "4a034137622a2deb26c07c7a5971b0a22d906624f51a9db481730e50d7165085"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "279a402fdc4faeebd46f99cd1807ea1806a93fae559018b646e10264e37a395f"
   end
 
   depends_on "nspr"
+
+  uses_from_macos "sqlite"
+  uses_from_macos "zlib"
+
+  conflicts_with "resty", because: "both install `pp` binaries"
+  conflicts_with "googletest", because: "both install `libgtest.a`"
 
   def install
     ENV.deparallelize
@@ -37,7 +51,8 @@ class Nss < Formula
     # rather than copying the referenced file.
     cd "../dist"
     bin.mkpath
-    Dir.glob("Darwin*/bin/*") do |file|
+    os = OS.kernel_name
+    Dir.glob("#{os}*/bin/*") do |file|
       cp file, bin unless file.include? ".dylib"
     end
 
@@ -47,7 +62,7 @@ class Nss < Formula
 
     lib.mkpath
     libexec.mkpath
-    Dir.glob("Darwin*/lib/*") do |file|
+    Dir.glob("#{os}*/lib/*") do |file|
       if file.include? ".chk"
         cp file, libexec
       else
@@ -70,30 +85,32 @@ class Nss < Formula
 
   # A very minimal nss-config for configuring firefox etc. with this nss,
   # see https://bugzil.la/530672 for the progress of upstream inclusion.
-  def config_file; <<~EOS
-    #!/bin/sh
-    for opt; do :; done
-    case "$opt" in
-      --version) opt="--modversion";;
-      --cflags|--libs) ;;
-      *) exit 1;;
-    esac
-    pkg-config "$opt" nss
-  EOS
+  def config_file
+    <<~EOS
+      #!/bin/sh
+      for opt; do :; done
+      case "$opt" in
+        --version) opt="--modversion";;
+        --cflags|--libs) ;;
+        *) exit 1;;
+      esac
+      pkg-config "$opt" nss
+    EOS
   end
 
-  def pc_file; <<~EOS
-    prefix=#{prefix}
-    exec_prefix=${prefix}
-    libdir=${exec_prefix}/lib
-    includedir=${prefix}/include/nss
+  def pc_file
+    <<~EOS
+      prefix=#{prefix}
+      exec_prefix=${prefix}
+      libdir=${exec_prefix}/lib
+      includedir=${prefix}/include/nss
 
-    Name: NSS
-    Description: Mozilla Network Security Services
-    Version: #{version}
-    Requires: nspr >= 4.12
-    Libs: -L${libdir} -lnss3 -lnssutil3 -lsmime3 -lssl3
-    Cflags: -I${includedir}
-  EOS
+      Name: NSS
+      Description: Mozilla Network Security Services
+      Version: #{version}
+      Requires: nspr >= 4.12
+      Libs: -L${libdir} -lnss3 -lnssutil3 -lsmime3 -lssl3
+      Cflags: -I${includedir}
+    EOS
   end
 end

@@ -1,21 +1,21 @@
 class Gammaray < Formula
   desc "Examine and manipulate Qt application internals at runtime"
-  homepage "https://www.kdab.com/kdab-products/gammaray/"
-  url "https://github.com/KDAB/GammaRay/releases/download/v2.11.0/gammaray-2.11.0.tar.gz"
-  sha256 "ab0488d2178c532816d491ab361ac3d362590f0e63912f7198f34c1b582209ca"
+  homepage "https://www.kdab.com/gammaray"
+  url "https://github.com/KDAB/GammaRay/releases/download/v2.11.3/gammaray-2.11.3.tar.gz"
+  sha256 "03d7ca7bd5eb600c9c389d0cf071960330592f1f392a783b7fec5f9eaa5df586"
+  license "GPL-2.0-or-later"
   head "https://github.com/KDAB/GammaRay.git"
 
   bottle do
-    cellar :any
-    sha256 "c6d0ef57b42ec3732e21e2c2971d248cfdcb2e46c97a89fe979055364204bb4e" => :catalina
-    sha256 "3efdda21f9a32efef5dc78367e2b0bafae12793fab0e387d426ac3631842c7b4" => :mojave
-    sha256 "317874bb7746f5f992984ae9deb89338d852565d6e08b46788d7a2d8e7fcee59" => :high_sierra
-    sha256 "ebab58973253ea91221d628922d55a2e60db306170970d770ac53f8c9a50821e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "bdf3eb554fd62c1f4fffb31049006fb6911b77f798adbc4e87061a5066e9b77d"
+    sha256 cellar: :any, big_sur:       "c2233705c3f3c5b0af61f67ebcd4c891313903c857a1a7773ab426ecd0e7acfb"
+    sha256 cellar: :any, catalina:      "990a0bd03354b751b3913cc6b308beba880fef6c97898290420221d9f8a080fa"
+    sha256 cellar: :any, mojave:        "3eeedcdccc07fc4dba59a90a3672f1a208fd608c6127839d5437019bfbd5adc6"
   end
 
   depends_on "cmake" => :build
   depends_on "graphviz"
-  depends_on "qt"
+  depends_on "qt@5"
 
   def install
     # For Mountain Lion

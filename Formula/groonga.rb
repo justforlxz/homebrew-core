@@ -1,13 +1,22 @@
 class Groonga < Formula
   desc "Fulltext search engine and column store"
-  homepage "http://groonga.org/"
-  url "https://packages.groonga.org/source/groonga/groonga-9.0.9.tar.gz"
-  sha256 "09767f0295b3321d8b41802c5a190ac3b0118f4b9106422754b448f4d801ae2b"
+  homepage "https://groonga.org/"
+  url "https://packages.groonga.org/source/groonga/groonga-11.0.9.tar.gz"
+  sha256 "c84fce93440d63df9ae2f7cd2566634785bc13f8be970ed3f395f6fa83b0f26e"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :homepage
+    regex(%r{>v?(\d+(?:\.\d+)+)</a> is the latest release}i)
+  end
 
   bottle do
-    sha256 "7cc47428e69cc70693de3ffdf41e599500a2b78c9f6a3397e26c5d6eb886e096" => :catalina
-    sha256 "15904cb411f3f0dc1407d7eede5f49f0fd0e84f514ec6f6f460d5a3c99f042b2" => :mojave
-    sha256 "ea3e616ff592f84e63484289198c2d32977b67533409bb256c2339381f8fdf14" => :high_sierra
+    sha256 arm64_monterey: "891b7a85bf8e539d276f3251648c471ce925e401f99b543316ad3c39d794b801"
+    sha256 arm64_big_sur:  "8f7ebff8749f1359b146daf9c9ce74a91eae50a867c5ddfb2ab7a35d7c7d5531"
+    sha256 monterey:       "1f1fe3e3be961b44ee5d843f53d9c54360e05692141e5b158587b32a47c1ba4c"
+    sha256 big_sur:        "4b7d1e036fa48057b17f6023df91c2f98afa194040353f336fde21d3370d9a72"
+    sha256 catalina:       "9a803cce113b246a1c810c0322196b4f2ce340c52cb82b8f7fb2fd5b4abb96dc"
+    sha256 x86_64_linux:   "f463490d32374d53f8203366084d72fb4a17ec89cc353ebe461abc38f5d1af26"
   end
 
   head do
@@ -23,6 +32,10 @@ class Groonga < Formula
   depends_on "msgpack"
   depends_on "openssl@1.1"
   depends_on "pcre"
+
+  on_linux do
+    depends_on "glib"
+  end
 
   link_overwrite "lib/groonga/plugins/normalizers/"
   link_overwrite "share/doc/groonga-normalizer-mysql/"
@@ -49,8 +62,10 @@ class Groonga < Formula
       system "./autogen.sh"
     end
 
-    system "./configure", *args
-    system "make", "install"
+    mkdir "builddir" do
+      system "../configure", *args
+      system "make", "install"
+    end
 
     resource("groonga-normalizer-mysql").stage do
       ENV.prepend_path "PATH", bin

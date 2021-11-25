@@ -1,11 +1,14 @@
 class Kerl < Formula
   desc "Easy building and installing of Erlang/OTP instances"
   homepage "https://github.com/kerl/kerl"
-  url "https://github.com/kerl/kerl/archive/1.8.6.tar.gz"
-  sha256 "990cf0addc6c3733473a34442bb35aeeed2668e87e416bd694f4dec3f9799c75"
+  url "https://github.com/kerl/kerl/archive/2.2.2.tar.gz"
+  sha256 "54c896ed694383cb09f0fa23c0d26c435c9ced3895424c6a7b5fed1c22eb9842"
+  license "MIT"
   head "https://github.com/kerl/kerl.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "33646c2f97a3dcd62521b92dc91eff01c2e4a6e18fd9b28f2db4edb2c27b408a"
+  end
 
   def install
     bin.install "kerl"

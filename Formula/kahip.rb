@@ -1,24 +1,33 @@
 class Kahip < Formula
   desc "Karlsruhe High Quality Partitioning"
   homepage "https://algo2.iti.kit.edu/documents/kahip/index.html"
-  url "https://algo2.iti.kit.edu/schulz/software_releases/KaHIP_2.12.tar.gz"
-  sha256 "b91abdbf9420e2691ed73cea999630e38dfaf0e03157c7a690a998564c652aac"
+  url "https://github.com/KaHIP/KaHIP/archive/v3.12.tar.gz"
+  sha256 "df923b94b552772d58b4c1f359b3f2e4a05f7f26ab4ebd00a0ab7d2579f4c257"
+  license "MIT"
+  head "https://github.com/KaHIP/KaHIP.git"
 
   bottle do
-    cellar :any
-    sha256 "970a6dbb933e2fae1f04cf06f73cbad53ebcecbee8c2434e2045d46d5cecd82b" => :catalina
-    sha256 "3c59b856d2b908f55fe555621a1ad866a1e4e2cbc1e07d13bda116d33d9f1ddc" => :mojave
-    sha256 "5872593fdd32749fc4d11bff597808732428137b869840f5db65e7ef408e393c" => :high_sierra
-    sha256 "cb925202435f91a405717bd7f5f162d54bdab0bccbdb87eaa817324d331211b0" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "35aaeb5b6017d06d68cfe54aef25d1a745ef4fdf5f0b41bb5e544e17cc5c49ec"
+    sha256 cellar: :any,                 monterey:      "5bd59728b30733335ccb33cdadface3d183dc2e4e351104a19840495b8952ce6"
+    sha256 cellar: :any,                 big_sur:       "b9be588260c93ea0c0d20a9f96d9b646341955e8842119f6325bcb6c29d4727f"
+    sha256 cellar: :any,                 catalina:      "e71a62e66cf71370faa5108de3e8d1b21babf32974f0fe800e33885cddccaa93"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "76cc24151d1df1ac6eed61bb4f723f2013f3f9c506b790883972b043f1e8412c"
   end
 
   depends_on "cmake" => :build
-  depends_on "gcc"
   depends_on "open-mpi"
 
+  on_macos do
+    depends_on "gcc"
+  end
+
   def install
-    ENV["CC"] = Formula["gcc"].opt_bin/"gcc-#{Formula["gcc"].version_suffix}"
-    ENV["CXX"] = Formula["gcc"].opt_bin/"g++-#{Formula["gcc"].version_suffix}"
+    if OS.mac?
+      gcc_major_ver = Formula["gcc"].any_installed_version.major
+      ENV["CC"] = Formula["gcc"].opt_bin/"gcc-#{gcc_major_ver}"
+      ENV["CXX"] = Formula["gcc"].opt_bin/"g++-#{gcc_major_ver}"
+    end
+
     mkdir "build" do
       system "cmake", *std_cmake_args, ".."
       system "make", "install"

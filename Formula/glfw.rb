@@ -1,19 +1,27 @@
 class Glfw < Formula
   desc "Multi-platform library for OpenGL applications"
   homepage "https://www.glfw.org/"
-  url "https://github.com/glfw/glfw/archive/3.3.tar.gz"
-  sha256 "81bf5fde487676a8af55cb317830703086bb534c53968d71936e7b48ee5a0f3e"
+  url "https://github.com/glfw/glfw/archive/3.3.5.tar.gz"
+  sha256 "32fdb8705784adfe3082f97e0d41e7c515963e977b5a14c467a887cf0da827b5"
+  license "Zlib"
   head "https://github.com/glfw/glfw.git"
 
   bottle do
-    cellar :any
-    sha256 "59d76959deeaed390dd2f2a98e670f1a944c26d1212ce9dd8bd230f5010eec44" => :catalina
-    sha256 "5f7f80b2113be000ab11c52357d2b1dc684b82a61455c562c2d84968fab2b2c7" => :mojave
-    sha256 "d064f1a5ed0ac3d2cc2979472f47116c4aa4dcabe5a2b8f6684411e157bf0ef6" => :high_sierra
-    sha256 "bf7f440724924b206abe7be4407df6277cf7c145c25eb9429d20d2d4ccd0994e" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "f403c7bb3b896a27697b11dadc2ec57dfd0bcdd9677f06506e5b342fd8ef867b"
+    sha256 cellar: :any,                 arm64_big_sur:  "a27a303ba0d840adb0b4db81c0c8193b89657eac79d55edc230c41f720af25cd"
+    sha256 cellar: :any,                 monterey:       "2b946d54a5c83fae4e45773dece612471fa482881a48e7c92d860e2d352de0ce"
+    sha256 cellar: :any,                 big_sur:        "f444562fbb85b074137dabd8074ad783f385e6c50d3dbeaaeb767f31dddc4aab"
+    sha256 cellar: :any,                 catalina:       "278dcbbad6f20303f3eb533e45478ee47f3636a240748b2cf2413b5b3c5310e1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "e54519e99c5f073c35d9b33a43b3fb838982c3d556ac7d0a13e135cef5e80489"
   end
 
   depends_on "cmake" => :build
+
+  on_linux do
+    depends_on "freeglut"
+    depends_on "libxcursor"
+    depends_on "mesa"
+  end
 
   def install
     args = std_cmake_args + %w[
@@ -42,6 +50,12 @@ class Glfw < Formula
 
     system ENV.cc, "test.c", "-o", "test",
                    "-I#{include}", "-L#{lib}", "-lglfw"
+
+    on_linux do
+      # glfw does not work in headless mode
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     system "./test"
   end
 end

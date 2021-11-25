@@ -1,23 +1,33 @@
 class Librealsense < Formula
   desc "Intel RealSense D400 series and SR300 capture"
   homepage "https://github.com/IntelRealSense/librealsense"
-  url "https://github.com/IntelRealSense/librealsense/archive/v2.30.1.tar.gz"
-  sha256 "379c2b8248b1f550222dcf0fbfb1d77037014a7d8e3ae9265d599b3d3f177c11"
+  url "https://github.com/IntelRealSense/librealsense/archive/v2.49.0.tar.gz"
+  sha256 "2578ea0e75546aeebd908da732f52e0122bf37750d5a45f3adf92945a673aefd"
+  license "Apache-2.0"
   head "https://github.com/IntelRealSense/librealsense.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any
-    sha256 "f1e09f226e1580f648f825ebe78911d54a565683649afc8dfbfdee30e8f10956" => :catalina
-    sha256 "17e9d36f4e7b0b4fb245dbf29f13295d2ee1d97f96b7ce4c08fc828ebfc639e1" => :mojave
-    sha256 "938e52912ddf7ff5546547d9e37af48db8093a13c0f7b7fe962231d0eefdb3e6" => :high_sierra
+    sha256 cellar: :any,                 monterey:     "bfcc6fb89a8cac2db7fe0d30b84c4d7b1585f02e3216f43435602ea484bb3d8f"
+    sha256 cellar: :any,                 big_sur:      "4c696d7911ab9321c26df52208dd433824e855f50b7a019018c980771c53b5ba"
+    sha256 cellar: :any,                 catalina:     "e32b24f59e07ceaac9482a1e1e961f4a0713ff045958e2d5f41872899f6bb4b8"
+    sha256 cellar: :any,                 mojave:       "6353572f45ee221eea411c12fb1ba1deeb24b9eea1cf8b15e860886012a000c7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "dbca3533de2b20945032d022e7776713db26f21d0c94d3ed8c8b355868cefd07"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "glfw"
   depends_on "libusb"
+  depends_on "openssl@1.1"
 
   def install
+    ENV["OPENSSL_ROOT_DIR"] = Formula["openssl@1.1"].prefix
+
     args = std_cmake_args
     args << "-DENABLE_CCACHE=OFF"
 

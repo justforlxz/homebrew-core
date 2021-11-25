@@ -1,66 +1,55 @@
 class Openvdb < Formula
-  desc "Sparse volume processing toolkit"
+  desc "Sparse volumetric data processing toolkit"
   homepage "https://www.openvdb.org/"
-  url "https://github.com/AcademySoftwareFoundation/openvdb/archive/v6.2.1.tar.gz"
-  sha256 "d4dd17ad571d4dd048f010e6f4b7657391960ed73523ed1716a17e7cf1806f71"
-  head "https://github.com/AcademySoftwareFoundation/openvdb.git"
+  url "https://github.com/AcademySoftwareFoundation/openvdb/archive/v9.0.0.tar.gz"
+  sha256 "ad3816e8f1931d1d6fdbddcec5a1acd30695d049dd10aa965096b2fb9972b468"
+  license "MPL-2.0"
+  head "https://github.com/AcademySoftwareFoundation/openvdb.git", branch: "master"
 
   bottle do
-    sha256 "3bd3b1a0572827e3904945d4f5251a4f946a5776b25a64668a7c27ed52d56f26" => :catalina
-    sha256 "1a2e126f54fc18e62f6591f2edcc54f6e9bfcddf88c8fdba77d13d4539fe8e0a" => :mojave
-    sha256 "a5d74669be61a935aca1d9151c5dff04c854f4a1976f421c15e1ebcc6ae3b0da" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "4efeba9379d21856de78e1502bfbb0e9914fb9f770b10c8ca353c763c5425dbd"
+    sha256 cellar: :any,                 arm64_big_sur:  "4acd2ab4377e2fc5a75ed9c778e96061d35e4bb4428d14e4d7ebfd669df305b7"
+    sha256 cellar: :any,                 monterey:       "418a7fccce828311fa23674d50ed5d24422ba253bb7aac2adc37545e8046606a"
+    sha256 cellar: :any,                 big_sur:        "3d094143c12d6b8708d2df2823c6713e7e773d7ce871c3c2443dc1f3278ec77e"
+    sha256 cellar: :any,                 catalina:       "73d9710a66677ce795271bb0f737ae59ab01550729e4b848440c570566177b62"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "eaa6699c14759acee35d1ea14a7c081924a0850ac99cdfc779fa234ea98238f7"
   end
 
+  depends_on "cmake" => :build
   depends_on "doxygen" => :build
   depends_on "boost"
   depends_on "c-blosc"
-  depends_on "glfw"
-  depends_on "ilmbase"
   depends_on "jemalloc"
   depends_on "openexr"
   depends_on "tbb"
 
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+
   resource "test_file" do
-    url "https://nexus.aswf.io/content/repositories/releases/io/aswf/openvdb/models/cube.vdb/1.0.0/cube.vdb-1.0.0.zip"
+    url "https://artifacts.aswf.io/io/aswf/openvdb/models/cube.vdb/1.0.0/cube.vdb-1.0.0.zip"
     sha256 "05476e84e91c0214ad7593850e6e7c28f777aa4ff0a1d88d91168a7dd050f922"
   end
 
   def install
-    ENV.cxx11
-    # Adjust hard coded paths in Makefile
-    args = [
-      "DESTDIR=#{prefix}",
-      "BLOSC_INCL_DIR=#{Formula["c-blosc"].opt_include}",
-      "BLOSC_LIB_DIR=#{Formula["c-blosc"].opt_lib}",
-      "BOOST_INCL_DIR=#{Formula["boost"].opt_include}",
-      "BOOST_LIB_DIR=#{Formula["boost"].opt_lib}",
-      "BOOST_THREAD_LIB=-lboost_thread-mt",
-      "CONCURRENT_MALLOC_LIB_DIR=#{Formula["jemalloc"].opt_lib}",
-      "CPPUNIT_INCL_DIR=", # Do not use cppunit
-      "CPPUNIT_LIB_DIR=",
-      "DOXYGEN=doxygen",
-      "EXR_INCL_DIR=#{Formula["openexr"].opt_include}/OpenEXR",
-      "EXR_LIB_DIR=#{Formula["openexr"].opt_lib}",
-      "LOG4CPLUS_INCL_DIR=", # Do not use log4cplus
-      "LOG4CPLUS_LIB_DIR=",
-      "NUMPY_INCL_DIR=",
-      "PYTHON_VERSION=",
-      "TBB_INCL_DIR=#{Formula["tbb"].opt_include}",
-      "TBB_LIB_DIR=#{Formula["tbb"].opt_lib}",
-      "GLFW_INCL_DIR=#{Formula["glfw"].opt_include}",
-      "GLFW_LIB_DIR=#{Formula["glfw"].opt_lib}",
-      "GLFW_LIB=-lglfw",
+    cmake_args = [
+      "-DDISABLE_DEPENDENCY_VERSION_CHECKS=ON",
+      "-DOPENVDB_BUILD_DOCS=ON",
+      "-DUSE_NANOVDB=ON",
+      "-DCMAKE_EXE_LINKER_FLAGS=-Wl,-rpath,#{rpath}",
     ]
 
-    ENV.append_to_cflags "-I #{buildpath}"
-
-    cd "openvdb" do
-      system "make", "install", *args
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args, *cmake_args
+      system "make", "install"
     end
   end
 
   test do
     resource("test_file").stage testpath
-    system "#{bin}/vdb_print", "-m", "cube.vdb"
+    system bin/"vdb_print", "-m", "cube.vdb"
   end
 end

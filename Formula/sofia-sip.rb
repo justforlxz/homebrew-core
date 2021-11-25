@@ -1,25 +1,30 @@
 class SofiaSip < Formula
   desc "SIP User-Agent library"
   homepage "https://sofia-sip.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/sofia-sip/sofia-sip/1.12.11/sofia-sip-1.12.11.tar.gz"
-  sha256 "2b01bc2e1826e00d1f7f57d29a2854b15fd5fe24695e47a14a735d195dd37c81"
-  revision 4
+  url "https://github.com/freeswitch/sofia-sip/archive/v1.13.6.tar.gz"
+  sha256 "6f3cb48a35929abd3454087b32ad4c75fa5fe50fab8a9cc6f98559e6fd1bd64b"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    cellar :any
-    sha256 "2f00e1e117d44b4cea76f7d6434e80e77884b3cee8f31f1fd3e8c203911d1497" => :catalina
-    sha256 "a7d98db04406b64b6c84fbee215cccb8f44b3342318d22c8adef65865096df22" => :mojave
-    sha256 "52d32ecd60bcc55d2e4569be650e9b11fd1c75e1b14d44145773717bb6693a6c" => :high_sierra
-    sha256 "95a892ab2ae71eb09d5aa22c6e30a2336376d34321c54032b6d03106a96dc631" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "e8e5655133dbe792ce9686538f8b9ac6a18174c1f6325abbc25b65dd66a504f9"
+    sha256 cellar: :any,                 arm64_big_sur:  "c0d8e1a4495af7b3052d85c76e8b3c1a5587e3b49a46925b9f5ea5f585cd0895"
+    sha256 cellar: :any,                 monterey:       "b205c1d6762b4961b7e6f94d1233d874345143c850f56f6fecbc88b2c0e873ae"
+    sha256 cellar: :any,                 big_sur:        "6f2bc64913d1a3205c627cd87cc011fd559574ec4ea581a525118649a2504896"
+    sha256 cellar: :any,                 catalina:       "e402cc99a8c04ea17e461d1e82a5a44ceb93b183913a353d3193698193d1ead2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "dc7fcb25bb1b1be2290c7025084c08ce01f72a2149d4bd3a79931a4e780686e0"
   end
 
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
   depends_on "pkg-config" => :build
-  depends_on "gettext"
   depends_on "glib"
   depends_on "openssl@1.1"
 
   def install
+    system "./bootstrap.sh"
     system "./configure", "--disable-dependency-tracking",
+                          "--disable-silent-rules",
                           "--prefix=#{prefix}"
     system "make", "install"
   end

@@ -3,18 +3,23 @@ class Legit < Formula
 
   desc "Command-line interface for Git, optimized for workflow simplicity"
   homepage "https://frostming.github.io/legit/"
-  url "https://files.pythonhosted.org/packages/6b/65/819f84ef3caa4743c834122acb897df29167f6178c9c095d7896f2181387/legit-1.1.0.tar.gz"
-  sha256 "25bd3809d657c9b0bd45a6a230dc7f58a56e6e068159d471ffeadb0cf4677b4d"
-  head "https://github.com/frostming/legit.git", :branch => "master"
+  url "https://files.pythonhosted.org/packages/cb/e4/8cc5904c486241bf2edc4dd84f357fa96686dc85f48eedb835af65f821bf/legit-1.2.0.post0.tar.gz"
+  sha256 "949396b68029a8af405ab20c901902341ef6bd55c7fec6dab71141d63d406b11"
+  license "BSD-3-Clause"
+  revision 2
+  head "https://github.com/frostming/legit.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1f688323badcbca7aabde7b3d6714c143d40a5306de059ecdf7dbf815157143e" => :catalina
-    sha256 "81ff474f13586a2e6e543e24d8bc2c40f29c671fa8fb194de3d5e501fcf2b7a2" => :mojave
-    sha256 "b2b05bde239b036eec589a445c27ada95aca2330b76113bba72c7ad20e482d10" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "074f805ae9c628e46e894167fe2ecc7851fab6ee097091114a812b4d1c1c6500"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "074f805ae9c628e46e894167fe2ecc7851fab6ee097091114a812b4d1c1c6500"
+    sha256 cellar: :any_skip_relocation, monterey:       "854ec2ea856e780bcc1a37f2c43d8047973cb3592f19614074a8f1267647cab1"
+    sha256 cellar: :any_skip_relocation, big_sur:        "854ec2ea856e780bcc1a37f2c43d8047973cb3592f19614074a8f1267647cab1"
+    sha256 cellar: :any_skip_relocation, catalina:       "854ec2ea856e780bcc1a37f2c43d8047973cb3592f19614074a8f1267647cab1"
+    sha256 cellar: :any_skip_relocation, mojave:         "854ec2ea856e780bcc1a37f2c43d8047973cb3592f19614074a8f1267647cab1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "f95553e37c878f6089d3dd236c75691fb74a77d9290cd8a7376df2fa5a8fe036"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   resource "args" do
     url "https://files.pythonhosted.org/packages/e5/1c/b701b3f4bd8d3667df8342f311b3efaeab86078a840fb826bd204118cc6b/args-0.1.0.tar.gz"

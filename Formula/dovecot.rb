@@ -1,20 +1,50 @@
 class Dovecot < Formula
   desc "IMAP/POP3 server"
   homepage "https://dovecot.org/"
-  url "https://dovecot.org/releases/2.3/dovecot-2.3.8.tar.gz"
-  sha256 "c5778d03bf26ab34a605854098035badec455d07adfab38d974f610c8f78b649"
+  url "https://dovecot.org/releases/2.3/dovecot-2.3.17.tar.gz"
+  sha256 "224412cd77a23a3ffb857da294da200883d956082cff7257942eff2789bd2df9"
+  license all_of: ["BSD-3-Clause", "LGPL-2.1-or-later", "MIT", "Unicode-DFS-2016", :public_domain]
+
+  livecheck do
+    url "https://www.dovecot.org/download/"
+    regex(/href=.*?dovecot[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "309a862f3cdc959cf2f42e9f18d6b6114b31c11f928414057c15dc18a197a433" => :catalina
-    sha256 "09830a87a9cb50ce4543feeec61024ed4bac334b28728b5393ac7d6038429fbe" => :mojave
-    sha256 "f74d62538df971fd54a56c8795ea23aca238b74149dd9571598bf91c44d3743e" => :high_sierra
+    sha256 arm64_monterey: "6a09e1d80034aacab3b64db30ab1f22e69b19b1bf3f02c4dbe575d60c516071f"
+    sha256 arm64_big_sur:  "97ee2d2b1c2214d6fd00211e4deb99a2476eff51a135bc9e97367fed98c2cbae"
+    sha256 monterey:       "9c1c6a718ddc61b95705ce76f4504066a877a5385c2b10fbd97e0ace8b21118f"
+    sha256 big_sur:        "0e2332671e5df12e9dc1cc947d413b0b4555d7bdb80ceaea944e7623cba1767f"
+    sha256 catalina:       "c047e4e19250f80ae8ed466a6e097ba22e727efa01f349335d51f4925bc731cf"
+    sha256 x86_64_linux:   "4bf69f94e1276372205ea581baa2b2e15baa98ca6b852307c938d5e609edb61c"
   end
 
   depends_on "openssl@1.1"
 
+  uses_from_macos "bzip2"
+  uses_from_macos "sqlite"
+
+  on_linux do
+    depends_on "linux-pam"
+  end
+
   resource "pigeonhole" do
-    url "https://pigeonhole.dovecot.org/releases/2.3/dovecot-2.3-pigeonhole-0.5.8.tar.gz"
-    sha256 "8fb860d50c1b1a09aea9e25f8ee89c22e34ecedfb0e11a1c48a7f67310759022"
+    # Syystem curl errors with:
+    # curl: (35) error:1400442E:SSL routines:CONNECT_CR_SRVR_HELLO:tlsv1 alert protocol version
+    url "https://pigeonhole.dovecot.org/releases/2.3/dovecot-2.3-pigeonhole-0.5.17.tar.gz", using: :homebrew_curl
+    sha256 "031e823966c53121e289b3ecdcfa4bc35ed9d22ecbf5d93a8eb140384e78d648"
+
+    # Fix -flat_namespace being used on Big Sur and later.
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+      sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+    end
+  end
+
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
   end
 
   def install
@@ -47,47 +77,20 @@ class Dovecot < Formula
     end
   end
 
-  def caveats; <<~EOS
-    For Dovecot to work, you may need to create a dovecot user
-    and group depending on your configuration file options.
-  EOS
+  def caveats
+    <<~EOS
+      For Dovecot to work, you may need to create a dovecot user
+      and group depending on your configuration file options.
+    EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>KeepAlive</key>
-        <false/>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_sbin}/dovecot</string>
-          <string>-F</string>
-        </array>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/dovecot/dovecot.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/dovecot/dovecot.log</string>
-        <key>SoftResourceLimits</key>
-        <dict>
-        <key>NumberOfFiles</key>
-        <integer>1000</integer>
-        </dict>
-        <key>HardResourceLimits</key>
-        <dict>
-        <key>NumberOfFiles</key>
-        <integer>1024</integer>
-        </dict>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_sbin/"dovecot", "-F"]
+    environment_variables PATH: std_service_path_env
+    error_log_path var/"log/dovecot/dovecot.log"
+    log_path var/"log/dovecot/dovecot.log"
   end
 
   test do

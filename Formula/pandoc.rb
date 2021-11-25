@@ -1,27 +1,29 @@
-require "language/haskell"
-
 class Pandoc < Formula
-  include Language::Haskell::Cabal
-
   desc "Swiss-army knife of markup format conversion"
   homepage "https://pandoc.org/"
-  url "https://hackage.haskell.org/package/pandoc-2.8.0.1/pandoc-2.8.0.1.tar.gz"
-  sha256 "fadf831f0de8498d096599d2b8b2e8044d4d0b92e99fe5b20e2da63044791a3d"
-  head "https://github.com/jgm/pandoc.git"
+  url "https://hackage.haskell.org/package/pandoc-2.16.2/pandoc-2.16.2.tar.gz"
+  sha256 "72f291c5b9642309ff1010eed2c990d0893923e52982f7864c710111cb26dc5e"
+  license "GPL-2.0-or-later"
+  head "https://github.com/jgm/pandoc.git", branch: "master"
 
   bottle do
-    sha256 "0ad37daba22cb7eb8f8c7ea5d2a6c0a9dd4449e41dc25627e6e35d245bfa3589" => :catalina
-    sha256 "34f2c6a2b06880dde6f3d251bfca925f80c205909c1d1284b2e36ceabc9d433f" => :mojave
-    sha256 "dfb2c37fa7ba156f31b996596ee7ef38f259d73e8fb71246d1c8efc65fc585b8" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "65b87339c01f5311f37c91d67f620abc7c3684b40498aa6e19036f911f68969a"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "670abca89612e7e0905a9a93ea9adffcc5756f62c147c5eaf7a73454738bcd54"
+    sha256 cellar: :any_skip_relocation, monterey:       "139b66f7708b91a435fd1b3329cd1259a0543130a70da481db07bdfcdec61b8c"
+    sha256 cellar: :any_skip_relocation, big_sur:        "5cf1538dd40056f3ac27d87b08021095be3e05b6bedc51a83f73bfc349a853f6"
+    sha256 cellar: :any_skip_relocation, catalina:       "ac8c43af1661e7304c44bd9443c5485152fdbd284babfbc7eaef1247816ced48"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "2e5354e16aa00389fd0aace7eef9ef235ce2f9af74e2e35b8a413e277aa09b6e"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
 
+  uses_from_macos "unzip" => :build # for cabal install
+  uses_from_macos "zlib"
+
   def install
-    cabal_sandbox do
-      install_cabal_package
-    end
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
     (bash_completion/"pandoc").write `#{bin}/pandoc --bash-completion`
     man1.install "man/pandoc.1"
   end

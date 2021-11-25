@@ -1,14 +1,23 @@
 class MariadbConnectorOdbc < Formula
   desc "Database driver using the industry standard ODBC API"
-  homepage "https://downloads.mariadb.org/connector-odbc/"
-  url "https://downloads.mariadb.org/f/connector-odbc-3.1.5/mariadb-connector-odbc-3.1.5-ga-src.tar.gz"
-  sha256 "c5a96fa166c8e7c93ceb86eeef2b4f726e076329f7686e36f7044e7b23b44ea9"
+  homepage "https://mariadb.org/download/?tab=connector&prod=connector-odbc"
+  url "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.1.14/mariadb-connector-odbc-3.1.14-src.tar.gz"
+  mirror "https://fossies.org/linux/misc/mariadb-connector-odbc-3.1.14-src.tar.gz/"
+  sha256 "06ed87398f70eb17f15856f961ea26af9f03b2d5615766ce7857f8285c380f68"
+  license "LGPL-2.1-or-later"
+
+  # https://mariadb.org/download/ sometimes lists an older version as newest,
+  # so we check the JSON data used to populate the mariadb.com downloads page
+  # (which lists GA releases).
+  livecheck do
+    url "https://mariadb.com/downloads_data.json"
+    regex(/href=.*?mariadb-connector-odbc[._-]v?(\d+(?:\.\d+)+)-src\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d5345b3a38f7fc8d7828981e498615a2d57a9901d281c1df118c3884e85108de" => :catalina
-    sha256 "b960e6ea642b098ef7cbe7b834d132ac8a5710cc81e8caa2b7223ce3436cabe2" => :mojave
-    sha256 "b07194158ff198b5386768679975367af20a32b01ad87c90302e1c959eb4d374" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "5cbb94d692b477fc62781e7608ed02cb008540e073a1d5917e990dfb4f0f9078"
+    sha256 cellar: :any, big_sur:       "0cbc9afc47d208947067f0124156c3af9cc72af759c44d045048dec8f32d92b0"
+    sha256 cellar: :any, catalina:      "e9c77b4c4a4073d83c7d4c5acad5aa75b598abe5caae2fa9c8e4bce7d24cf550"
   end
 
   depends_on "cmake" => :build
@@ -23,6 +32,10 @@ class MariadbConnectorOdbc < Formula
                          "-DWITH_SSL=OPENSSL",
                          "-DOPENSSL_ROOT_DIR=#{Formula["openssl@1.1"].opt_prefix}",
                          "-DWITH_IODBC=0",
+                         # Workaround 3.1.11 issues finding system's built-in -liconv
+                         # See https://jira.mariadb.org/browse/ODBC-299
+                         "-DICONV_LIBRARIES=#{MacOS.sdk_path}/usr/lib/libiconv.tbd",
+                         "-DICONV_INCLUDE_DIR=/usr/include",
                          *std_cmake_args
 
     # By default, the installer pkg is built - we don't want that.
@@ -33,7 +46,7 @@ class MariadbConnectorOdbc < Formula
   end
 
   test do
-    output = shell_output("#{Formula["unixodbc"].opt_bin}/dltest #{lib}/libmaodbc.dylib")
-    assert_equal "SUCCESS: Loaded #{lib}/libmaodbc.dylib", output.chomp
+    output = shell_output("#{Formula["unixodbc"].opt_bin}/dltest #{lib}/mariadb/#{shared_library("libmaodbc")}")
+    assert_equal "SUCCESS: Loaded #{lib}/mariadb/#{shared_library("libmaodbc")}", output.chomp
   end
 end

@@ -1,32 +1,41 @@
 class Manticoresearch < Formula
   desc "Open source text search engine"
   homepage "https://www.manticoresearch.com"
-  url "https://github.com/manticoresoftware/manticoresearch/releases/download/3.2.0/manticore-3.2.0-191017-e526a01-release.tar.gz"
-  sha256 "df6dbcc4df01065fc3cc6328f043b8cef3eb403a28671455cd3c8fc4217e3391"
-  revision 1
+  url "https://repo.manticoresearch.com/repository/manticoresearch_source/release/manticore-3.6.0-210504-96d61d8-release-source.tar.gz"
+  version "3.6.0"
+  sha256 "320a19c837caf827a75e19e11755a9586487435aeb8b8aa80e8bef552fd5e1f5"
+  license "GPL-2.0-only"
+  version_scheme 1
   head "https://github.com/manticoresoftware/manticoresearch.git"
 
   bottle do
-    sha256 "1e40580a0e712cdcde9f403281d5e99ca64d0284666ce4a22cec9a4bf0db1c37" => :catalina
-    sha256 "ff90a6afa1768090306b1bff962e97a426c05b3abd8f5c277d6ad37d2a8a191a" => :mojave
-    sha256 "6a5cc018b61d2265e9a30ccb67be8992712dcb591dfd2f802d76346018ba3367" => :high_sierra
+    rebuild 1
+    sha256 arm64_big_sur: "e285345ff7b6a8a99c0cbac69232301a6ad97cd09abae93bfffce5d3885f6ac2"
+    sha256 big_sur:       "11dfe819517e1b8c379d761ed9391192bb585564588a0ee23f85880a4b7e2f8c"
+    sha256 catalina:      "77c342a7a0d4a7c786b2c777b92522ab8b9eae7806074b0f81112cd7890c4d91"
+    sha256 mojave:        "f20768ffb1961f40fe39b3bebd20491f31cd2d91f9c43c4b5897458a50354a06"
   end
 
+  depends_on "boost" => :build
   depends_on "cmake" => :build
   depends_on "icu4c" => :build
   depends_on "libpq" => :build
   depends_on "mysql" => :build
-  depends_on "unixodbc" => :build
   depends_on "openssl@1.1"
 
-  conflicts_with "sphinx",
-   :because => "manticore, sphinx install the same binaries."
+  conflicts_with "sphinx", because: "manticoresearch is a fork of sphinx"
 
   def install
     args = %W[
       -DCMAKE_INSTALL_LOCALSTATEDIR=#{var}
       -DDISTR_BUILD=macosbrew
+      -DBoost_NO_BOOST_CMAKE=ON
+      -DWITH_ODBC=OFF
     ]
+
+    # Disable support for Manticore Columnar Library on ARM (since the library itself doesn't support it as well)
+    args << "-DWITH_COLUMNAR=OFF" if Hardware::CPU.arm?
+
     mkdir "build" do
       system "cmake", "..", *std_cmake_args, *args
       system "make", "install"
@@ -39,35 +48,14 @@ class Manticoresearch < Formula
     (var/"manticore/data").mkpath
   end
 
-  plist_options :manual => "searchd --config #{HOMEBREW_PREFIX}/etc/manticore/sphinx.conf"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/searchd</string>
-            <string>--config</string>
-            <string>#{etc}/manticore/sphinx.conf</string>
-            <string>--nodetach</string>
-        </array>
-        <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"searchd", "--config", etc/"manticore/manticore.conf", "--nodetach"]
+    keep_alive false
+    working_dir HOMEBREW_PREFIX
   end
 
   test do
-    (testpath/"sphinx.conf").write <<~EOS
+    (testpath/"manticore.conf").write <<~EOS
       searchd {
         pid_file = searchd.pid
         binlog_path=#

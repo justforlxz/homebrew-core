@@ -1,42 +1,52 @@
 class Grafana < Formula
   desc "Gorgeous metric visualizations and dashboards for timeseries databases"
   homepage "https://grafana.com"
-  url "https://github.com/grafana/grafana/archive/v6.5.1.tar.gz"
-  sha256 "479b2c85c0280de9ff4a32ae73c0df795d0eeb365dfb9d57f79a7b56106a26a1"
-  head "https://github.com/grafana/grafana.git"
+  url "https://github.com/grafana/grafana/archive/v8.2.5.tar.gz"
+  sha256 "d83e07256a6e55e44e1b63fa0dd505927687336ea6dc89fe7bccfa14d5ba1a97"
+  license "AGPL-3.0-only"
+  head "https://github.com/grafana/grafana.git", branch: "main"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bc1fa274a23a67a5571412646befcb0f15ffe200f64951c908490d7e1d155add" => :catalina
-    sha256 "b7c7e5ceab80c4f67e9e5dbdd6263ad00baf90a5e845eb6cd00400f7a99c50fb" => :mojave
-    sha256 "b231326604b40afcecc2d01c56262b2f97f58dbf3b89d62caca6589f4fb2ebc7" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "a82b7d31b1426ce2c88552567a1b4be7e7c9e09c50f76e245c6e118d2ec3940a"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "657fef1c20bb4b3f2d9e8e16ae985d3ab902899159772bdcdf7a05d989464374"
+    sha256 cellar: :any_skip_relocation, monterey:       "c74796464be95a639f24dff3ac120399e1da3cd7493ed1efacfe3ecdef75a402"
+    sha256 cellar: :any_skip_relocation, big_sur:        "23f9a074b54ccc9d6456a672bf03b2ac2092eeb8160ec32bba5c826280a75360"
+    sha256 cellar: :any_skip_relocation, catalina:       "c22296bc6fb7bf0c21035374a210169d007c5810101ff821974af008f55f0c4c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "216e754d1d3598e0225d34af819d952be15140506f44689668c5a3726071b656"
   end
 
   depends_on "go" => :build
-  depends_on "node@10" => :build
+  depends_on "node" => :build
   depends_on "yarn" => :build
 
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "fontconfig"
+    depends_on "freetype"
+  end
+
   def install
-    ENV["GOPATH"] = buildpath
-    grafana_path = buildpath/"src/github.com/grafana/grafana"
-    grafana_path.install buildpath.children
+    system "make", "gen-go"
+    system "go", "run", "build.go", "build"
 
-    cd grafana_path do
-      system "go", "run", "build.go", "build"
+    system "yarn", "install", "--ignore-engines", "--network-concurrency", "1"
 
-      system "yarn", "install", "--ignore-engines"
+    system "node", "--max_old_space_size=4096", "node_modules/webpack/bin/webpack.js",
+           "--config", "scripts/webpack/webpack.prod.js"
 
-      system "node_modules/grunt-cli/bin/grunt", "build"
-
-      bin.install "bin/darwin-amd64/grafana-cli"
-      bin.install "bin/darwin-amd64/grafana-server"
-      (etc/"grafana").mkpath
-      cp("conf/sample.ini", "conf/grafana.ini.example")
-      etc.install "conf/sample.ini" => "grafana/grafana.ini"
-      etc.install "conf/grafana.ini.example" => "grafana/grafana.ini.example"
-      pkgshare.install "conf", "public", "tools", "vendor"
-      prefix.install_metafiles
+    if OS.mac?
+      bin.install Dir["bin/darwin-*/grafana-cli"]
+      bin.install Dir["bin/darwin-*/grafana-server"]
+    else
+      bin.install "bin/linux-amd64/grafana-cli"
+      bin.install "bin/linux-amd64/grafana-server"
     end
+    (etc/"grafana").mkpath
+    cp("conf/sample.ini", "conf/grafana.ini.example")
+    etc.install "conf/sample.ini" => "grafana/grafana.ini"
+    etc.install "conf/grafana.ini.example" => "grafana/grafana.ini.example"
+    pkgshare.install "conf", "public", "tools"
   end
 
   def post_install
@@ -44,48 +54,18 @@ class Grafana < Formula
     (var/"lib/grafana/plugins").mkpath
   end
 
-  plist_options :manual => "grafana-server --config=#{HOMEBREW_PREFIX}/etc/grafana/grafana.ini --homepath #{HOMEBREW_PREFIX}/share/grafana --packaging=brew cfg:default.paths.logs=#{HOMEBREW_PREFIX}/var/log/grafana cfg:default.paths.data=#{HOMEBREW_PREFIX}/var/lib/grafana cfg:default.paths.plugins=#{HOMEBREW_PREFIX}/var/lib/grafana/plugins"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <dict>
-          <key>SuccessfulExit</key>
-          <false/>
-        </dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/grafana-server</string>
-          <string>--config</string>
-          <string>#{etc}/grafana/grafana.ini</string>
-          <string>--homepath</string>
-          <string>#{opt_pkgshare}</string>
-          <string>--packaging=brew</string>
-          <string>cfg:default.paths.logs=#{var}/log/grafana</string>
-          <string>cfg:default.paths.data=#{var}/lib/grafana</string>
-          <string>cfg:default.paths.plugins=#{var}/lib/grafana/plugins</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}/lib/grafana</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/grafana/grafana-stderr.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/grafana/grafana-stdout.log</string>
-        <key>SoftResourceLimits</key>
-        <dict>
-          <key>NumberOfFiles</key>
-          <integer>10240</integer>
-        </dict>
-      </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"grafana-server",
+         "--config", etc/"grafana/grafana.ini",
+         "--homepath", opt_pkgshare,
+         "--packaging=brew",
+         "cfg:default.paths.logs=#{var}/log/grafana",
+         "cfg:default.paths.data=#{var}/lib/grafana",
+         "cfg:default.paths.plugins=#{var}/lib/grafana/plugins"]
+    keep_alive true
+    error_log_path var/"log/grafana-stderr.log"
+    log_path var/"log/grafana-stdout.log"
+    working_dir var/"lib/grafana"
   end
 
   test do
@@ -115,10 +95,10 @@ class Grafana < Formula
     w = res[1]
     pid = res[2]
 
-    listening = Timeout.timeout(5) do
+    listening = Timeout.timeout(10) do
       li = false
       r.each do |l|
-        if /Initializing HTTPServer/.match?(l)
+        if /HTTP Server Listen/.match?(l)
           li = true
           break
         end

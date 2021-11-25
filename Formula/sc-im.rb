@@ -1,19 +1,30 @@
 class ScIm < Formula
   desc "Spreadsheet program for the terminal, using ncurses"
   homepage "https://github.com/andmarti1424/sc-im"
-  url "https://github.com/andmarti1424/sc-im/archive/v0.7.0.tar.gz"
-  sha256 "87225918cb6f52bbc068ee6b12eaf176c7c55ba9739b29ca08cb9b6699141cad"
-  head "https://github.com/andmarti1424/sc-im.git", :branch => "freeze"
+  url "https://github.com/andmarti1424/sc-im/archive/v0.8.2.tar.gz"
+  sha256 "7f00c98601e7f7709431fb4cbb83707c87016a3b015d48e5a7c2f018eff4b7f7"
+  license "BSD-4-Clause"
+  revision 4
+  head "https://github.com/andmarti1424/sc-im.git", branch: "main"
 
   bottle do
-    sha256 "24cb0ad706b03a9933cdb24dba862b38a3fcb59f96f9942227d8f9f79ff93ea5" => :catalina
-    sha256 "67180ab11eedd56f8eaffb0d2f12a90ca9636bbd93ff693914450be8248702ce" => :mojave
-    sha256 "275a0a9dbd1a1271119e36b2767a54587aae57a65ee92278e701e0e1236a192c" => :high_sierra
-    sha256 "f346970ef805cec01ae6485365d8fb5002533255c01e81bdd44d072058d00081" => :sierra
-    sha256 "50e8d50e0373ac626ad617057eb1246c779e1e3b05171f4be2aa547c5b8ddf4c" => :el_capitan
+    sha256 arm64_monterey: "5bebafdb76dd401671b0b1888f3db8b2e6c8e4c79af6d5beb26796f62848f5e1"
+    sha256 arm64_big_sur:  "b055d6cf9eef6bf5c975a1eb6919875580f2014bcfb73cb333f650e940f9d6a4"
+    sha256 monterey:       "6e9c2d8b686b95f3f5814a6892a5552f40ce2008977741937a4b8d2845c34868"
+    sha256 big_sur:        "7e830a488a3d2645044fdab8494e1497c37dd4b72933dc6a638948b7f5c2c6c7"
+    sha256 catalina:       "1c62ae56ea50617ef67e0363d7b99ffc83eb7ec1688d74ccf44142ec5bba6811"
+    sha256 x86_64_linux:   "1be8f9b8c792d4203ebdd6021915ff23dc1c9e39749cff724f435df9c7bfb44a"
   end
 
+  depends_on "pkg-config" => :build
+  depends_on "libxls"
+  depends_on "libxlsxwriter"
+  depends_on "libxml2"
+  depends_on "libzip"
+  depends_on "lua"
   depends_on "ncurses"
+
+  uses_from_macos "bison" => :build
 
   def install
     cd "src" do
@@ -25,10 +36,11 @@ class ScIm < Formula
   test do
     input = <<~EOS
       let A1=1+1
+      recalc
       getnum A1
     EOS
     output = pipe_output(
-      "#{bin}/scim --nocurses --quit_afterload 2>/dev/null", input
+      "#{bin}/sc-im --nocurses --quit_afterload 2>/dev/null", input
     )
     assert_equal "2", output.lines.last.chomp
   end

@@ -1,28 +1,33 @@
 class Ghq < Formula
   desc "Remote repository management made easy"
-  homepage "https://github.com/motemen/ghq"
-  url "https://github.com/motemen/ghq.git",
-      :tag      => "v0.14.0",
-      :revision => "ce6939542ed1176d3accc128fac17b3aebdc76e8"
-  head "https://github.com/motemen/ghq.git"
+  homepage "https://github.com/x-motemen/ghq"
+  url "https://github.com/x-motemen/ghq.git",
+      tag:      "v1.2.1",
+      revision: "dd139fb46cb7c1a3b19bca7a0c3762090c7c522f"
+  license "MIT"
+  head "https://github.com/x-motemen/ghq.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4cd009f67833f8c8874335276d63fe52c130f9b63b73ec8b7521e67aa5ee5887" => :catalina
-    sha256 "22134e924695b698b3d492b8994ad7a032d66f62f62ae607696308e74bcf4c4f" => :mojave
-    sha256 "85d2cfd26987ebbd208edc9b33dbc4c965f2a40df8db827a7e7cb08632ceff12" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "99932f495196aeb90f4fefbff02ab6c4ab8e6b23ff91b5f68acb6ca0fd28ebc0"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "8b1f5f18b219a60f8d86556e0e6542edb7e9e8fb010bbf55ab83859e32ba5f00"
+    sha256 cellar: :any_skip_relocation, monterey:       "0a9dde6a51cf71edde229e6478a8a2155c72469ebda1daae965d055de02d6ce1"
+    sha256 cellar: :any_skip_relocation, big_sur:        "82fd83decb4539c9c0050d59a240c37149cf61ff5d6b6b6e47e7d6cba83c4d2d"
+    sha256 cellar: :any_skip_relocation, catalina:       "8a337adf03ab11238253364863890654ebb92b6cc0b602658c54017059f4f6b5"
+    sha256 cellar: :any_skip_relocation, mojave:         "983535fe9c12471da7b4cb2c72035dd602e525f3bcc26579d2d865a5c9cc263c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "f7a52d8fb22234e9c3ee2ab8ab48fae4a47a0b7c2b13da13fa96de8377b9f8c4"
   end
 
   depends_on "go" => :build
 
   def install
-    system "make", "build"
+    system "make", "build", "VERBOSE=1"
     bin.install "ghq"
-    zsh_completion.install "zsh/_ghq"
+    bash_completion.install "misc/bash/_ghq" => "ghq"
+    zsh_completion.install "misc/zsh/_ghq"
     prefix.install_metafiles
   end
 
   test do
-    assert_match "#{testpath}/.ghq", shell_output("#{bin}/ghq root")
+    assert_match "#{testpath}/ghq", shell_output("#{bin}/ghq root")
   end
 end

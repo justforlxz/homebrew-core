@@ -1,21 +1,45 @@
 class Fail2ban < Formula
   desc "Scan log files and ban IPs showing malicious signs"
   homepage "https://www.fail2ban.org/"
-  url "https://github.com/fail2ban/fail2ban/archive/0.10.4.tar.gz"
-  sha256 "d6ca1bbc7e7944f7acb2ba7c1065953cd9837680bc4d175f30ed155c6a372449"
+  url "https://github.com/fail2ban/fail2ban/archive/0.11.2.tar.gz"
+  sha256 "383108e5f8644cefb288537950923b7520f642e7e114efb843f6e7ea9268b1e0"
+  license "GPL-2.0-or-later"
+  revision 1
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "8a94f2acb50779d21bf5f419ef4ab65692d03e827d1d618a878b14b5174fba59" => :mojave
-    sha256 "96f7b39c78cab991ea75e7c68e65b764fe1ce0299ce82281e25800a255662bb9" => :high_sierra
-    sha256 "96f7b39c78cab991ea75e7c68e65b764fe1ce0299ce82281e25800a255662bb9" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "8bbb8f762200e892130d7f5fe082f75057f8d5fe8950c85686182872ae1cd0d0"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "8bbb8f762200e892130d7f5fe082f75057f8d5fe8950c85686182872ae1cd0d0"
+    sha256 cellar: :any_skip_relocation, monterey:       "9db5992983e4db132111565b5eee72e6f7fd5f00eb63b00f5386e7b370ae0a21"
+    sha256 cellar: :any_skip_relocation, big_sur:        "9db5992983e4db132111565b5eee72e6f7fd5f00eb63b00f5386e7b370ae0a21"
+    sha256 cellar: :any_skip_relocation, catalina:       "9db5992983e4db132111565b5eee72e6f7fd5f00eb63b00f5386e7b370ae0a21"
+    sha256 cellar: :any_skip_relocation, mojave:         "9db5992983e4db132111565b5eee72e6f7fd5f00eb63b00f5386e7b370ae0a21"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "e842d2c8d7fe34eefe7e889fe31b597dbf398c2345efaec38af1cfabd268d0ec"
   end
 
   depends_on "help2man" => :build
   depends_on "sphinx-doc" => :build
-  uses_from_macos "python@2"
+  depends_on "python@3.10"
+
+  # fixes https://github.com/fail2ban/fail2ban/issues/3098 remove in the next release
+  patch do
+    url "https://github.com/fail2ban/fail2ban/commit/5ac303df8a171f748330d4c645ccbf1c2c7f3497.patch?full_index=1"
+    sha256 "4f22a39ae708b0c0fb59d29054e86b7c3f478a79925508833fd21f000b86aadb"
+  end
+
+  # fixes https://github.com/fail2ban/fail2ban/issues/2931 remove in the next release
+  patch do
+    url "https://github.com/fail2ban/fail2ban/commit/2b6bb2c1bed8f7009631e8f8c306fa3160324a49.patch?full_index=1"
+    sha256 "ff0aa188dbcfedaff6f882dba00963f4faf3fa774da9cfeb7f96030050e9d8e3"
+  end
 
   def install
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python2.7/site-packages"
+    ENV.prepend_create_path "PYTHONPATH", libexec/Language::Python.site_packages("python3")
+    ENV["PYTHON"] = which("python3")
 
     rm "setup.cfg"
     Dir["config/paths-*.conf"].each do |r|
@@ -23,6 +47,9 @@ class Fail2ban < Formula
 
       rm r
     end
+
+    # Replace paths in config
+    inreplace "config/jail.conf", "before = paths-debian.conf", "before = paths-osx.conf"
 
     # Replace hardcoded paths
     inreplace "setup.py" do |s|
@@ -63,7 +90,8 @@ class Fail2ban < Formula
     inreplace "setup.py", "if os.path.exists('#{var}/run')", "if True"
     inreplace "setup.py", "platform_system in ('linux',", "platform_system in ('linux', 'darwin',"
 
-    system "python", "setup.py", "install", "--prefix=#{libexec}"
+    system "./fail2ban-2to3"
+    system "python3", "setup.py", "install", "--prefix=#{libexec}"
 
     cd "doc" do
       system "make", "dirhtml", "SPHINXBUILD=sphinx-build"
@@ -71,7 +99,7 @@ class Fail2ban < Formula
     end
 
     bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    bin.env_script_all_files(libexec/"bin", PYTHONPATH: ENV["PYTHONPATH"])
     man1.install Dir["man/*.1"]
     man5.install "man/jail.conf.5"
   end
@@ -103,27 +131,10 @@ class Fail2ban < Formula
     EOS
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist
-    <<~EOS
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/fail2ban-client</string>
-          <string>-x</string>
-          <string>start</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-      </plist>
-    EOS
+  service do
+    run [opt_bin/"fail2ban-client", "-x", "start"]
   end
 
   test do

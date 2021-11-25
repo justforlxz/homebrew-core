@@ -2,32 +2,44 @@ class Moreutils < Formula
   desc "Collection of tools that nobody wrote when UNIX was young"
   homepage "https://joeyh.name/code/moreutils/"
   url "https://git.joeyh.name/git/moreutils.git",
-      :tag      => "0.63",
-      :revision => "aeddd0f4caa9d10aaa691040773fa4764e12ff46"
+      tag:      "0.66",
+      revision: "f0642d6331e89ca5a6ced8c0f1744428983e1780"
+  license all_of: [
+    "GPL-2.0-or-later",
+    { any_of: ["GPL-2.0-only", "Artistic-2.0"] },
+  ]
   head "https://git.joeyh.name/git/moreutils.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0277b44f53cc7e581c338a28fa330e4d436cd05757d99cfc9baa1f5ca095af4c" => :catalina
-    sha256 "a3d5a342bf079998b52d172f0f5e8b066b256145e2eb3ded393a0e6e2680b573" => :mojave
-    sha256 "3731c1304a72a7a0486891bf592cd82b7422d0c37cadeb00b6f633e62f20aa35" => :high_sierra
-    sha256 "fac2ba67a62889ff07edb8257e0d13aa96143a7421521ffdf3e0cf685a1cdc1e" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c93055c0a353c93a20b0421a85eb055cc54340d1793cf12dd0fad275be123b71"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "b7bb6a5498e898c303cbbb526f83a12e690315c43260ebab1cf348ecb2a712bb"
+    sha256 cellar: :any_skip_relocation, monterey:       "4d5c2460a0d242df46376e618207038722ffc65a9e3e6379fdd229ce821f4d52"
+    sha256 cellar: :any_skip_relocation, big_sur:        "98e36f509fe2556660dec088c1dcf380cf1ce60167fcb4289782614feb381821"
+    sha256 cellar: :any_skip_relocation, catalina:       "e7774183139434a9f4707a5931793fb2aed0678fd0257a5860571f320f507c8e"
+    sha256 cellar: :any_skip_relocation, mojave:         "099c5b0cc96ae204c211da65446db79bf83469ed0bcbc40d81e5a9e95b5a678c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "0890cc88f2e311ec01cc0439cbfa6a7a43166ebaeb54a8bfa9d22fc21fba4bb4"
   end
 
   depends_on "docbook-xsl" => :build
 
-  conflicts_with "parallel", :because => "Both install a `parallel` executable."
-  conflicts_with "pwntools", :because => "Both install an `errno` executable."
-  conflicts_with "task-spooler", :because => "Both install a `ts` executable."
+  uses_from_macos "libxml2" => :build
+  uses_from_macos "libxslt" => :build
+
+  uses_from_macos "perl"
+
+  conflicts_with "parallel", because: "both install a `parallel` executable"
+  conflicts_with "pwntools", because: "both install an `errno` executable"
+  conflicts_with "sponge", because: "both install a `sponge` executable"
+  conflicts_with "task-spooler", because: "both install a `ts` executable"
 
   resource "Time::Duration" do
-    url "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Time-Duration-1.20.tar.gz"
-    sha256 "458205b528818e741757b2854afac5f9af257f983000aae0c0b1d04b5a9cbbb8"
+    url "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Time-Duration-1.21.tar.gz"
+    sha256 "fe340eba8765f9263694674e5dff14833443e19865e5ff427bbd79b7b5f8a9b8"
   end
 
   resource "IPC::Run" do
-    url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-0.94.tar.gz"
-    sha256 "2eb336c91a2b7ea61f98e5b2282d91020d39a484f16041e2365ffd30f8a5605b"
+    url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/IPC-Run-20200505.0.tar.gz"
+    sha256 "816ebf217fa0df99c583d73c0acc6ced78ac773787c664c75cbf140bb7e4c901"
   end
 
   def install
@@ -48,9 +60,8 @@ class Moreutils < Formula
               "#{Formula["docbook-xsl"].opt_prefix}/docbook-xsl"
     end
     system "make", "all"
-    system "make", "check"
     system "make", "install", "PREFIX=#{prefix}"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do

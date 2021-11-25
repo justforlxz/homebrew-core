@@ -1,24 +1,21 @@
 class IsoCodes < Formula
   desc "Provides lists of various ISO standards"
   homepage "https://salsa.debian.org/iso-codes-team/iso-codes"
-  url "https://deb.debian.org/debian/pool/main/i/iso-codes/iso-codes_4.4.orig.tar.xz"
-  sha256 "5124ba64e5ce6e1a73c24d1a1cdc42f6a2d0db038791b28ac77aafeb07654e86"
+  url "https://deb.debian.org/debian/pool/main/i/iso-codes/iso-codes_4.8.0.orig.tar.xz"
+  sha256 "b02b9c8bb81dcfa03e4baa25b266df47710832cbf550081cf43f72dcedfc8768"
+  license "LGPL-2.1-or-later"
   head "https://salsa.debian.org/iso-codes-team/iso-codes.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "36f4fe5b5c79b4ca8fa0cbf3817fde2003a7ec3b33ce7aab6fc845352ec1ddaf" => :catalina
-    sha256 "36f4fe5b5c79b4ca8fa0cbf3817fde2003a7ec3b33ce7aab6fc845352ec1ddaf" => :mojave
-    sha256 "36f4fe5b5c79b4ca8fa0cbf3817fde2003a7ec3b33ce7aab6fc845352ec1ddaf" => :high_sierra
+    sha256 cellar: :any_skip_relocation, all: "c27f3b850cca2166c7cb79fad9ad835f622e2f742a2e2ce4dd773b9fb8733a1b"
   end
 
   depends_on "gettext" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
 
   def install
     system "./configure", "--prefix=#{prefix}"
     system "make"
-    system "make", "check"
     system "make", "install"
   end
 

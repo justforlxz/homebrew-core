@@ -1,13 +1,20 @@
 class Suricata < Formula
   desc "Network IDS, IPS, and security monitoring engine"
-  homepage "https://suricata-ids.org/"
-  url "https://www.openinfosecfoundation.org/download/suricata-5.0.0.tar.gz"
-  sha256 "6a3dcc427196927a5cdefd32c290fa352d6405e9bb6d3fe12c71f47d31d98a63"
+  homepage "https://suricata.io"
+  url "https://www.openinfosecfoundation.org/download/suricata-6.0.4.tar.gz"
+  sha256 "a8f197e33d1678689ebbf7bc1abe84934c465d22c504c47c2c7e9b74aa042d0d"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://suricata.io/download/"
+    regex(/href=.*?suricata[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "bb6b21d3beb37cfa2ceaf5f524daf6bd5a8f48c8a2f3203f2bab9a203424aa0f" => :catalina
-    sha256 "2d5a85985c0bba470ab19fcb85516983c455f6515966b7f2320d4e75dd7e89cc" => :mojave
-    sha256 "a5251c6b0ac12117237d04252339ef60886bc5e038052310bb4b917e8864d778" => :high_sierra
+    sha256 arm64_big_sur: "e222dd787408ebc39be3189d74fff39ae3be004fa1395b66c6900e45076eab72"
+    sha256 big_sur:       "a59ee562882071a98eba9116e1175787cd57749bbf21fdece37098048de0f24a"
+    sha256 catalina:      "aca8a07601138f8a12b9b378ff20bed7471e5413416555f2bf8439f2817f356f"
+    sha256 x86_64_linux:  "27222b9a2b55c48251ed492bae1ae573dab98a92593b6555dc58bb62e0ae1221"
   end
 
   depends_on "pkg-config" => :build
@@ -20,7 +27,9 @@ class Suricata < Formula
   depends_on "nspr"
   depends_on "nss"
   depends_on "pcre"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  uses_from_macos "libpcap"
 
   resource "argparse" do
     url "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz"
@@ -28,21 +37,29 @@ class Suricata < Formula
   end
 
   resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/e3/e8/b3212641ee2718d556df0f23f78de8303f068fe29cdaa7a91018849582fe/PyYAML-5.1.2.tar.gz"
-    sha256 "01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4"
+    url "https://files.pythonhosted.org/packages/a0/a4/d63f2d7597e1a4b55aa3b4d6c5b029991d3b824b5bd331af8d4ab1ed687d/PyYAML-5.4.1.tar.gz"
+    sha256 "607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e"
   end
 
   resource "simplejson" do
-    url "https://files.pythonhosted.org/packages/e3/24/c35fb1c1c315fc0fffe61ea00d3f88e85469004713dab488dee4f35b0aff/simplejson-3.16.0.tar.gz"
-    sha256 "b1f329139ba647a9548aa05fb95d046b4a677643070dc2afc05fa2e975d09ca5"
+    url "https://files.pythonhosted.org/packages/7a/47/c7cc3d4ed15f09917838a2fb4e1759eafb6d2f37ebf7043af984d8b36cf7/simplejson-3.17.6.tar.gz"
+    sha256 "cf98038d2abf63a1ada5730e91e84c642ba6c225b0198c3684151b1f80c5f8a6"
+  end
+
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+    directory "libhtp"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
+    python3 = Formula["python@3.9"].opt_bin/"python3"
+    xy = Language::Python.major_minor_version python3
     ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
     resources.each do |r|
       r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
+        system python3, *Language::Python.setup_install_args(libexec/"vendor")
       end
     end
 
@@ -62,13 +79,19 @@ class Suricata < Formula
       --with-libmagic-libraries=#{libmagic.opt_lib}
       --with-libnet-includes=#{libnet.opt_include}
       --with-libnet-libraries=#{libnet.opt_lib}
-      --enable-ipfw
     ]
+
+    args << if OS.mac?
+      "--enable-ipfw"
+    else
+      args << "--with-libpcap-includes=#{Formula["libpcap"].opt_include}"
+      "--with-libpcap-libraries=#{Formula["libpcap"].opt_lib}"
+    end
 
     system "./configure", *args
     system "make", "install-full"
 
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    bin.env_script_all_files(libexec/"bin", PYTHONPATH: ENV["PYTHONPATH"])
 
     # Leave the magic-file: prefix in otherwise it overrides a commented out line rather than intended line.
     inreplace etc/"suricata/suricata.yaml", %r{magic-file: /.+/magic}, "magic-file: #{libmagic.opt_share}/misc/magic"

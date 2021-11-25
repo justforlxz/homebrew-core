@@ -1,30 +1,37 @@
 class Assh < Formula
   desc "Advanced SSH config - Regex, aliases, gateways, includes and dynamic hosts"
-  homepage "https://github.com/moul/advanced-ssh-config"
-  url "https://github.com/moul/advanced-ssh-config/archive/v2.8.0.tar.gz"
-  sha256 "e04de57ab048f1abee75e9e739514c4f47e6cbb8acacb9d58a6e2892df30dc42"
-  head "https://github.com/moul/advanced-ssh-config.git"
+  homepage "https://manfred.life/assh"
+  url "https://github.com/moul/assh/archive/v2.12.0.tar.gz"
+  sha256 "f4b8ef42582f86f208fe6947e5ca123e9b86d47e58e0aaecf822bbe9e9e74a26"
+  license "MIT"
+  head "https://github.com/moul/assh.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bea473073d77ae8be2329b1c868242b6d5098c46516a6e16669752b8742d56b2" => :mojave
-    sha256 "7e48c5089af70b883059a68a4e8be6b3a4a973306067d16983bc1130e23979fc" => :high_sierra
-    sha256 "0087bab708bd409d1cd00dcaba1ed40c4ad9e4f11f3b6db275a827fe2ff69011" => :sierra
-    sha256 "f791dad7d95875ae19db21305c2d5d3632ebfb7783c837d212a08099d15c4d7a" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "a8b66c39894c86ce43aa3e3fd2415cbfd98e7443b94d99f5a2c4058cb50977a1"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "a2e89654afd5dd87dc505b09dd36ee2d0dd142f6a7955dce79db9a4f96713c77"
+    sha256 cellar: :any_skip_relocation, monterey:       "482dce52a4f7a0dcc4a9b4664013d18373ea734f7dddd88b241dbec631e6d055"
+    sha256 cellar: :any_skip_relocation, big_sur:        "b32614a996f726756faa62ca0b4e27ee7404e9f3341a8d8f1457d925e899bc65"
+    sha256 cellar: :any_skip_relocation, catalina:       "77570e18528c106267cf4fe3f7a8160d7f788681885dfe16560280d9d450ad7a"
+    sha256 cellar: :any_skip_relocation, mojave:         "46193d23bec30727a5a8b63d77e8f8a811dd4ffaf7b7023c832d7e3a24acc072"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "efa11877000c3a322c5ae8a1402910e95a122554ae80321f8c3557fbc9063625"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/moul/advanced-ssh-config").install Dir["*"]
-    cd "src/github.com/moul/advanced-ssh-config/cmd/assh" do
-      system "go", "build", "-o", bin/"assh"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/assh --version")
+    assh_config = testpath/"assh.yml"
+    assh_config.write <<~EOS
+      hosts:
+        hosta:
+          Hostname: 127.0.0.1
+      asshknownhostfile: /dev/null
+    EOS
+
+    output = "hosta assh ping statistics"
+    assert_match output, shell_output("#{bin}/assh --config #{assh_config} ping -c 4 hosta 2>&1")
   end
 end

@@ -1,15 +1,18 @@
 class Pspg < Formula
   desc "Unix pager optimized for psql"
   homepage "https://github.com/okbob/pspg"
-  url "https://github.com/okbob/pspg/archive/2.6.0.tar.gz"
-  sha256 "02029132144552914a9aa1d813cd1bdbf3612e13f362a49f3ef4bf63007760aa"
-  head "https://github.com/okbob/pspg.git"
+  url "https://github.com/okbob/pspg/archive/5.5.1.tar.gz"
+  sha256 "a4a4003982017261360bae24d5b38b3653d694d3d66140cf8fe7864d50958a8e"
+  license "BSD-2-Clause"
+  head "https://github.com/okbob/pspg.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "635a6c2304a3f4f3edb8a00020f37c265ac3be27f7c599059334afaa017a78da" => :catalina
-    sha256 "c2fea23e4da00501c1dd89bbf4c22618e77d455b49cf39046163a0c9b8313630" => :mojave
-    sha256 "351b781a01908ecee72be4f42683c858859a003fc6d804b274f4e38d7f424aeb" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "1a5340ff2fa5d02cfbaa18727952749af3a4f7946d60fd8e5eb888e2f60c499a"
+    sha256 cellar: :any,                 arm64_big_sur:  "e02ac3ae1e2d31d0484d657d88a925a0f6cb1b06a7095cb22828f9ab4b873497"
+    sha256 cellar: :any,                 monterey:       "3c8be4a6e02617d26bd6e06d614626f35d001c933bc4b2e82e778ffb170da97b"
+    sha256 cellar: :any,                 big_sur:        "3703edc3a98f48bcfac8d95e69bc87f8930d7e0e839ff784d9877771d40d18f5"
+    sha256 cellar: :any,                 catalina:       "27d9812a7df7a3940183f660f5861233fc846edc33d1de8707883a45a0a85aeb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "9964dff52b1e160a001a7dc8e8d4005279fae7c68c367ac73d025176c48fb6c8"
   end
 
   depends_on "libpq"
@@ -22,15 +25,16 @@ class Pspg < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    Add the following line to your psql profile (e.g. ~/.psqlrc)
-      \\setenv PAGER pspg
-      \\pset border 2
-      \\pset linestyle unicode
-  EOS
+  def caveats
+    <<~EOS
+      Add the following line to your psql profile (e.g. ~/.psqlrc)
+        \\setenv PAGER pspg
+        \\pset border 2
+        \\pset linestyle unicode
+    EOS
   end
 
   test do
-    assert_match "pspg-#{version.to_f}", shell_output("#{bin}/pspg --version")
+    assert_match "pspg-#{version}", shell_output("#{bin}/pspg --version")
   end
 end

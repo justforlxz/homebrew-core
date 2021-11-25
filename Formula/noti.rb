@@ -1,16 +1,19 @@
 class Noti < Formula
   desc "Trigger notifications when a process completes"
   homepage "https://github.com/variadico/noti"
-  url "https://github.com/variadico/noti/archive/3.3.0.tar.gz"
-  sha256 "494e1a83897bfa9123c8292d0b8501b779b5d31b7f43923b8c48543a5404eb7a"
+  url "https://github.com/variadico/noti/archive/3.5.0.tar.gz"
+  sha256 "04183106921e3a6aa7c107c6dff6fa13273436e8a26d139e49f34c5d1eea348c"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "55373807cc24bc00f1e26855c43cb2d00ea1bfa993c4f61a4368210990a1d5b0" => :catalina
-    sha256 "483119c4bf2865ddc52208f33eeb3e8db9e4ff0e5901baf0e441d31492b2a5ff" => :mojave
-    sha256 "44d31ac34449acb98d99c65403c6515f4f66f88cb0f0e9f4bed41f31b47107d3" => :high_sierra
-    sha256 "2684f0630a200aac31d9ef08f757b431a956534d40776d80599b1a02d80d6ec8" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "947f45e4f2792140748229ed6ab17f3f2497b0668c643ffd11cf1d76bac4ee89"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "a4eb0ad59a65cb3c8c870aef3b96754c2ec1b3e62ca79d30bad2abdf746ce9e3"
+    sha256 cellar: :any_skip_relocation, monterey:       "36bf279d975a61d82a48e4618c0c925c283f3bdd383e9bf95b443349ae43acbb"
+    sha256 cellar: :any_skip_relocation, big_sur:        "c62799cbbb117b38b1aa7115d9ca4e823caf6eba30bc509638445d82ea7aaa99"
+    sha256 cellar: :any_skip_relocation, catalina:       "fd5b46d0b59943d06196923e4ba4f5628816d3c051d3b982939e3e64d2397fdf"
+    sha256 cellar: :any_skip_relocation, mojave:         "83a2ca79439aaaa5872597f0d937facea22e69eba196eade49a20099c5b6b120"
+    sha256 cellar: :any_skip_relocation, high_sierra:    "f622905f1a8f1ce308b629de6521c17be579de1019a3727ec568a359f852d135"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "8b5e7f6ed05b1d96d96059281319cbb3fd5cfb95b7b81c58aa7cfc115698cffb"
   end
 
   depends_on "go" => :build

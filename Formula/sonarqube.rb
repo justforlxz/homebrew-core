@@ -1,43 +1,46 @@
 class Sonarqube < Formula
   desc "Manage code quality"
   homepage "https://www.sonarqube.org/"
-  url "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.0.zip"
-  sha256 "cfb93b3a76bb783ddb2a0146f06892b478dcbd3463258738ca6d12bc91424162"
+  url "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.2.0.49834.zip"
+  sha256 "96aefddd3ec64d3ce73791755de780427165b2e8c6f25adb2510aaab8a567b75"
+  license "LGPL-3.0-or-later"
 
-  bottle :unneeded
+  livecheck do
+    url "https://binaries.sonarsource.com/Distribution/sonarqube/"
+    regex(/href=.*?sonarqube[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  depends_on :java => "11+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, big_sur:      "4ee7fd481ccb4301bb547fb7830ec7dd202959859c2404b753f5ed7ce02ca5aa"
+    sha256 cellar: :any_skip_relocation, catalina:     "4ee7fd481ccb4301bb547fb7830ec7dd202959859c2404b753f5ed7ce02ca5aa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5bd7b5e142d30a1caf30979e5e077f462e076540c514505d354df4625e2be67d"
+  end
 
-  conflicts_with "sonarqube-lts", :because => "both install the same binaries"
+  # sonarqube ships pre-built x86_64 binaries
+  depends_on arch: :x86_64
+  depends_on "openjdk@11"
+
+  conflicts_with "sonarqube-lts", because: "both install the same binaries"
 
   def install
     # Delete native bin directories for other systems
-    rm_rf Dir["bin/{linux,windows}-*"]
+    remove, keep = if OS.mac?
+      ["linux", "macosx-universal"]
+    else
+      ["macosx", "linux-x86"]
+    end
+
+    rm_rf Dir["bin/{#{remove},windows}-*"]
 
     libexec.install Dir["*"]
 
-    bin.install_symlink "#{libexec}/bin/macosx-universal-64/sonar.sh" => "sonar"
+    (bin/"sonar").write_env_script libexec/"bin/#{keep}-64/sonar.sh",
+      Language::Java.overridable_java_home_env("11")
   end
 
-  plist_options :manual => "sonar console"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-        <string>#{opt_bin}/sonar</string>
-        <string>start</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"sonar", "console"]
+    keep_alive true
   end
 
   test do

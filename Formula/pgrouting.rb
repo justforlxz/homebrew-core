@@ -1,16 +1,20 @@
 class Pgrouting < Formula
   desc "Provides geospatial routing for PostGIS/PostgreSQL database"
   homepage "https://pgrouting.org/"
-  url "https://github.com/pgRouting/pgrouting/archive/v2.6.3.tar.gz"
-  sha256 "7ebef19dc698d4e85b85274f6949e77b26fe5a2b79335589bc3fbdfca977eb0f"
-  revision 1
-  head "https://github.com/pgRouting/pgrouting.git"
+  url "https://github.com/pgRouting/pgrouting/releases/download/v3.3.0/pgrouting-3.3.0.tar.gz"
+  sha256 "a0953d98a2ce7d7162448bc31f17eba1950ce252f7f292a4953e6291237a16dd"
+  license "GPL-2.0-or-later"
+  head "https://github.com/pgRouting/pgrouting.git", branch: "main"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "5082abf1c48e77ff3adbde7667689676ffd4e398bfc2897e7cf636c07e4f911c" => :catalina
-    sha256 "8d86dbbe3ab8589ad2dab7d567510caeec58a2ae027ef2a1c87597032f4ffd60" => :mojave
-    sha256 "76fd2839fd83677abf987de63c756eaf2ca3f090d787efe6400c818c5979df16" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4e0ebfc58d08e965ad5e726f850151dd91838224671936e946d046ffe2db2101"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8160f9e8421d16996fe418bf82637acc0cf9eafe72a6e482df8dca5e41feb404"
+    sha256 cellar: :any_skip_relocation, catalina:      "e649753bce351dde13226665c14f5260302d3fd010880f52c2783133f0144974"
   end
 
   depends_on "cmake" => :build
@@ -30,23 +34,15 @@ class Pgrouting < Formula
 
     lib.install Dir["stage/**/lib/*"]
     (share/"postgresql/extension").install Dir["stage/**/share/postgresql/extension/*"]
+
+    # write the postgres version in the install to ensure rebuilds on new major versions
+    inreplace share/"postgresql/extension/pgrouting.control",
+      "# pgRouting Extension",
+      "# pgRouting Extension for PostgreSQL #{Formula["postgresql"].version.major}"
   end
 
   test do
-    pg_bin = Formula["postgresql"].opt_bin
-    pg_port = "55561"
-    system "#{pg_bin}/initdb", testpath/"test"
-    pid = fork { exec "#{pg_bin}/postgres", "-D", testpath/"test", "-p", pg_port }
-
-    begin
-      sleep 2
-      system "#{pg_bin}/createdb", "-p", pg_port
-      system "#{pg_bin}/psql", "-p", pg_port, "--command", "CREATE DATABASE test;"
-      system "#{pg_bin}/psql", "-p", pg_port, "-d", "test", "--command", "CREATE EXTENSION postgis;"
-      system "#{pg_bin}/psql", "-p", pg_port, "-d", "test", "--command", "CREATE EXTENSION pgrouting;"
-    ensure
-      Process.kill 9, pid
-      Process.wait pid
-    end
+    expected = "for PostgreSQL #{Formula["postgresql"].version.major}"
+    assert_match expected, (share/"postgresql/extension/pgrouting.control").read
   end
 end

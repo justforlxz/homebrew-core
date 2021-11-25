@@ -1,19 +1,33 @@
 class Gdb < Formula
   desc "GNU debugger"
   homepage "https://www.gnu.org/software/gdb/"
-  url "https://ftp.gnu.org/gnu/gdb/gdb-8.3.tar.xz"
-  mirror "https://ftpmirror.gnu.org/gdb/gdb-8.3.tar.xz"
-  sha256 "802f7ee309dcc547d65a68d61ebd6526762d26c3051f52caebe2189ac1ffd72e"
-  head "https://sourceware.org/git/binutils-gdb.git"
+  url "https://ftp.gnu.org/gnu/gdb/gdb-11.1.tar.xz"
+  mirror "https://ftpmirror.gnu.org/gdb/gdb-11.1.tar.xz"
+  sha256 "cccfcc407b20d343fb320d4a9a2110776dd3165118ffd41f4b1b162340333f94"
+  license "GPL-3.0-or-later"
+  head "https://sourceware.org/git/binutils-gdb.git", branch: "master"
 
   bottle do
-    sha256 "fbc1eb60dc46eb6517ea530049496336e1a4d3c9b3bdf8816665cac528fd99a4" => :catalina
-    sha256 "16da5f61ca304740defde7f8a772d5fb5f5c48ac658984ef186d1c77f53b5d6a" => :mojave
-    sha256 "2721c3a733fba77d623f84c33cce6a1cca46c6a020649269f4431de402704fa1" => :high_sierra
-    sha256 "b2343fca9963d198248c98ee069211c28e04135effcc2e7ed0900fec7c7d95a3" => :sierra
+    sha256 monterey:     "c4d3d881ae2ae938b37031f94c9b2780e53f78fa224fe64532b08656157f9afe"
+    sha256 big_sur:      "ce7aa7f3589b5833ff0ace1afb6e43ea01860666bf34ad7f941b9cab5c7ab5ab"
+    sha256 catalina:     "7543956f666aae922d34accd371fbc57d901adb386776b47e079163933e75755"
+    sha256 mojave:       "1d315c9b2213bfe09533c05beb2221a68ae816dc92c321d966c3fe1974e95913"
+    sha256 x86_64_linux: "e83bcc7a2b903fb7e76b2d4b2ae2935d96100385a5cbae4316641c90fc724685"
   end
 
-  depends_on "pkg-config" => :build
+  depends_on "gmp"
+  depends_on "python@3.9"
+  depends_on "xz" # required for lzma support
+
+  uses_from_macos "texinfo" => :build
+  uses_from_macos "expat"
+  uses_from_macos "ncurses"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "gcc"
+    depends_on "guile"
+  end
 
   fails_with :clang do
     build 800
@@ -23,33 +37,35 @@ class Gdb < Formula
     EOS
   end
 
+  fails_with gcc: "5"
+
   def install
     args = %W[
+      --enable-targets=all
       --prefix=#{prefix}
       --disable-debug
       --disable-dependency-tracking
-      --enable-targets=all
-      --with-python=/usr
+      --with-lzma
+      --with-python=#{Formula["python@3.9"].opt_bin}/python3
       --disable-binutils
     ]
 
-    system "./configure", *args
-    system "make"
+    mkdir "build" do
+      system "../configure", *args
+      system "make"
 
-    # Don't install bfd or opcodes, as they are provided by binutils
-    system "make", "install-gdb"
+      # Don't install bfd or opcodes, as they are provided by binutils
+      system "make", "install-gdb", "maybe-install-gdbserver"
+    end
   end
 
-  def caveats; <<~EOS
-    gdb requires special privileges to access Mach ports.
-    You will need to codesign the binary. For instructions, see:
+  def caveats
+    <<~EOS
+      gdb requires special privileges to access Mach ports.
+      You will need to codesign the binary. For instructions, see:
 
-      https://sourceware.org/gdb/wiki/BuildingOnDarwin
-
-    On 10.12 (Sierra) or later with SIP, you need to run this:
-
-      echo "set startup-with-shell off" >> ~/.gdbinit
-  EOS
+        https://sourceware.org/gdb/wiki/PermissionsDarwin
+    EOS
   end
 
   test do

@@ -1,25 +1,36 @@
 class Openvpn < Formula
   desc "SSL/TLS VPN implementing OSI layer 2 or 3 secure network extension"
-  homepage "https://openvpn.net/index.php/download/community-downloads.html"
-  url "https://swupdate.openvpn.org/community/releases/openvpn-2.4.8.tar.xz"
-  mirror "https://build.openvpn.net/downloads/releases/openvpn-2.4.8.tar.xz"
-  sha256 "fb8ca66bb7807fff595fbdf2a0afd085c02a6aa47715c9aa3171002f9f1a3f91"
+  homepage "https://openvpn.net/community/"
+  url "https://swupdate.openvpn.org/community/releases/openvpn-2.5.4.tar.xz"
+  mirror "https://build.openvpn.net/downloads/releases/openvpn-2.5.4.tar.xz"
+  sha256 "56c0dcd27ab938c4ad07469c86eb8b7408ef64c3e68f98497db8c03f11792436"
+  license "GPL-2.0-only" => { with: "openvpn-openssl-exception" }
+
+  livecheck do
+    url "https://openvpn.net/community-downloads/"
+    regex(/href=.*?openvpn[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "5d765e9c0b189897133a930ab956c4a861bf36532a225b7d11a4f19cfba91a26" => :catalina
-    sha256 "c4216f771502095c9ef56440c4c6061d907100ad9530bd4f3e9ac8beb98a743e" => :mojave
-    sha256 "3be2664f28a1df4bd39f4f70b68274efa08d02338572aa857820692a0f50f116" => :high_sierra
+    sha256 arm64_monterey: "02af3b44c4340fcbcfdcc2cbb8800f5ec0701fc1dc1cbf8a4ec1df8cf539933d"
+    sha256 arm64_big_sur:  "6666fe4dc8bfa42db9bb92d52962606daacfa284be240e183de86f568ac2af43"
+    sha256 monterey:       "632edbc545de24e3a4ae0b3bbf4872d38ff5c0e8cefce4c6db71c35ac6435e56"
+    sha256 big_sur:        "682a9cd67a9ca4d1f3e98b2278bfb30cba39e30f532cdebbc25258fe7e4e69af"
+    sha256 catalina:       "904507f9c962a7294f67a92e48d0c8cfc12a71bcf91c6d5d924e0f28a4836a3a"
+    sha256 mojave:         "fec0ed2726d148cc96ac6a19a9dfa0e39703fba82c717020f5c6ccc1ee4deef9"
+    sha256 x86_64_linux:   "a8d95b95acf6cdfed376475c0e5265bc97bac433dbb51c7279f0bb76a39db6a2"
   end
 
   depends_on "pkg-config" => :build
   depends_on "lz4"
   depends_on "lzo"
-
-  # Requires tuntap for < 10.10
-  depends_on :macos => :yosemite
-
   depends_on "openssl@1.1"
   depends_on "pkcs11-helper"
+
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "net-tools"
+  end
 
   def install
     system "./configure", "--disable-debug",
@@ -28,10 +39,17 @@ class Openvpn < Formula
                           "--with-crypto-library=openssl",
                           "--enable-pkcs11",
                           "--prefix=#{prefix}"
+    inreplace "sample/sample-plugins/Makefile" do |s|
+      if OS.mac?
+        s.gsub! Superenv.shims_path/"pkg-config", Formula["pkg-config"].opt_bin/"pkg-config"
+      else
+        s.gsub! Superenv.shims_path/"ld", "ld"
+      end
+    end
     system "make", "install"
 
     inreplace "sample/sample-config-files/openvpn-startup.sh",
-              "/etc/openvpn", "#{etc}/openvpn"
+              "/etc/openvpn", etc/"openvpn"
 
     (doc/"samples").install Dir["sample/sample-*"]
     (etc/"openvpn").install doc/"samples/sample-config-files/client.conf"
@@ -45,36 +63,11 @@ class Openvpn < Formula
     (var/"run/openvpn").mkpath
   end
 
-  plist_options :startup => true
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd";>
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/openvpn</string>
-        <string>--config</string>
-        <string>#{etc}/openvpn/openvpn.conf</string>
-      </array>
-      <key>OnDemand</key>
-      <false/>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>TimeOut</key>
-      <integer>90</integer>
-      <key>WatchPaths</key>
-      <array>
-        <string>#{etc}/openvpn</string>
-      </array>
-      <key>WorkingDirectory</key>
-      <string>#{etc}/openvpn</string>
-    </dict>
-    </plist>
-  EOS
+  plist_options startup: true
+  service do
+    run [opt_sbin/"openvpn", "--config", etc/"openvpn/openvpn.conf"]
+    keep_alive true
+    working_dir etc/"openvpn"
   end
 
   test do

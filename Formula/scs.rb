@@ -1,15 +1,17 @@
 class Scs < Formula
   desc "Conic optimization via operator splitting"
   homepage "https://web.stanford.edu/~boyd/papers/scs.html"
-  url "https://github.com/cvxgrp/scs/archive/2.1.1.tar.gz"
-  sha256 "0e20b91e8caf744b84aa985ba4e98cc7235ee33612b2bad2bf31ea5ad4e07d93"
+  url "https://github.com/cvxgrp/scs/archive/v2.1.4.tar.gz"
+  sha256 "5583c70e97e4897bcac32ec487225c3e49161a7e2c8135d1d1a07e4be0375057"
+  license "MIT"
 
   bottle do
-    cellar :any
-    sha256 "75459dcf470d2685ee0d27ce63e4bf39367a6e8ab12478379cf77cf0455dcab7" => :catalina
-    sha256 "790a8b317c31bed14703a624c2c10ac21d6b5a79e49a9602cf17d4fcfda0206a" => :mojave
-    sha256 "972212da980f70df69900f0af8115022cf12eb1dbad0c74a2c65b83b9c22daba" => :high_sierra
-    sha256 "9c4f346e1a76e4951c6eb12324e40f08a3b52671872401091d01e456d715455f" => :sierra
+    sha256 cellar: :any, arm64_monterey: "314ba6c1d1f05470bdb444d392083c2989cd6391bc525f53d719e5b5f7cd17d8"
+    sha256 cellar: :any, arm64_big_sur:  "fdbe71dc5aff701be00e9629c5ee27cdf0d5942aebea202da39a78217569097e"
+    sha256 cellar: :any, monterey:       "6555694ae2fdca5f72009c124eb7f801ed45bd9b9fdc05945fe9a92bcfaa3308"
+    sha256 cellar: :any, big_sur:        "1d41b23aceb11793eb5fed5caa703818f62636ae23e70134ae064a4d829f59d0"
+    sha256 cellar: :any, catalina:       "37e188ea7df7a55ee087a32743bfce52cdb0acd91ddcffff629659f3c6a326bc"
+    sha256 cellar: :any, mojave:         "99764bf3362d0dd01f78337f1f943e77b48d68ffc8ef18fffa811516f9763e4f"
   end
 
   def install

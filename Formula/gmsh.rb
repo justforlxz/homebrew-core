@@ -1,16 +1,17 @@
 class Gmsh < Formula
   desc "3D finite element grid generator with CAD engine"
   homepage "https://gmsh.info/"
-  url "https://gmsh.info/src/gmsh-4.4.1-source.tgz"
-  sha256 "853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc"
+  url "https://gmsh.info/src/gmsh-4.8.4-source.tgz"
+  sha256 "760dbdc072eaa3c82d066c5ba3b06eacdd3304eb2a97373fe4ada9509f0b6ace"
+  license "GPL-2.0-or-later"
   revision 1
   head "https://gitlab.onelab.info/gmsh/gmsh.git"
 
   bottle do
-    cellar :any
-    sha256 "28e6d53b54a18a7cbe1d8667e78c122aa9a6ce88b0873ae17011b87885e12e5b" => :catalina
-    sha256 "0481ac18b7fb27296d18d6b2991a1900f4a156127b1be31d68151ce0ece1ddd9" => :mojave
-    sha256 "30a4b910905200d7eba39d1cc311bcd82cda4fb5c249502083097a82ec472d90" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "e14165656cd32d0fba4cc400a71bb2e79a70acd18ef2ef94186829addb129f4c"
+    sha256 cellar: :any, monterey:      "68df0c59dab7a269e8de9fffbdba1335f25c62e2a5fdc346abc738dc4f12dcfe"
+    sha256 cellar: :any, big_sur:       "8a23c9c50c44b3cb149910bdedd76fd55bf466a445c96a2645177ee745b85301"
+    sha256 cellar: :any, catalina:      "8757c1a3e4599bababb99cf54d66cb45b3a820357beb59f8e7f75a0c3b305dca"
   end
 
   depends_on "cmake" => :build

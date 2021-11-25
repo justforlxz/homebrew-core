@@ -1,31 +1,26 @@
 class Alp < Formula
   desc "Access Log Profiler"
   homepage "https://github.com/tkuchiki/alp"
-  url "https://github.com/tkuchiki/alp/archive/v1.0.2.tar.gz"
-  sha256 "b2a0cb6b836d0f2ab9b4a53bf2ac996e18645c1332a4f0c824b6a5e12925913e"
-  head "https://github.com/tkuchiki/alp.git"
+  url "https://github.com/tkuchiki/alp/archive/v1.0.8.tar.gz"
+  sha256 "66befab0cd827fed8eeb06e18b0b0e1d4551cf7311ac8c5e15fcabf272a44c99"
+  license "MIT"
+  head "https://github.com/tkuchiki/alp.git", branch: "main"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9cfab017fc82194576c793c3fc429d9cff31cb04a72ab5741f89428f3caef547" => :catalina
-    sha256 "cfbba643bf915f19598675cbb333674527fa64a41e36d1ad248c8f49c7754a9e" => :mojave
-    sha256 "f102f90a4e05ea5c651d9cddc3ea987767bb792b4385a6669283f7678f5fdbbc" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "eaabd757583812c7c7c71adc45f682928ad66a18a886f234badbe522a5c06385"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "74d8563f23cfd9716a9f7b1b5ecc667f92acb7817ea881efeb0037c9ccaccef8"
+    sha256 cellar: :any_skip_relocation, monterey:       "a96ee3d19dde5365dd9cbe69bc6006aecf0904a2819a4567aed8e82a3091921b"
+    sha256 cellar: :any_skip_relocation, big_sur:        "909d30918325d04599ffe05aecd4b12dc3b4287367f392abc645329cdc0f57f9"
+    sha256 cellar: :any_skip_relocation, catalina:       "3b5ed01c4396d31b9873f39339a6efc9663ee2968db6dbbab777f05ecc7cda84"
+    sha256 cellar: :any_skip_relocation, mojave:         "03a94a2058cd2e4e889fd9064949d0164ade83cc1c6dba2ae5d0804c9e8232c5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "b304ced670dd2ff7ca0fc39fa82627aee5144d1375fcb9371d492cbd7641fb47"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    srcpath = buildpath/"src/github.com/tkuchiki/alp"
-    srcpath.install buildpath.children
-
-    cd srcpath do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-o", bin/"alp", "cli/alp/main.go"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w", "-trimpath", "-o", bin/"alp", "cli/alp/main.go"
+    prefix.install_metafiles
   end
 
   test do

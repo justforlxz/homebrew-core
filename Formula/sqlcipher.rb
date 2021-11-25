@@ -1,20 +1,25 @@
 class Sqlcipher < Formula
   desc "SQLite extension providing 256-bit AES encryption"
   homepage "https://www.zetetic.net/sqlcipher/"
-  url "https://github.com/sqlcipher/sqlcipher/archive/v4.2.0.tar.gz"
-  sha256 "105c1b813f848da038c03647a8bfc9d42fb46865e6aaf4edfd46ff3b18cdccfc"
-  revision 1
-  head "https://github.com/sqlcipher/sqlcipher.git"
+  url "https://github.com/sqlcipher/sqlcipher/archive/v4.5.0.tar.gz"
+  sha256 "20c46a855c47d5a0a159fdcaa8491ec7bdbaa706a734ee52bc76188b929afb14"
+  license "BSD-3-Clause"
+  head "https://github.com/sqlcipher/sqlcipher.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "d75fad68d4754a6e4df6b42dd67e30060841ed4c4b76f11c876ae56fe8c5b634" => :catalina
-    sha256 "6d341263b65d34595b30df94ff816f9554f7101860709433644cc180ab551298" => :mojave
-    sha256 "723521130f5dbebf48d7eb61eb3525f7d779261cc4c3760724e65f4a87315cd8" => :high_sierra
-    sha256 "0168ffe787b5aa7742861922a503118aa5140eac7572d3270a42e7dfb68f04c6" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "d1ebc849953fce08b1f64fc5e7ccfafa89637c3427737fea0ffb105255c68939"
+    sha256 cellar: :any,                 arm64_big_sur:  "97ceef7f92c22f17d907f9e1aa530b920736c61eabc8355b04d423deac883ab6"
+    sha256 cellar: :any,                 monterey:       "e285802456eb8923bffdeb1bffd55fa244a6e0f1a059c4aef0e62dfe0ecfdac0"
+    sha256 cellar: :any,                 big_sur:        "1c013e2b27b25ad78a5246879d7ee328fce7375ee7ad67a2fe518ea064be3b2c"
+    sha256 cellar: :any,                 catalina:       "ac90cfc14325a2af557d9418d3cf52c74ebda41dab2611aaba3e3e28410252c9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "73aef4b1856454a29f3bc8a50ee75a2b36f92548c113cd04031ca22a665bf1ac"
   end
 
   depends_on "openssl@1.1"
+
+  # Build scripts require tclsh. `--disable-tcl` only skips building extension
+  uses_from_macos "tcl-tk" => :build
+  uses_from_macos "sqlite"
 
   def install
     args = %W[
@@ -26,7 +31,17 @@ class Sqlcipher < Formula
     ]
 
     # Build with full-text search enabled
-    args << "CFLAGS=-DSQLITE_HAS_CODEC -DSQLITE_ENABLE_JSON1 -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS3_PARENTHESIS -DSQLITE_ENABLE_FTS5"
+    cflags = %w[
+      -DSQLITE_HAS_CODEC
+      -DSQLITE_ENABLE_JSON1
+      -DSQLITE_ENABLE_FTS3
+      -DSQLITE_ENABLE_FTS3_PARENTHESIS
+      -DSQLITE_ENABLE_FTS5
+      -DSQLITE_ENABLE_COLUMN_METADATA
+    ].join(" ")
+    args << "CFLAGS=#{cflags}"
+
+    args << "LIBS=-lm" if OS.linux?
 
     system "./configure", *args
     system "make"

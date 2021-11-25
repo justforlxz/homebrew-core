@@ -1,25 +1,55 @@
 class Ospray < Formula
   desc "Ray-tracing-based rendering engine for high-fidelity visualization"
   homepage "https://www.ospray.org/"
-  url "https://github.com/ospray/ospray/archive/v1.8.5.tar.gz"
-  sha256 "6d85e103280aa4c8d0032a2cc3082f08a6021a79d22cf4a8e38b09f152f35f53"
-  head "https://github.com/ospray/ospray.git"
+  url "https://github.com/ospray/ospray/archive/v2.8.0.tar.gz"
+  sha256 "2dabc75446a0e2e970952d325f930853a51a9b4d1868c8135f05552a4ae04d39"
+  license "Apache-2.0"
+  head "https://github.com/ospray/ospray.git", branch: "master"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "b9b5016940568986207bc383505a8e8742252bd7c42e9f072647bdecea849865" => :mojave
+    sha256 cellar: :any, arm64_monterey: "27d5cd84fdcb61aed73615c0b712f429a0f1b7df85d40315cb590ace93114d9f"
+    sha256 cellar: :any, arm64_big_sur:  "56e3d6f2fb3397da3e5851734d249e27e0d3a977a18bd56efac86450a187e645"
+    sha256 cellar: :any, monterey:       "5b04ca98dc320b067be01c21ee939bd00e41004d38875f08931170e26208d61e"
+    sha256 cellar: :any, big_sur:        "e7aeb214fa4838ade69c27e42da80b52864fab318463096cd0e616e0699a3123"
+    sha256 cellar: :any, catalina:       "e06589b30ff8480d2bab0cc0e4696a16ea20fb10dae9ada2c031995a98dc7e4c"
   end
 
   depends_on "cmake" => :build
   depends_on "ispc" => :build
   depends_on "embree"
-  depends_on :macos => :mojave # Needs embree bottle built with SSE4.2.
+  depends_on macos: :mojave # Needs embree bottle built with SSE4.2.
   depends_on "tbb"
 
+  resource "rkcommon" do
+    url "https://github.com/ospray/rkcommon/archive/v1.8.0.tar.gz"
+    sha256 "f037c15f7049610ef8bca37500b2ab00775af60ebbb9d491ba5fc2e5c04a7794"
+  end
+
+  resource "openvkl" do
+    url "https://github.com/openvkl/openvkl/archive/v1.1.0.tar.gz"
+    sha256 "d193c75a2c57acd764649215b244c432694a0169da374a9d769a81b02a9132e9"
+  end
+
   def install
-    args = std_cmake_args + %w[
-      -DCMAKE_INSTALL_NAME_DIR=#{opt_lib}
-      -DCMAKE_INSTALL_RPATH=#{opt_lib}
+    resources.each do |r|
+      r.stage do
+        mkdir "build" do
+          system "cmake", "..", *std_cmake_args,
+                                "-DCMAKE_INSTALL_NAME_DIR=#{lib}",
+                                "-DBUILD_EXAMPLES=OFF"
+          system "make"
+          system "make", "install"
+        end
+      end
+    end
+
+    args = std_cmake_args + %W[
+      -DCMAKE_INSTALL_NAME_DIR=#{lib}
       -DOSPRAY_ENABLE_APPS=OFF
       -DOSPRAY_ENABLE_TESTING=OFF
       -DOSPRAY_ENABLE_TUTORIALS=OFF

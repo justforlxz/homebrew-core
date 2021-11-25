@@ -1,14 +1,17 @@
 class I2pd < Formula
   desc "Full-featured C++ implementation of I2P client"
   homepage "https://i2pd.website/"
-  url "https://github.com/PurpleI2P/i2pd/archive/2.29.0.tar.gz"
-  sha256 "fd0474c33b411593b9dc8197f3799d37d68455c11a9ee3994ec993a96388ec06"
+  url "https://github.com/PurpleI2P/i2pd/archive/2.39.0.tar.gz"
+  sha256 "3ffeb614cec826e13b50e8306177018ecb8d873668dfe66aadc733ca9fcaa568"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "2c6ccce7e008ed0cabee2fee0832eba4d67cbd8482317cfabeb46f93fd83c17d" => :catalina
-    sha256 "cece83169dec44036fb623e39bb0b60d982e1e755a7c8bb1e26c6598941ff1d7" => :mojave
-    sha256 "f8b9251551ba5a9935baec7ffa2b7d14a2f6e1d288ed27f20016e9b5c5e22780" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "be899cbd6346e27aa0d30ceebc5a7e198409f7050351b2f4217811904390303e"
+    sha256 cellar: :any, arm64_big_sur:  "9e13462dfd0f3cd5e6afc79979ed48c6b09a243c3c5242b399c7dee418a3e1eb"
+    sha256 cellar: :any, monterey:       "e8e8a23a976418e00c3a27026e980f717b3e5ca2c09af94acd3f4cc591a5ab6a"
+    sha256 cellar: :any, big_sur:        "e2c0afab1198c4bcdde3dd1e6559ddcb868b2e192bf0dc8cdec9c336ddfc9baa"
+    sha256 cellar: :any, catalina:       "4d3df93923c0489b44ca55cb3f7071962bd530ba73d778457cc9ae9d1602ba85"
+    sha256 cellar: :any, mojave:         "eab780040dd0391df1af3aed028ed140ab126b2f272caea80aed15bda675b36b"
   end
 
   depends_on "boost"
@@ -16,7 +19,16 @@ class I2pd < Formula
   depends_on "openssl@1.1"
 
   def install
-    system "make", "install", "DEBUG=no", "HOMEBREW=1", "USE_UPNP=yes", "USE_AENSI=no", "USE_AVX=no", "PREFIX=#{prefix}"
+    args = %W[
+      DEBUG=no
+      HOMEBREW=1
+      USE_UPNP=yes
+      PREFIX=#{prefix}
+    ]
+
+    args << "USE_AESNI=no" if Hardware::CPU.arm?
+
+    system "make", "install", *args
 
     # preinstall to prevent overwriting changed by user configs
     confdir = etc/"i2pd"
@@ -25,44 +37,27 @@ class I2pd < Formula
   end
 
   def post_install
-    # i2pd uses datadir from variable below. If that path not exists, create that directory and create symlinks to certificates and configs.
-    # Certificates can be updated between releases, so we must re-create symlinks to latest version of it on upgrade.
+    # i2pd uses datadir from variable below. If that path doesn't exist,
+    # create the directory and create symlinks to certificates and configs.
+    # Certificates can be updated between releases, so we must recreate symlinks
+    # to the latest version on upgrade.
     datadir = var/"lib/i2pd"
     if datadir.exist?
       rm datadir/"certificates"
       datadir.install_symlink pkgshare/"certificates"
     else
       datadir.dirname.mkpath
-      datadir.install_symlink pkgshare/"certificates", etc/"i2pd/i2pd.conf", etc/"i2pd/subscriptions.txt", etc/"i2pd/tunnels.conf"
+      datadir.install_symlink pkgshare/"certificates", etc/"i2pd/i2pd.conf",
+                              etc/"i2pd/subscriptions.txt", etc/"i2pd/tunnels.conf"
     end
 
     (var/"log/i2pd").mkpath
   end
 
-  plist_options :manual => "i2pd"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/i2pd</string>
-        <string>--datadir=#{var}/lib/i2pd</string>
-        <string>--conf=#{etc}/i2pd/i2pd.conf</string>
-        <string>--tunconf=#{etc}/i2pd/tunnels.conf</string>
-        <string>--log=file</string>
-        <string>--logfile=#{var}/log/i2pd/i2pd.log</string>
-        <string>--pidfile=#{var}/run/i2pd.pid</string>
-      </array>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"i2pd", "--datadir=#{var}/lib/i2pd", "--conf=#{etc}/i2pd/i2pd.conf",
+         "--tunconf=#{etc}/i2pd/tunnels.conf", "--log=file", "--logfile=#{var}/log/i2pd/i2pd.log",
+         "--pidfile=#{var}/run/i2pd.pid"]
   end
 
   test do

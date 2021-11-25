@@ -1,35 +1,38 @@
 class SpirvTools < Formula
   desc "API and commands for processing SPIR-V modules"
   homepage "https://github.com/KhronosGroup/SPIRV-Tools"
-  url "https://github.com/KhronosGroup/SPIRV-Tools/archive/v2019.2.tar.gz"
-  sha256 "1fde9d2a0df920a401441cd77253fc7b3b9ab0578eabda8caaaceaa6c7638440"
+  url "https://github.com/KhronosGroup/SPIRV-Tools/archive/v2021.4.tar.gz"
+  sha256 "d68de260708dda785d109ff1ceeecde2d2ab71142fa5bf59061bb9f47dd3bb2c"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "31efbec043164a1f6105eccaf2031bf5482abac4567fbf6880e373a90ff3abd9" => :catalina
-    sha256 "46438f2839f8258cec5593a0db9899c5dd7d9ae4c791ed0f349d6a5ab9164d10" => :mojave
-    sha256 "741ef8b7a9b09ebc6cb485b6d752f5e2ea8e84643ca07aa8d2931861501f69b4" => :high_sierra
-    sha256 "d2a4328e6a8e8e98114c97f547e87b248384855c9013d3b48c70a20b7d525a84" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "c4d6a8fca257d7de1d78168e2dcb1f49056ffbd388c59114ed37ae464b9f085b"
+    sha256 cellar: :any,                 arm64_big_sur:  "a24e7ffaa9c6d57c00b0c8cc93052f07eaa42c0f25b037a4f920109d25d3aab1"
+    sha256 cellar: :any,                 monterey:       "0d4a0adf1357d733f663de0ea622252229b5548e600d6eef590c0f9be7418a4a"
+    sha256 cellar: :any,                 big_sur:        "92b58c54632a083e1dbbe49525e5372015241a65813817e5446b3388fb90b756"
+    sha256 cellar: :any,                 catalina:       "f8c766313e53cd3fdd059ddcdedc88807dd87a2a8dbbb895d061edd4512dfb6a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "19f193bfb2d43bdb75c047431c5c3e605d2526c8121d4e35bd48e01037a57a4e"
   end
 
   depends_on "cmake" => :build
+  depends_on "python@3.9" => :build
 
   resource "re2" do
     # revision number could be found in ./DEPS
     url "https://github.com/google/re2.git",
-        :revision => "6cf8ccd82dbaab2668e9b13596c68183c9ecd13f"
+        revision: "4244cd1cb492fa1d10986ec67f862964c073f844"
   end
 
   resource "effcee" do
     # revision number could be found in ./DEPS
     url "https://github.com/google/effcee.git",
-        :revision => "04b624799f5a9dbaf3fa1dbed2ba9dce2fc8dcf2"
+        revision: "ddf5e2bb92957dc8a12c5392f8495333d6844133"
   end
 
   resource "spirv-headers" do
     # revision number could be found in ./DEPS
     url "https://github.com/KhronosGroup/SPIRV-Headers.git",
-        :revision => "e74c389f81915d0a48d6df1af83c3862c5ad85ab"
+        revision: "814e728b30ddd0f4509233099a3ad96fd4318c07"
   end
 
   def install
@@ -38,7 +41,10 @@ class SpirvTools < Formula
     (buildpath/"external/SPIRV-Headers").install resource("spirv-headers")
 
     mkdir "build" do
-      system "cmake", "..", "-DEFFCEE_BUILD_TESTING=OFF", *std_cmake_args
+      system "cmake", "..", *std_cmake_args,
+                            "-DBUILD_SHARED_LIBS=ON",
+                            "-DSPIRV_SKIP_TESTS=ON",
+                            "-DSPIRV_TOOLS_BUILD_STATIC=OFF"
       system "make", "install"
     end
 
@@ -47,13 +53,15 @@ class SpirvTools < Formula
 
   test do
     cp libexec/"examples"/"main.cpp", "test.cpp"
-    # fix test, porting https://github.com/KhronosGroup/SPIRV-Tools/pull/2540
-    inreplace "test.cpp" do |s|
-      s.gsub! /(const std::string source =)\n(      \"         OpCapability Shader \")/,
-              "\\1\n      \"         OpCapability Linkage \"\n\\2"
-      s.gsub! "SPV_ENV_VULKAN_1_0", "SPV_ENV_UNIVERSAL_1_3"
+
+    args = "-lc++"
+
+    on_linux do
+      args = ["-lstdc++", "-lm"]
     end
-    system ENV.cc, "-o", "test", "test.cpp", "-std=c++11", "-I#{include}", "-L#{lib}", "-lSPIRV-Tools", "-lSPIRV-Tools-link", "-lSPIRV-Tools-opt", "-lc++"
+
+    system ENV.cc, "-o", "test", "test.cpp", "-std=c++11", "-I#{include}", "-L#{lib}",
+                   "-lSPIRV-Tools", "-lSPIRV-Tools-link", "-lSPIRV-Tools-opt", *args
     system "./test"
   end
 end

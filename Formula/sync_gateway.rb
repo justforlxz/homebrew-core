@@ -1,46 +1,46 @@
 class SyncGateway < Formula
   desc "Make Couchbase Server a replication endpoint for Couchbase Lite"
-  homepage "https://docs.couchbase.com/sync-gateway"
+  homepage "https://docs.couchbase.com/sync-gateway/current/index.html"
   url "https://github.com/couchbase/sync_gateway.git",
-      :tag      => "2.6.0",
-      :revision => "b4c828d5d167140d75ab4c4f7402602f65f74464"
-  head "https://github.com/couchbase/sync_gateway.git"
+      tag:      "2.8.3",
+      revision: "e54a62741bb28f3e54a6599c21c739df9a9dad76"
+  license "Apache-2.0"
+  head "https://github.com/couchbase/sync_gateway.git", branch: "master"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d023c939c11fcbfd814fc90493f7420dfff6f4e1d709142432bda2915c0bb44a" => :catalina
-    sha256 "b40cc2e518e0e74f3fe53e9a765fee8ecaf5b77a9b87973f237cf37c019e8ba7" => :mojave
-    sha256 "efb726a9bd964c275283e2bec005d13a3385a781864ef1e9433380c2461a4306" => :high_sierra
-    sha256 "d616e833f59e37de97a07a67e00c4babf8e04b7310c6562c64096c696188711a" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "dc30a79633112d1c6a18e6632f4b1ed95fd78495aba2d8ecfd8fb0f36722dad3"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "8db243a62dcdd2c9c6b1ddd9bf61ad0072e4ac395b208822fd254077d6973d75"
+    sha256 cellar: :any_skip_relocation, monterey:       "8d97b3bd4148de64835b723feb06d3718b6606b941b9c3661dd464495c3c392a"
+    sha256 cellar: :any_skip_relocation, big_sur:        "2bd988cfdd72c00a76eae19e4c347ae79b0c597e34a551add01318fa71645b9b"
+    sha256 cellar: :any_skip_relocation, catalina:       "ad754927fbbec6adc9b31cb726a0457f62719bdfa546260eb768b402b9257bda"
   end
 
   depends_on "gnupg" => :build
   depends_on "go" => :build
-
-  resource "depot_tools" do
-    url "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        :revision => "b97d193baafa7343cc869e2b48d3bffec46a0c31"
-  end
+  depends_on "repo" => :build
+  depends_on "python@3.10"
 
   def install
     # Cache the vendored Go dependencies gathered by depot_tools' `repo` command
     repo_cache = buildpath/"repo_cache/#{name}/.repo"
     repo_cache.mkpath
 
-    (buildpath/"depot_tools").install resource("depot_tools")
-    ENV.prepend_path "PATH", buildpath/"depot_tools"
-
     (buildpath/"build").install_symlink repo_cache
     cp Dir["*.sh"], "build"
 
-    git_commit = `git rev-parse HEAD`.chomp
     manifest = buildpath/"new-manifest.xml"
-    manifest.write Utils.popen_read "python", "rewrite-manifest.sh",
-                                    "--manifest-url",
-                                    "file://#{buildpath}/manifest/default.xml",
-                                    "--project-name", "sync_gateway",
-                                    "--set-revision", git_commit
+    manifest.write Utils.safe_popen_read "python", "rewrite-manifest.sh",
+                                         "--manifest-url",
+                                         "file://#{buildpath}/manifest/default.xml",
+                                         "--project-name", "sync_gateway",
+                                         "--set-revision", Utils.git_head
     cd "build" do
+      ENV["GO111MODULE"] = "auto"
       mkdir "godeps"
       system "repo", "init", "-u", stable.url, "-m", "manifest/default.xml"
       cp manifest, ".repo/manifest.xml"
@@ -52,9 +52,14 @@ class SyncGateway < Formula
   end
 
   test do
-    pid = fork { exec "#{bin}/sync_gateway" }
+    interface_port = free_port
+    admin_port = free_port
+    fork do
+      exec "#{bin}/sync_gateway_ce -interface :#{interface_port} -adminInterface 127.0.0.1:#{admin_port}"
+    end
     sleep 1
-    Process.kill("SIGINT", pid)
-    Process.wait(pid)
+
+    system "nc", "-z", "localhost", interface_port
+    system "nc", "-z", "localhost", admin_port
   end
 end

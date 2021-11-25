@@ -1,43 +1,48 @@
 class Minio < Formula
-  desc "Amazon S3 compatible object storage server"
-  homepage "https://github.com/minio/minio"
+  desc "High Performance, Kubernetes Native Object Storage"
+  homepage "https://min.io"
   url "https://github.com/minio/minio.git",
-      :tag      => "RELEASE.2019-10-12T01-39-57Z",
-      :revision => "bd106408462ecef70debf51f1e6179de950c5812"
-  version "20191012013957"
+      tag:      "RELEASE.2021-11-09T03-21-45Z",
+      revision: "f4b55ea7a70f8a065fb7065797696e815241ff93"
+  version "20211109032145"
+  license "AGPL-3.0-or-later"
+  head "https://github.com/minio/minio.git"
+
+  livecheck do
+    url :stable
+    regex(%r{href=.*?/tag/(?:RELEASE[._-]?)?([\d\-TZ]+)["' >]}i)
+    strategy :github_latest do |page, regex|
+      page.scan(regex).map { |match| match&.first&.gsub(/\D/, "") }
+    end
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1c5c0595206f8c26f31314f9d96efed95dcb51df0e016941f6ac07bf4f8e4434" => :catalina
-    sha256 "617635392cbafe21de8060ed5fc5dacf96a246c315f2950c577eb1f7a924656e" => :mojave
-    sha256 "4d7484e1cc920ae55dcf0775b7969c0de76cc3aa2fe855f2c2334a5f2c1f4896" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "c13205404309a87e93221eec9a7436d7a7292ce7a7f1f0a3a05b6a9a2e47aee3"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "2ef744f010aab5f0eeb28f5a73abe093b0165681e5fc6e3e8ddb2b827c363650"
+    sha256 cellar: :any_skip_relocation, monterey:       "3ef98a07a740ee45a59636e6b65e5e37888d5e59b4ff84d09c1f472018d721a7"
+    sha256 cellar: :any_skip_relocation, big_sur:        "7567650d3ac3b166804fd32314dbad4f3d9ea274d9925fa2b27bcfe2c97b5290"
+    sha256 cellar: :any_skip_relocation, catalina:       "b1ea36a141715bd4f4d7b63c31be1ba41c267daf47467fb076fcb3c74617bcd5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "d3d943a04bc873e878429df47a25e440b75a9726adcee8853b9d200b5a2cc953"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    src = buildpath/"src/github.com/minio/minio"
-    src.install buildpath.children
-    src.cd do
-      if build.head?
-        system "go", "build", "-o", buildpath/"minio"
-      else
-        release = `git tag --points-at HEAD`.chomp
-        version = release.gsub(/RELEASE\./, "").chomp.gsub(/T(\d+)\-(\d+)\-(\d+)Z/, 'T\1:\2:\3Z')
-        commit = `git rev-parse HEAD`.chomp
-        proj = "github.com/minio/minio"
+    if build.head?
+      system "go", "build", *std_go_args
+    else
+      release = `git tag --points-at HEAD`.chomp
+      version = release.gsub(/RELEASE\./, "").chomp.gsub(/T(\d+)-(\d+)-(\d+)Z/, 'T\1:\2:\3Z')
 
-        system "go", "build", "-o", buildpath/"minio", "-ldflags", <<~EOS
-          -X #{proj}/cmd.Version=#{version}
-          -X #{proj}/cmd.ReleaseTag=#{release}
-          -X #{proj}/cmd.CommitID=#{commit}
-        EOS
-      end
+      ldflags = %W[
+        -s -w
+        -X github.com/minio/minio/cmd.Version=#{version}
+        -X github.com/minio/minio/cmd.ReleaseTag=#{release}
+        -X github.com/minio/minio/cmd.CommitID=#{Utils.git_head}
+      ]
+
+      system "go", "build", *std_go_args(ldflags: ldflags.join(" "))
     end
-
-    bin.install buildpath/"minio"
-    prefix.install_metafiles
   end
 
   def post_install
@@ -45,44 +50,21 @@ class Minio < Formula
     (etc/"minio").mkpath
   end
 
-  plist_options :manual => "minio server"
-
-  def plist
-    <<~EOS
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-        <dict>
-          <key>KeepAlive</key>
-          <true/>
-          <key>Label</key>
-          <string>#{plist_name}</string>
-          <key>ProgramArguments</key>
-          <array>
-            <string>#{opt_bin}/minio</string>
-            <string>server</string>
-            <string>--config-dir=#{etc}/minio</string>
-            <string>--address=:9000</string>
-            <string>#{var}/minio</string>
-          </array>
-          <key>RunAtLoad</key>
-          <true/>
-          <key>KeepAlive</key>
-          <true/>
-          <key>WorkingDirectory</key>
-          <string>#{HOMEBREW_PREFIX}</string>
-          <key>StandardErrorPath</key>
-          <string>#{var}/log/minio.log</string>
-          <key>StandardOutPath</key>
-          <string>#{var}/log/minio.log</string>
-          <key>RunAtLoad</key>
-          <true/>
-        </dict>
-      </plist>
-    EOS
+  service do
+    run [opt_bin/"minio", "server", "--config-dir=#{etc}/minio", "--address=:9000", var/"minio"]
+    keep_alive true
+    working_dir HOMEBREW_PREFIX
+    log_path var/"log/minio.log"
+    error_log_path var/"log/minio.log"
   end
 
   test do
-    system "#{bin}/minio", "version"
+    assert_match "minio server - start object storage server",
+      shell_output("#{bin}/minio server --help 2>&1")
+
+    assert_match "minio gateway - start object storage gateway",
+      shell_output("#{bin}/minio gateway 2>&1")
+    assert_match "ERROR Unable to validate credentials",
+      shell_output("#{bin}/minio gateway s3 2>&1", 1)
   end
 end

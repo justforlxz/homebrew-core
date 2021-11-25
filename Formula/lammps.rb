@@ -1,18 +1,37 @@
 class Lammps < Formula
   desc "Molecular Dynamics Simulator"
   homepage "https://lammps.sandia.gov/"
-  url "https://lammps.sandia.gov/tars/lammps-7Aug19.tar.gz"
+  url "https://github.com/lammps/lammps/archive/stable_29Sep2021_update1.tar.gz"
   # lammps releases are named after their release date. We transform it to
   # YYYY-MM-DD (year-month-day) so that we get a sane version numbering.
   # We only track stable releases as announced on the LAMMPS homepage.
-  version "2019-08-07"
-  sha256 "4e8342b97441deb76c2fddd8a4fd23beb718cb0910779d98e334026391ed3961"
+  version "20210929-update1"
+  sha256 "5000b422c9c245b92df63507de5aa2ea4af345ea1f00180167aaa084b711c27c"
+  license "GPL-2.0-only"
+
+  # The `strategy` block below is used to massage upstream tags into the
+  # YYYY-MM-DD format we use in the `version`. This is necessary for livecheck
+  # to be able to do proper `Version` comparison.
+  livecheck do
+    url :stable
+    regex(/^stable[._-](\d{1,2}\w+\d{2,4})(?:[._-](update\d*))?$/i)
+    strategy :git do |tags, regex|
+      tags.map do |tag|
+        match = tag.match(regex)
+        next if match.blank? || match[1].blank?
+
+        date_str = Date.parse(match[1]).strftime("%Y%m%d")
+        match[2].present? ? "#{date_str}-#{match[2]}" : date_str
+      end
+    end
+  end
 
   bottle do
-    sha256 "604056c80bb3b36f0a1644388bff26f2bcdc3e2f2541247e9a7ce941b20e9bcc" => :catalina
-    sha256 "e14fbf9e68b16804c9d86f525e92190010c580c479263eaf194ff1e23dd877b1" => :mojave
-    sha256 "eebae98d9606af15a5281f07843ea41aeb94974a52f0023e9734aab3db430406" => :high_sierra
-    sha256 "cd52cb03b501cb8d65f0dcf8baf3857dc13e2a2206016ef559bf5ff3eba31e1d" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "d70926aca441eb764f2bb06fc24ea6668e192d977d938f80d03e36d0ca7edcd0"
+    sha256 cellar: :any,                 monterey:      "5ca9669e6ed7ecacf6071abd43f8864a3255e0bc20b413135e5ca3138513bb3d"
+    sha256 cellar: :any,                 big_sur:       "f76682e33b45cf0a0ce399e15ec84f13c26a43e51ab7ccecc823ac3edc1265b4"
+    sha256 cellar: :any,                 catalina:      "4b875ec8c8e097e9827c81a828f2c6d2c0a0f498060d0238dcff7ed136911170"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "218af2d8d0296d555f87dd1cd28ca62a07b8b3f8733c476844b2e1adaf808248"
   end
 
   depends_on "pkg-config" => :build
@@ -24,16 +43,19 @@ class Lammps < Formula
   depends_on "open-mpi"
 
   def install
+    ENV.cxx11
+
+    # Disable some packages for which we do not have dependencies, that are
+    # deprecated or require too much configuration.
+    disabled_packages = %w[gpu kokkos latte mscg message mpiio poems python voronoi]
+
     %w[serial mpi].each do |variant|
       cd "src" do
-        system "make", "clean-all"
-        system "make", "yes-standard"
-
-        # Disable some packages for which we do not have dependencies, that are
-        # deprecated or require too much configuration.
-        %w[gpu kokkos latte mscg message mpiio poems voronoi].each do |package|
+        disabled_packages.each do |package|
           system "make", "no-#{package}"
         end
+
+        system "make", "yes-basic"
 
         system "make", variant,
                        "LMP_INC=-DLAMMPS_GZIP",
@@ -46,6 +68,7 @@ class Lammps < Formula
                        "JPG_LIB=-ljpeg -lpng"
 
         bin.install "lmp_#{variant}"
+        system "make", "clean-all"
       end
     end
 

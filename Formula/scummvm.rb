@@ -1,20 +1,29 @@
 class Scummvm < Formula
   desc "Graphic adventure game interpreter"
   homepage "https://www.scummvm.org/"
-  url "https://www.scummvm.org/frs/scummvm/2.1.0/scummvm-2.1.0.tar.xz"
-  sha256 "6b50c6596a1536b52865f556dc05ded20f86b6ffabe4bccbd746b5587b15f727"
-  head "https://github.com/scummvm/scummvm.git"
+  url "https://downloads.scummvm.org/frs/scummvm/2.5.0/scummvm-2.5.0.tar.xz"
+  sha256 "b47ee4b195828d2c358e38a4088eda49886dc37a04f1cc17b981345a59e0d623"
+  license "GPL-2.0-or-later"
+  head "https://github.com/scummvm/scummvm.git", branch: "master"
+
+  livecheck do
+    url "https://www.scummvm.org/downloads/"
+    regex(/href=.*?scummvm[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "213a7b49024659878d44c874d3d493f348bd7042a63940d62bfa54aed3541224" => :catalina
-    sha256 "a9e8736f6b93bbf3c6c165831a58d944f488a0c4287858b4fbd39f635941f703" => :mojave
-    sha256 "1bcbb3168dbe936067d015f60fa19cd5dca0892e10c25ff18f86e49c0a268129" => :high_sierra
+    sha256 arm64_big_sur: "90d437657d306794297adcfaf083dd0bd951bbf437e8f7ff40c12413efa32376"
+    sha256 monterey:      "f8d5919d8dfbaffc4b818decb7859fa37b7ad8d2689adaed5e1d8e9de4f67d7a"
+    sha256 big_sur:       "f1543bc3553a0bae3a659f4c17412228cf6fb643c460ec3f488354d65ebcd27b"
+    sha256 catalina:      "07e6e6c14491af15cb9900691fd60276568bdc66ef423752dbe4cde10d5e8bc7"
+    sha256 mojave:        "b83003efb12c36548180f1bb883f02e48276078992b3916196c3495bd80bb9a9"
+    sha256 x86_64_linux:  "671cc9da5228b2e1c6500083b3508bc41d7a9fe7c0b94f525732126bae4edb2d"
   end
 
   depends_on "a52dec"
   depends_on "faad2"
   depends_on "flac"
-  depends_on "fluid-synth"
+  depends_on "fluid-synth@2.1"
   depends_on "freetype"
   depends_on "jpeg-turbo"
   depends_on "libmpeg2"
@@ -35,6 +44,11 @@ class Scummvm < Formula
   end
 
   test do
+    on_linux do
+      # Test fails on headless CI: Could not initialize SDL: No available video device
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     system "#{bin}/scummvm", "-v"
   end
 end

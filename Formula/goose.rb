@@ -1,29 +1,23 @@
 class Goose < Formula
   desc "Go Language's command-line interface for database migrations"
   homepage "https://github.com/pressly/goose"
-  url "https://github.com/pressly/goose/archive/v2.3.0.tar.gz"
-  sha256 "f19ec6ef1bae596e013a40c300d7f28ba91f71f6f7d6d0f13d03feaf4ab1ac43"
+  url "https://github.com/pressly/goose/archive/v3.3.1.tar.gz"
+  sha256 "95ecd4176dd86126d56f23d8dccbc37550b0ee1c7f22004ee5bc5a4f3547856c"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0090a7bdb8ffc8831426d49aa138ebd4a608bdc3366cf37e8fd0a441db1e8a53" => :catalina
-    sha256 "1143891d26f430acacc6b47128d0eaa520508925dc0f1d594685c997d77b5e38" => :mojave
-    sha256 "c98cdc85daea46b8439109211194ede9342ff76c296f830f9225872c28877baa" => :high_sierra
-    sha256 "a5c492e34e3351d3efb87b0e5f3e2571741e6efad35f794e3de64f39a8cd464f" => :sierra
-    sha256 "720376f84dc67566d55a27325771ce36e5ed523f2d7eba20a0982022b37a3b85" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "e88739a7ba43c6835c87f0e3feb63c294f04abad9e0e5e889f7709de23b7a9cf"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "45dc821c5dff3ecd759722fb547ba53aa458282b0a7cd4f7ae9896fd276f5ad0"
+    sha256 cellar: :any_skip_relocation, monterey:       "d00b5d7874032d4aa20ada379091d52d4b3b5d626f1e61728167b9b0679fadfa"
+    sha256 cellar: :any_skip_relocation, big_sur:        "4f317e5d8221d3f7edba6036365869ae4967d6173780037c04155bcc5586b7e9"
+    sha256 cellar: :any_skip_relocation, catalina:       "6e1e5388a8986a5869fec5c019103ffd205e349c1ec69b0f8af3c2bd63331edb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "4b199e49c996e5a687f89d75eddc26675ddbfcfb326198a541167feb8faa81ef"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/pressly/goose").install buildpath.children
-    cd "src/github.com/pressly/goose" do
-      system "dep", "ensure"
-      system "go", "build", "-o", bin/"goose", ".../cmd/goose"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/goose"
   end
 
   test do

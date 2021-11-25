@@ -1,15 +1,23 @@
 class Urdfdom < Formula
   desc "Unified Robot Description Format (URDF) parser"
   homepage "https://wiki.ros.org/urdf/"
-  url "https://github.com/ros/urdfdom/archive/1.0.3.tar.gz"
-  sha256 "839d939fbd91d115f928a6e02334638829c58d9c8ea2f81bfa3faffd233c154c"
+  url "https://github.com/ros/urdfdom/archive/3.0.0.tar.gz"
+  sha256 "3c780132d9a0331eb2116ea5dac6fa53ad2af86cb09f37258c34febf526d52b4"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "124c7475dc74116d0185194354dbe12ab0a383592a81c5617e62c4065155b7cd" => :catalina
-    sha256 "263f8b75de2465c83b527ea27fe6fdc2687d14571114f575c433a3316f2b9524" => :mojave
-    sha256 "736c863207d6de888b32645de4a68a32776e0011d115ca51feb98bf066e9493f" => :high_sierra
-    sha256 "fe30973514c5c9f9a6484b98ae3b36ae98fc5b0bfdadf7d8cfcd889391f68a72" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "ced2cb8a17221d58fee32a3b5ecedaeef6caf43c4a721b1a543a1db2e9a1d30f"
+    sha256 cellar: :any,                 arm64_big_sur:  "144123d35146a73b2faa6a41d05d5660efbc35d8d19b23bffad4bbe4335a4f26"
+    sha256 cellar: :any,                 monterey:       "cbf83550cba6be1cc2ce3eaf4693872d266ba9effe2c0974581d00c1ffdd5079"
+    sha256 cellar: :any,                 big_sur:        "61bdf95fadfdd5ec951efe254a57068f50037e6ee8a5f9e2a46333aca445c283"
+    sha256 cellar: :any,                 catalina:       "75b9eb3c4cbc6a1f7ba49d9c664895f6b523d1c72c4a0829858e4cb85f36e5b1"
+    sha256 cellar: :any,                 mojave:         "2b50fa0f77d4e0255488e1978f7550d007ac16da5caf7b74b73553673a15d0b4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "5ac7538d7996e4e71f976f811dc4b362d40993487dca09ab13dafd4675005b58"
   end
 
   depends_on "cmake" => :build

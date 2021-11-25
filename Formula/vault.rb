@@ -5,39 +5,57 @@ class Vault < Formula
   desc "Secures, stores, and tightly controls access to secrets"
   homepage "https://vaultproject.io/"
   url "https://github.com/hashicorp/vault.git",
-      :tag      => "v1.3.0",
-      :revision => "0f5c835d1cf91c00d01cb29a0048732d91357afa"
-  head "https://github.com/hashicorp/vault.git"
+      tag:      "v1.8.4",
+      revision: "925bc650ad1d997e84fbb832f302a6bfe0105bbb"
+  license "MPL-2.0"
+  head "https://github.com/hashicorp/vault.git", branch: "main"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "157a98c8c0437a07bb91f23e0f466077689c54fa0fc83bb6291972ed3fb7661e" => :catalina
-    sha256 "7ff366fc8db6a9b9bce7cdc44725b0c706498057c25aaa8addb38c60d0c0fcdc" => :mojave
-    sha256 "023fc73fcbc9b28e58bf1ce180b8f26db46df9babaa26c314073fd076213b828" => :high_sierra
+  livecheck do
+    url "https://releases.hashicorp.com/vault/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
   end
 
-  depends_on "go@1.12" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "15d1d63cc1e6028d4ea4284517354c17dad4348b91b99c468311ac86ac682796"
+    sha256 cellar: :any_skip_relocation, big_sur:       "61f7b7a0042e66afc38be2bb3a892c93674e38d6b33de8e4f88f7b48c4bfdfbe"
+    sha256 cellar: :any_skip_relocation, catalina:      "2316c2d94d761c6928e67b28c122fb9175943f965cb389d2735edcb61bc3e904"
+    sha256 cellar: :any_skip_relocation, mojave:        "38c70bfa12f622a9a7ad27d8b63b50b56dad4729b4b67a88109d7941d84f3982"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ade90a215435e4fb81baca40756f4b9c9edb02f3f31365340956e12278956356"
+  end
+
+  depends_on "go" => :build
   depends_on "gox" => :build
+  # Cannot build with `node` while upstream depends on node-sass<6
+  depends_on "node@14" => :build
+  depends_on "yarn" => :build
+
+  # remove in next release
+  patch do
+    url "https://github.com/hashicorp/vault/commit/b368a675955707db4e940da29a1043871a3781b6.patch?full_index=1"
+    sha256 "3595f5a6e3d3f73dfa0db6886f430a0ae5cbcc7f5bd5444c3652bc0c426b26f2"
+  end
 
   def install
-    ENV["GOPATH"] = buildpath
+    ENV.prepend_path "PATH", "#{ENV["GOPATH"]}/bin"
+    system "make", "bootstrap", "static-dist", "dev-ui"
+    bin.install "bin/vault"
+  end
 
-    contents = buildpath.children - [buildpath/".brew_home"]
-    (buildpath/"src/github.com/hashicorp/vault").install contents
-
-    (buildpath/"bin").mkpath
-
-    cd "src/github.com/hashicorp/vault" do
-      system "make", "dev"
-      bin.install "bin/vault"
-      prefix.install_metafiles
-    end
+  service do
+    run [opt_bin/"vault", "server", "-dev"]
+    keep_alive true
+    working_dir var
+    log_path var/"log/vault.log"
+    error_log_path var/"log/vault.log"
   end
 
   test do
+    port = free_port
+    ENV["VAULT_DEV_LISTEN_ADDRESS"] = "127.0.0.1:#{port}"
+    ENV["VAULT_ADDR"] = "http://127.0.0.1:#{port}"
+
     pid = fork { exec bin/"vault", "server", "-dev" }
-    sleep 1
-    ENV.append "VAULT_ADDR", "http://127.0.0.1:8200"
+    sleep 5
     system bin/"vault", "status"
     Process.kill("TERM", pid)
   end

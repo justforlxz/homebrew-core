@@ -1,15 +1,22 @@
 class Wireshark < Formula
   desc "Graphical network analyzer and capture tool"
   homepage "https://www.wireshark.org"
-  url "https://www.wireshark.org/download/src/all-versions/wireshark-3.0.7.tar.xz"
-  mirror "https://1.eu.dl.wireshark.org/src/all-versions/wireshark-3.0.7.tar.xz"
-  sha256 "3b2b279017753398b8d5deb440db5f98a205eea35f9417e5fa2893947e7992f2"
-  head "https://code.wireshark.org/review/wireshark", :using => :git
+  url "https://www.wireshark.org/download/src/all-versions/wireshark-3.6.0.tar.xz"
+  mirror "https://1.eu.dl.wireshark.org/src/all-versions/wireshark-3.6.0.tar.xz"
+  sha256 "9cc8f7fc5bb1d66fbdfdf95cde6e1c98633c303f9af9b33ae9f1fcf022fedf06"
+  license "GPL-2.0-or-later"
+  head "https://gitlab.com/wireshark/wireshark.git", branch: "master"
+
+  livecheck do
+    url "https://www.wireshark.org/download.html"
+    regex(/Stable Release \((\d+(?:\.\d+)*)/i)
+  end
 
   bottle do
-    sha256 "31b983597eed8c9b2c558834daead1e10627bded7d09704f717c511393153a8a" => :catalina
-    sha256 "cae160ae78978e6538c3cb092d873f621b0bfa48653f19bbdb09f1c1ba60d6e5" => :mojave
-    sha256 "6cf02d08de5b6cc3ceb03b5f302587695b66777b2fb48ea426dde0678bb9b0b2" => :high_sierra
+    sha256 arm64_big_sur: "a8ee91edd0d8156acd5cd122178896764ebbfb542fbbb93d567db4e696707f2a"
+    sha256 big_sur:       "36a0d0bd585b7735864e29843b194e97bb5efbede5040234399e677b7eabab30"
+    sha256 catalina:      "05d7df5204e95d3e677282542807420b469b6fae285fe1beaf17814854782c04"
+    sha256 x86_64_linux:  "ad61fa693279ac5b1fc255442406007ab725b4c8c8256de35bbb6a03844511b9"
   end
 
   depends_on "cmake" => :build
@@ -18,10 +25,13 @@ class Wireshark < Formula
   depends_on "gnutls"
   depends_on "libgcrypt"
   depends_on "libmaxminddb"
+  depends_on "libnghttp2"
   depends_on "libsmi"
   depends_on "libssh"
-  depends_on "lua@5.1"
-  depends_on "nghttp2"
+  depends_on "lua"
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
 
   def install
     args = std_cmake_args + %W[
@@ -31,8 +41,8 @@ class Wireshark < Formula
       -DBUILD_wireshark_gtk=OFF
       -DENABLE_PORTAUDIO=OFF
       -DENABLE_LUA=ON
-      -DLUA_INCLUDE_DIR=#{Formula["lua@5.1"].opt_include}/lua-5.1
-      -DLUA_LIBRARY=#{Formula["lua@5.1"].opt_lib}/liblua5.1.dylib
+      -DLUA_INCLUDE_DIR=#{Formula["lua"].opt_include}/lua
+      -DLUA_LIBRARY=#{Formula["lua"].opt_lib}/liblua.dylib
       -DCARES_INCLUDE_DIR=#{Formula["c-ares"].opt_include}
       -DGCRYPT_INCLUDE_DIR=#{Formula["libgcrypt"].opt_include}
       -DGNUTLS_INCLUDE_DIR=#{Formula["gnutls"].opt_include}
@@ -40,11 +50,11 @@ class Wireshark < Formula
       -DENABLE_SMI=ON
       -DBUILD_sshdump=ON
       -DBUILD_ciscodump=ON
-
       -DENABLE_NGHTTP2=ON
       -DBUILD_wireshark=OFF
       -DENABLE_APPLICATION_BUNDLE=OFF
       -DENABLE_QT5=OFF
+      -DCMAKE_INSTALL_NAME_DIR:STRING=#{lib}
     ]
 
     system "cmake", *args, "."
@@ -62,16 +72,17 @@ class Wireshark < Formula
     (include/"wireshark/wsutil").install Dir["wsutil/*.h"]
   end
 
-  def caveats; <<~EOS
-    This formula only installs the command-line utilities by default.
+  def caveats
+    <<~EOS
+      This formula only installs the command-line utilities by default.
 
-    Install Wireshark.app with Homebrew Cask:
-      brew cask install wireshark
+      Install Wireshark.app with Homebrew Cask:
+        brew install --cask wireshark
 
-    If your list of available capture interfaces is empty
-    (default macOS behavior), install ChmodBPF:
-      brew cask install wireshark-chmodbpf
-  EOS
+      If your list of available capture interfaces is empty
+      (default macOS behavior), install ChmodBPF:
+        brew install --cask wireshark-chmodbpf
+    EOS
   end
 
   test do

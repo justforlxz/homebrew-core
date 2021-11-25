@@ -3,18 +3,23 @@ class Ydcv < Formula
 
   desc "YouDao Console Version"
   homepage "https://github.com/felixonmars/ydcv"
-  url "https://github.com/felixonmars/ydcv/archive/0.7.tar.gz"
-  sha256 "03dd5de36ea8fce3170e678e63fc3694e2718b22bc5e1526e3e07f5c36ec9aa0"
+  url "https://files.pythonhosted.org/packages/1f/29/17124ebfdea8d810774977474a8652018c04c4a6db1ca413189f7e5b9d52/ydcv-0.7.tar.gz"
+  sha256 "53cd59501557496512470e7db5fb14e42ddcb411fe4fa45c00864d919393c1da"
+  license "GPL-3.0"
+  revision 4
+  head "https://github.com/felixonmars/ydcv.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8c3b86d6f485f64c93716604031b7ab9981bcaae43096b545a753e114e6bd7b9" => :catalina
-    sha256 "d4782bc68e0fe4fcc0d9687d44c9f4cf19188644bc723ad0de21e1c4629c757e" => :mojave
-    sha256 "306a3fba391696ddf6a1031774906786421ae4df2a2466f4b05eb9c2e7c34a57" => :high_sierra
-    sha256 "24bd213b43d60cf2ef49868c3419bf09bce242d82ce78c4cd4d793c01d45676c" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "15a2f9b94d39645328338ffb95aa4ba058bc16b1dbe097af765c1ee7aa0b0a37"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "15a2f9b94d39645328338ffb95aa4ba058bc16b1dbe097af765c1ee7aa0b0a37"
+    sha256 cellar: :any_skip_relocation, monterey:       "3961fb6ede937e194466d10568899cef0e9f7370348dcd758f4da4494c867d90"
+    sha256 cellar: :any_skip_relocation, big_sur:        "3961fb6ede937e194466d10568899cef0e9f7370348dcd758f4da4494c867d90"
+    sha256 cellar: :any_skip_relocation, catalina:       "3961fb6ede937e194466d10568899cef0e9f7370348dcd758f4da4494c867d90"
+    sha256 cellar: :any_skip_relocation, mojave:         "3961fb6ede937e194466d10568899cef0e9f7370348dcd758f4da4494c867d90"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "35d3c655f6e3b7623dd7657adc51da6bd53629676710c450d7941378a9f62b4b"
   end
 
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
     ENV["SETUPTOOLS_SCM_PRETEND_VERSION"] = version
@@ -23,9 +28,10 @@ class Ydcv < Formula
     virtualenv_install_with_resources
   end
 
-  def caveats; <<~EOS
-    You need to add a config for API Key, read more at https://github.com/felixonmars/ydcv
-  EOS
+  def caveats
+    <<~EOS
+      You need to add a config for API Key, read more at https://github.com/felixonmars/ydcv
+    EOS
   end
 
   test do

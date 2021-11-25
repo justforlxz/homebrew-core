@@ -1,24 +1,24 @@
 class Zimg < Formula
   desc "Scaling, colorspace conversion, and dithering library"
   homepage "https://github.com/sekrit-twc/zimg"
-  url "https://github.com/sekrit-twc/zimg/archive/release-2.9.2.tar.gz"
-  sha256 "10403c2964fe11b559a7ec5e081c358348fb787e26b91ec0d1f9dd7c01d1cd7b"
-  head "https://github.com/sekrit-twc/zimg.git"
+  url "https://github.com/sekrit-twc/zimg/archive/release-3.0.3.tar.gz"
+  sha256 "5e002992bfe8b9d2867fdc9266dc84faca46f0bfd931acc2ae0124972b6170a7"
+  license "WTFPL"
+  head "https://github.com/sekrit-twc/zimg.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "01b1116ebf7b0c065e19a3ce31c92965c361ba964dcc892f6fdbf69d98d94912" => :catalina
-    sha256 "7e22530b80432466153372f3d05580cf64d23d5f4fad6825887dad65737092b3" => :mojave
-    sha256 "699e5d20544252543c021de24b90aa9daae0f455310e030c485cd29b9eb350c5" => :high_sierra
-    sha256 "467810f773bb00aab981b5ad649751b9fe061a555babf15979f08a76b120f3db" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "4b7c0ee3d742c6681cf1cbb90b1a1cd3b5441a2848cbc9dd53a0d2818c8c956b"
+    sha256 cellar: :any,                 arm64_big_sur:  "d08af43082dcea61fab045c0940352b810836287e9772e95af2caed2b24ee504"
+    sha256 cellar: :any,                 monterey:       "043ba1e6f67e00c481e5252da3811f3f6eee860db62f24f1f236bd506a6c766d"
+    sha256 cellar: :any,                 big_sur:        "ad43a31d0f773c0bb8283e80bbe5cbb81e6d310a4888a8e4f0c23dd64b173c4c"
+    sha256 cellar: :any,                 catalina:       "3d51338569e7aee53eb4e3296915277290644f306443d91227ab0e76b19d9fba"
+    sha256 cellar: :any,                 mojave:         "9988ced11c8fae0f4b506c1688ecacfffdd824531a150471c9694b8caf5736b1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "961138b475fb316e2c692afe89b957fa341eec408207ce9c950e674411d1e990"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
-
-  # Upstream has decided not to fix https://github.com/sekrit-twc/zimg/issues/52
-  depends_on :macos => :el_capitan
 
   def install
     system "./autogen.sh"

@@ -1,15 +1,27 @@
 class Bcal < Formula
   desc "Storage conversion and expression calculator"
   homepage "https://github.com/jarun/bcal"
-  url "https://github.com/jarun/bcal/archive/v2.1.tar.gz"
-  sha256 "c0b6cb911a773abdd555e6a9e0eb8a25934ceca038156e6250e117fa451beaa6"
+  url "https://github.com/jarun/bcal/archive/v2.3.tar.gz"
+  sha256 "e295b022e5187079b4cc5310447da5c787cb6bade86936dabf34a42bb85348ba"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "037f7b75eb8d0485c2dc770d6f592549287559e5b4afeb4458bc16bfa3424795" => :catalina
-    sha256 "ceb385dfbcab9d34a2c54655729f934edf6ccc0eb135ba0cd580f9c384e64629" => :mojave
-    sha256 "fc9abe164d34c568d66589d0cbeb1268044e763d6d6d93212badf10d5701aa04" => :high_sierra
-    sha256 "5564379751e03bc62269e9edc689089713ca9a5d8113e0f33ea4ff8c83406427" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "a2503013003907b8c61799bff250beab99dc7ebcdbe6393e8fec8ca31237a1fc"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "184e482468546611a17a93f755ac988aa44b3abe1d5740b4d653e8a0684c2fc0"
+    sha256 cellar: :any_skip_relocation, monterey:       "d9607a44df122ff814a718621ebc3ac5cfcf6b33395c21e3fca1a4cd54ff33e7"
+    sha256 cellar: :any_skip_relocation, big_sur:        "68c9fe6f9ae3bff9bc964cc07fe73b7a02f0189d179a6e7579a0b031fc9ce26e"
+    sha256 cellar: :any_skip_relocation, catalina:       "094bff2b14bc31b0009f646ab03f6a1619af5647c801912a86ebff330c46c512"
+    sha256 cellar: :any_skip_relocation, mojave:         "cf1b9ee5aaf57f8821e5208b59974953f676e26a9584ea5aa45b43b507a21369"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "3e17beee69ada92813dabcf05ae0e05c1f39e7afe795cf0dc1ccf0dd1390d2ab"
+  end
+
+  on_linux do
+    depends_on "readline"
   end
 
   def install

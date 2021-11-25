@@ -1,21 +1,32 @@
 class Exiv2 < Formula
   desc "EXIF and IPTC metadata manipulation library and tools"
   homepage "https://www.exiv2.org/"
-  url "https://www.exiv2.org/builds/exiv2-0.27.2-Source.tar.gz"
-  sha256 "2652f56b912711327baff6dc0c90960818211cf7ab79bb5e1eb59320b78d153f"
+  url "https://www.exiv2.org/builds/exiv2-0.27.5-Source.tar.gz"
+  sha256 "35a58618ab236a901ca4928b0ad8b31007ebdc0386d904409d825024e45ea6e2"
+  license "GPL-2.0-or-later"
   head "https://github.com/Exiv2/exiv2.git"
 
+  livecheck do
+    url "https://www.exiv2.org/builds/"
+    regex(/href=.*?exiv2[._-]v?(\d+(?:\.\d+)+)-Source\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "fdadbb93ae659a651b2e7b899c3c2bf8910b8f0891661903a04a4c81a66ff534" => :catalina
-    sha256 "3b78b8fbffcc6d62685bc4a9a0a51855f5ccf6fe7fabc866f0970e1a12ced0b4" => :mojave
-    sha256 "8a4e65d47307247b11127c00cdad18626425eafb271faaeb1c076beb57298e12" => :high_sierra
-    sha256 "fe386bc9bfe7270655a6b3163f8e33a6fc6e6f36512e6ac6e6a49a1650a6a485" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "5154d667d5a85b3ae16e7b7ba5b542f58db18dcd3c8ffd0186824e7ad3734fe7"
+    sha256 cellar: :any,                 arm64_big_sur:  "08ecb10e2ccb420a0085f02c7b9ae2f68a3a051df143794416f212d47a752768"
+    sha256 cellar: :any,                 monterey:       "8a2abceaf1f395ec5f8c99f17b3c51f3131e23d9d7ec767c254222c74cc947e6"
+    sha256 cellar: :any,                 big_sur:        "295f349b27fbbd1d2336ed4576934ca6066624691b0ab615b4bcaaf31c9b0eb1"
+    sha256 cellar: :any,                 catalina:       "d527846d027df10a5aef6d1dfee4f909dc1cdd33058325d6c7be5cd24b5f7ded"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "803e01203d880519740c22f7ad437c85ecd292c446131e24ce77fa9cb333bdf9"
   end
 
   depends_on "cmake" => :build
   depends_on "gettext"
   depends_on "libssh"
+
+  uses_from_macos "curl"
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
 
   def install
     args = std_cmake_args
@@ -31,8 +42,9 @@ class Exiv2 < Formula
       -DEXIV2_ENABLE_CURL=ON
       -DEXIV2_ENABLE_SSH=ON
       -DEXIV2_BUILD_SAMPLES=OFF
-      -DSSH_LIBRARY=#{Formula["libssh"].opt_lib}/libssh.dylib
+      -DSSH_LIBRARY=#{Formula["libssh"].opt_lib}/#{shared_library("libssh")}
       -DSSH_INCLUDE_DIR=#{Formula["libssh"].opt_include}
+      -DCMAKE_INSTALL_NAME_DIR:STRING=#{lib}
       ..
     ]
     mkdir "build.cmake" do

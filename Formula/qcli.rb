@@ -1,32 +1,35 @@
 class Qcli < Formula
   desc "Report audiovisual metrics via libavfilter"
   homepage "https://bavc.org/preserve-media/preservation-tools"
-  url "https://github.com/bavc/qctools/archive/v1.0.tar.gz"
-  sha256 "4b687eb9aedf29a8262393079669d3870c04b510669b9df406021243b8ebd918"
-  head "https://github.com/bavc/qctools.git"
+  url "https://github.com/bavc/qctools/archive/v1.2.tar.gz"
+  sha256 "d648a5fb6076c6367e4eac320018ccbd1eddcb2160ce175b361b46fcf0d4a710"
+  license "GPL-3.0-or-later"
+  revision 4
+  head "https://github.com/bavc/qctools.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "14b15e5d2c173b11c20e3fb12d9dc5f8f34dfb9cbc7ffddc2649ed3ea0b0dc1a" => :catalina
-    sha256 "ff59d63feaa9096773228c1e4dd866da2e5bd5812c38645669c80c31be3c7bc8" => :mojave
-    sha256 "d726ff0f06c9e604a95d36d0eae58ca886c6b2024cefe4d77adc92598dd8d56d" => :high_sierra
-    sha256 "837745fe83f29aa3d83de03bd7ed22785248eb9328a5f18bda8a04e151af3c62" => :sierra
+    sha256 cellar: :any, arm64_monterey: "3f6dc6987458155d26492c4841d6682e7b616e6191887f87fac898b4dbc9aa67"
+    sha256 cellar: :any, arm64_big_sur:  "7b0da0fb3e98787780cb87e3ca2694ff93cec2a5bb40bf4310669128551a0921"
+    sha256 cellar: :any, big_sur:        "b1906aa6b03deb8b76f3a7dc89826775fbb53d510885fe99393a54eb941ab3a1"
+    sha256 cellar: :any, catalina:       "c600159fad5da4745bd0c04aac536d29d3746ff7398a36b6d276f18c5169d426"
+    sha256 cellar: :any, mojave:         "daefc70e69347f50d0392efa2777ca7db0e3c458aa188ab92c0a770b2ef1f8fe"
   end
 
   depends_on "pkg-config" => :build
   depends_on "ffmpeg"
-  depends_on "qt"
-  depends_on "qwt"
+  depends_on "qt@5"
+  depends_on "qwt-qt5"
 
   def install
+    qt5 = Formula["qt@5"].opt_prefix
     ENV["QCTOOLS_USE_BREW"]="true"
 
     cd "Project/QtCreator/qctools-lib" do
-      system "qmake", "qctools-lib.pro"
+      system "#{qt5}/bin/qmake", "qctools-lib.pro"
       system "make"
     end
     cd "Project/QtCreator/qctools-cli" do
-      system "qmake", "qctools-cli.pro"
+      system "#{qt5}/bin/qmake", "qctools-cli.pro"
       system "make"
       bin.install "qcli"
     end

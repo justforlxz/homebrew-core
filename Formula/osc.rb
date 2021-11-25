@@ -1,40 +1,45 @@
 class Osc < Formula
   include Language::Python::Virtualenv
 
-  desc "The command-line interface to work with an Open Build Service"
-  homepage "https://github.com/openSUSE/osc"
-  url "https://github.com/openSUSE/osc/archive/0.166.2.tar.gz"
-  sha256 "fe4cfb84accf305692a31c288204b9e7a14a544bb01ae14a7ce9bfe05589b18d"
-  head "https://github.com/openSUSE/osc.git"
+  desc "Command-line interface to work with an Open Build Service"
+  homepage "https://openbuildservice.org"
+  url "https://github.com/openSUSE/osc/archive/0.174.0.tar.gz"
+  sha256 "9be35b347fa07ac1235aa364b0e1229c00d5e98e202923d7a8a796e3ca2756ad"
+  license "GPL-2.0-or-later"
+  revision 1
+  head "https://github.com/openSUSE/osc.git", branch: "master"
 
   bottle do
-    cellar :any
-    sha256 "235bb8763edf360326f214d9607bc8e772cbe58108520ad3fee267d1c02b690d" => :catalina
-    sha256 "c51b9342a906a10fe69d7fc7ae3401b91e3b0e918865e7e0888ac091d4f49e0f" => :mojave
-    sha256 "b73d5d5d9c8eaf3e9543a6cec703b62621986d7e99147e8355ac282346ae03dc" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "599f8515898fc6b2592434cfe8920bc6a05becbc1715c820b2cde12386bb5ba6"
+    sha256 cellar: :any,                 arm64_big_sur:  "537ad65c12cb4a633f5f52dada6121947c90750983e289165ed8e2b1fc0ca3d9"
+    sha256 cellar: :any,                 monterey:       "ffdaf4c3e9c80206c4bc722e7d4d9f28ca77dfe84d7d8d29d2624a56ffeba13a"
+    sha256 cellar: :any,                 big_sur:        "da58b8627f227b386b87ac8b558fb79a1d7b90c1ed60674639187928ab00197a"
+    sha256 cellar: :any,                 catalina:       "adb60d9fc75fe8696bde10876cd878ea8ce7b75a6b13401dc7d8c3f3dcbb77ef"
+    sha256 cellar: :any,                 mojave:         "d2bc5039ffcecc4163a88a606790bfa743a77433c86613dfa23421db39aad095"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "2279bf292ee277d8a3f5d410113f8797d4915fa2b9f27fdf7e20c53274a3e550"
   end
 
   depends_on "swig" => :build
   depends_on "openssl@1.1"
-  depends_on "python"
+  depends_on "python@3.10"
 
-  resource "M2Crypto" do
-    url "https://files.pythonhosted.org/packages/74/18/3beedd4ac48b52d1a4d12f2a8c5cf0ae342ce974859fba838cbbc1580249/M2Crypto-0.35.2.tar.gz"
-    sha256 "4c6ad45ffb88670c590233683074f2440d96aaccb05b831371869fc387cbd127"
+  uses_from_macos "curl"
+
+  resource "chardet" do
+    url "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz"
+    sha256 "0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa"
   end
 
-  resource "typing" do
-    url "https://files.pythonhosted.org/packages/67/b0/b2ea2bd67bfb80ea5d12a5baa1d12bda002cab3b6c9b48f7708cd40c34bf/typing-3.7.4.1.tar.gz"
-    sha256 "91dfe6f3f706ee8cc32d38edbbf304e9b7583fb37108fef38229617f8b3eba23"
+  resource "M2Crypto" do
+    url "https://files.pythonhosted.org/packages/2c/52/c35ec79dd97a8ecf6b2bbd651df528abb47705def774a4a15b99977274e8/M2Crypto-0.38.0.tar.gz"
+    sha256 "99f2260a30901c949a8dc6d5f82cd5312ffb8abc92e76633baf231bbbcb2decb"
   end
 
   def install
-    ENV["SWIG_FEATURES"]="-I#{Formula["openssl@1.1"].opt_include}"
+    openssl = Formula["openssl@1.1"]
+    ENV["SWIG_FEATURES"] = "-I#{openssl.opt_include}"
 
-    # Fix building of M2Crypto on High Sierra https://github.com/Homebrew/homebrew-core/pull/45895#issuecomment-557200007
-    ENV.delete("HOMEBREW_SDKROOT") if MacOS.version == :high_sierra
-
-    inreplace "osc/conf.py", "'/etc/ssl/certs'", "'#{etc}/openssl/cert.pem'"
+    inreplace "osc/conf.py", "'/etc/ssl/certs'", "'#{openssl.pkgetc}/cert.pem'"
     virtualenv_install_with_resources
     mv bin/"osc-wrapper.py", bin/"osc"
   end

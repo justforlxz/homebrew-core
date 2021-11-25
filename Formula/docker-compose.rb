@@ -1,35 +1,41 @@
 class DockerCompose < Formula
-  include Language::Python::Virtualenv
-
   desc "Isolated development environments using Docker"
   homepage "https://docs.docker.com/compose/"
-  url "https://github.com/docker/compose/archive/1.25.0.tar.gz"
-  sha256 "a8abb3b62e1b4e1cce50ee23940b619220226ff2449d4398b27c848b76d2c280"
-  head "https://github.com/docker/compose.git"
+  url "https://github.com/docker/compose/archive/v2.1.1.tar.gz"
+  sha256 "5c9246c34cafeb51b3289c016cb2cbdd08b3eda87b0f8d4cc02fd7630cfdbd7b"
+  license "Apache-2.0"
+  head "https://github.com/docker/compose.git", branch: "v2"
 
   bottle do
-    cellar :any
-    sha256 "9dac324e835fd2d6b5fd2f0fbcdde899d4278578afe85d07779739ff7fd216d4" => :catalina
-    sha256 "a15bc3f65ba481e63bb511026bd1deaddb792e70f5d9ef96509ff89688cf7994" => :mojave
-    sha256 "7b7cbb154fcb50ce765cb370bf031d59ea25f50662299d4ae6c5e4d657e2481b" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "5d1eb06fff7f645293cbe34fd0d2f774be8538f62b58bdaa6908b84f2b272402"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "5d1eb06fff7f645293cbe34fd0d2f774be8538f62b58bdaa6908b84f2b272402"
+    sha256 cellar: :any_skip_relocation, monterey:       "c520d88df10ca7317f07a8db5f2a6247b331c81f262d969e42561b3283b9d384"
+    sha256 cellar: :any_skip_relocation, big_sur:        "c520d88df10ca7317f07a8db5f2a6247b331c81f262d969e42561b3283b9d384"
+    sha256 cellar: :any_skip_relocation, catalina:       "c520d88df10ca7317f07a8db5f2a6247b331c81f262d969e42561b3283b9d384"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "bf95955a3a91249a86bab809277446f0e0a48985e43994b369cc38b33f0a452f"
   end
 
-  depends_on "libyaml"
-  depends_on "python"
+  depends_on "go" => :build
 
   def install
-    system "./script/build/write-git-sha" if build.head?
-    venv = virtualenv_create(libexec, "python3")
-    system libexec/"bin/pip", "install", "-v", "--no-binary", ":all:",
-                              "--ignore-installed", buildpath
-    system libexec/"bin/pip", "uninstall", "-y", "docker-compose"
-    venv.pip_install_and_link buildpath
+    ENV["CGO_ENABLED"] = "0"
+    ldflags = %W[
+      -s -w
+      -X github.com/docker/compose/v2/internal.Version=#{version}
+    ].join(" ")
+    system "go", "build", *std_go_args(ldflags: ldflags), "./cmd"
+  end
 
-    bash_completion.install "contrib/completion/bash/docker-compose"
-    zsh_completion.install "contrib/completion/zsh/_docker-compose"
+  def caveats
+    <<~EOS
+      Compose is now a Docker plugin. For Docker to find this plugin, symlink it:
+        mkdir -p ~/.docker/cli-plugins
+        ln -sfn #{opt_bin}/docker-compose ~/.docker/cli-plugins/docker-compose
+    EOS
   end
 
   test do
-    system bin/"docker-compose", "--help"
+    output = shell_output(bin/"docker-compose up 2>&1", 14)
+    assert_match "can't find a suitable configuration file", output
   end
 end

@@ -1,27 +1,34 @@
 class Gitleaks < Formula
   desc "Audit git repos for secrets"
   homepage "https://github.com/zricethezav/gitleaks"
-  url "https://github.com/zricethezav/gitleaks/archive/v3.0.3.tar.gz"
-  sha256 "fe8cb70edc22b39551f2004465445899e8103940d88ef44f66c056299cc9aa6c"
+  url "https://github.com/zricethezav/gitleaks/archive/v8.0.2.tar.gz"
+  sha256 "db80329125656dc1c5f733a298c6c8132b81c678662ce89337782e5bb6b57457"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9d60b3ebc7973af2d0e4ab770ddf7bdf75a85ec4dfe79af51a2f50d5c89ac611" => :catalina
-    sha256 "74d03153fa0a4ca5b55d5f5cb95b894c7c40adfffb545d7fade402494279218e" => :mojave
-    sha256 "8889814db9493ffbc4ad21b96002ebb5a3adb0b4d9a963f4b52ccb90e9aa16dc" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "abbb3c54fea6ccf665eb54d9032a4875a84b420003dfbdc3a3a7aa9b4f9f259c"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "416932f0ea824e66678a7c22a1f42ca97a4468fa919addb0250eb1c309ad389d"
+    sha256 cellar: :any_skip_relocation, monterey:       "74e26015534d10c9b70824c00918ca273d3f3b0419db6f1a2b2b96784f38783b"
+    sha256 cellar: :any_skip_relocation, big_sur:        "ec3c7229662079891098cb82e3c7393166235d728569220b8d6c4af29ef42b25"
+    sha256 cellar: :any_skip_relocation, catalina:       "670717e2ca53fe9851a52ae4f61b0a828e41502abd353f20535531d7b137d1a5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "c31330ad2082d73989ae410bd15ec6377372f5ccf5d57d38567e1c4986f18804"
   end
 
   depends_on "go" => :build
 
-  def install
-    ldflags = %W[
-      -X github.com/zricethezav/gitleaks/version.Version=#{version}
-    ]
+  uses_from_macos "git"
 
-    system "go", "build", "-ldflags", ldflags.join(" "), "-o", bin/"gitleaks"
+  def install
+    ldflags = "-X github.com/zricethezav/gitleaks/v#{version.major}/cmd.Version=#{version}"
+    system "go", "build", *std_go_args(ldflags: ldflags)
   end
 
   test do
-    assert_includes shell_output("#{bin}/gitleaks -r https://github.com/gitleakstest/emptyrepo.git", 2), "remote repository is empty"
+    (testpath/"README").write "ghp_deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+    system "git", "init"
+    system "git", "add", "README"
+    system "git", "commit", "-m", "Initial commit"
+    assert_match(/WRN\S* leaks found: [1-9]/, shell_output("#{bin}/gitleaks detect 2>&1", 1))
+    assert_equal version.to_s, shell_output("#{bin}/gitleaks version").strip
   end
 end

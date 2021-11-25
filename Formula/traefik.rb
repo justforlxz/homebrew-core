@@ -1,95 +1,53 @@
 class Traefik < Formula
   desc "Modern reverse proxy"
   homepage "https://traefik.io/"
-  url "https://github.com/containous/traefik/releases/download/v2.0.6/traefik-v2.0.6.src.tar.gz"
-  version "2.0.6"
-  sha256 "1e5606e7dacb5d5952245bac21e3eef2e654b1198447273e570fe07f40060403"
-  head "https://github.com/containous/traefik.git"
+  url "https://github.com/traefik/traefik/releases/download/v2.5.4/traefik-v2.5.4.src.tar.gz"
+  sha256 "4cf1f65bf4665e08f97491f099114d659ff2785989b06f8360eeaddcc3abb728"
+  license "MIT"
+  head "https://github.com/traefik/traefik.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bc04b1731090cc1031ccd10f20c1a3deac88111552085f0338b9c1ac5d419c5e" => :catalina
-    sha256 "1f4a949564cfe03f6e622427471ed4f3bfed322c59087b372c88946ab4f99984" => :mojave
-    sha256 "700f23e27389016a354f7252e3cb17c875b52fc9e75b30d5877182b5dd7fa7c0" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "e313e9fb7ecd1d34d0780f41b23038693305c9ef5c99a0a487d9a7dc82ad8c7d"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "84aead677a9beb34e4be9f4e5e2e5c76e220a4da58d425b2addc4c0a1eb4aeda"
+    sha256 cellar: :any_skip_relocation, monterey:       "cf5184138ae1d54d682b1325bc29acf179c7b2b0795309dd22d43278e6fdafb2"
+    sha256 cellar: :any_skip_relocation, big_sur:        "f7ce61baff5d862790d201869602c7035c97c5047d97a3fbdc3fc6428c168656"
+    sha256 cellar: :any_skip_relocation, catalina:       "908ccdba1086de46152e991ab40bb213e25d569adc0eeeebc2f8d9ff3a0fdaa4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "8302a22363f8b263333f3ab7277792bcf76a8d91ada2d75858a7d6833cf494f1"
   end
 
   depends_on "go" => :build
   depends_on "go-bindata" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/containous/traefik").install buildpath.children
-
-    cd "src/github.com/containous/traefik" do
-      system "go", "generate"
-      system "go", "build", "-o", bin/"traefik", "./cmd/traefik"
-      prefix.install_metafiles
-    end
+    ldflags = %W[
+      -s -w
+      -X github.com/traefik/traefik/v#{version.major}/pkg/version.Version=#{version}
+    ].join(" ")
+    system "go", "generate"
+    system "go", "build", *std_go_args(ldflags: ldflags), "./cmd/traefik"
   end
 
-  plist_options :manual => "traefik"
-
-  def plist
-    <<~EOS
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-        <dict>
-          <key>KeepAlive</key>
-          <false/>
-          <key>Label</key>
-          <string>#{plist_name}</string>
-          <key>ProgramArguments</key>
-          <array>
-            <string>#{opt_bin}/traefik</string>
-            <string>--configfile=#{etc/"traefik/traefik.toml"}</string>
-          </array>
-          <key>EnvironmentVariables</key>
-          <dict>
-          </dict>
-          <key>RunAtLoad</key>
-          <true/>
-          <key>WorkingDirectory</key>
-          <string>#{var}</string>
-          <key>StandardErrorPath</key>
-          <string>#{var}/log/traefik.log</string>
-          <key>StandardOutPath</key>
-          <string>#{var}/log/traefik.log</string>
-        </dict>
-      </plist>
-    EOS
+  service do
+    run [opt_bin/"traefik", "--configfile=#{etc}/traefik/traefik.toml"]
+    keep_alive false
+    working_dir var
+    log_path var/"log/traefik.log"
+    error_log_path var/"log/traefik.log"
   end
 
   test do
-    require "socket"
-
-    ui_server = TCPServer.new(0)
-    http_server = TCPServer.new(0)
-    ui_port = ui_server.addr[1]
-    http_port = http_server.addr[1]
-    ui_server.close
-    http_server.close
+    ui_port = free_port
+    http_port = free_port
 
     (testpath/"traefik.toml").write <<~EOS
-      [global]
-        checkNewVersion = false
-        sendAnonymousUsage = false
-      [serversTransport]
-        insecureSkipVerify = true
       [entryPoints]
         [entryPoints.http]
           address = ":#{http_port}"
         [entryPoints.traefik]
           address = ":#{ui_port}"
-      [log]
-        level = "ERROR"
-        format = "common"
-      [accessLog]
-        format = "common"
       [api]
         insecure = true
         dashboard = true
-        debug = true
     EOS
 
     begin
@@ -97,13 +55,16 @@ class Traefik < Formula
         exec bin/"traefik", "--configfile=#{testpath}/traefik.toml"
       end
       sleep 5
-      cmd_http = "curl -sIm3 -XGET http://localhost:#{http_port}/"
-      assert_match /404 Not Found/m, shell_output(cmd_http)
+      cmd_ui = "curl -sIm3 -XGET http://127.0.0.1:#{http_port}/"
+      assert_match "404 Not Found", shell_output(cmd_ui)
       sleep 1
-      cmd_ui = "curl -sIm3 -XGET http://localhost:#{ui_port}/dashboard/"
-      assert_match /200 OK/m, shell_output(cmd_ui)
+      cmd_ui = "curl -sIm3 -XGET http://127.0.0.1:#{ui_port}/dashboard/"
+      assert_match "200 OK", shell_output(cmd_ui)
     ensure
-      Process.kill("HUP", pid)
+      Process.kill(9, pid)
+      Process.wait(pid)
     end
+
+    assert_match version.to_s, shell_output("#{bin}/traefik version 2>&1")
   end
 end

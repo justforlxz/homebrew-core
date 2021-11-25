@@ -1,32 +1,30 @@
-require "language/haskell"
-
 class Futhark < Formula
-  include Language::Haskell::Cabal
-
   desc "Data-parallel functional programming language"
   homepage "https://futhark-lang.org/"
-  url "https://github.com/diku-dk/futhark/archive/v0.13.1.tar.gz"
-  sha256 "a0f33d7605fad80998c9b8dae6678eb8932316235a4ac6e5993f3f2858987719"
+  url "https://github.com/diku-dk/futhark/archive/v0.20.6.tar.gz"
+  sha256 "1502fea3bd21b37181bf0d8981c2e7406ae4274dff0a52fe014c4a410c48925a"
+  license "ISC"
   head "https://github.com/diku-dk/futhark.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5d9c1909264dec6736495ad818fbc600ac9c0e83175a798359b4254bd51b6c82" => :catalina
-    sha256 "6701e2a413da75db04c8dc91dafee8113b3f27a0b32eb5b61fe811423cdb9302" => :mojave
-    sha256 "1172f141580077b575dca45c050b3a86a5f5ebdd3aa15615b4dee7d6b07cbfad" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "50fea7f91bd11ddcc3a263e9429eab4a4f7cab478c461ab375556feea7ecede3"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "edae07f29609ec891b93ee73a8513b4b9f77bb730702a2e5776fe760d200503a"
+    sha256 cellar: :any_skip_relocation, monterey:       "1352d3e4ff197ccbb19f558afc9a6f5533d2dc5b5c4db0ea976030501251d65d"
+    sha256 cellar: :any_skip_relocation, big_sur:        "8fd1b723d118d9535d6bf9a0634916f043552cead63d3b17dd024600f020a10e"
+    sha256 cellar: :any_skip_relocation, catalina:       "aaf597d62eacde1e13611c072aa2451fc2162026022bbcb44cef60d2cc79db2c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "08a47ce0d031dd3e165be0d6de04e380cc819a57835956bb1253c345e610744f"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
   depends_on "sphinx-doc" => :build
 
-  def install
-    cabal_sandbox do
-      cabal_install "hpack"
-      system "./.cabal-sandbox/bin/hpack"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
-      install_cabal_package :using => ["alex", "happy"]
-    end
+  def install
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
 
     system "make", "-C", "docs", "man"
     man1.install Dir["docs/_build/man/*.1"]

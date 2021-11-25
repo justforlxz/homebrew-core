@@ -1,15 +1,15 @@
 class Imgproxy < Formula
   desc "Fast and secure server for resizing and converting remote images"
   homepage "https://imgproxy.net"
-  url "https://github.com/imgproxy/imgproxy/archive/v2.7.0.tar.gz"
-  sha256 "9a97a4b184f67718f97a4b3d16cd98b61a825ba418e6e04139ed3a3a9d787fad"
+  url "https://github.com/imgproxy/imgproxy/archive/v3.0.0.tar.gz"
+  sha256 "0bdc7f9dd999d4a7ebf515fd0e7394acf4f79d9a7a81e42e0d0d4891110af690"
+  license "MIT"
   head "https://github.com/imgproxy/imgproxy.git"
 
   bottle do
-    cellar :any
-    sha256 "e8a745e2febcc0e27306dbd4c1d9b1215c744cbc0900cf75c9c83dda41fa0a95" => :catalina
-    sha256 "d987ba0ad66e8927fce68f881f4a3d6415ec92a2718716eaac35926a0011a735" => :mojave
-    sha256 "e1cd7887d771e625d128d120e90c8a2d5b14877668d712a18e56839c3fe692eb" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "848a65e1ac5b458b5c2a41d8e5758b4da073438cbaa1cdac8ac6e16e968a1582"
+    sha256 cellar: :any, big_sur:       "7028b3a4fb52a878ab198d29d242a91e510c81c2a2e60ad1eaaa8db87a728656"
+    sha256 cellar: :any, catalina:      "13adb5b1c91bf3b00fa9849c56d08562bce6d37c85b8eecd7fba55df680307c8"
   end
 
   depends_on "go" => :build
@@ -20,15 +20,11 @@ class Imgproxy < Formula
     ENV["CGO_LDFLAGS_ALLOW"]="-s|-w"
     ENV["CGO_CFLAGS_ALLOW"]="-Xpreprocessor"
 
-    system "go", "build", "-o", "#{bin}/#{name}"
+    system "go", "build", *std_go_args
   end
 
   test do
-    require "socket"
-
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
+    port = free_port
 
     cp(test_fixtures("test.jpg"), testpath/"test.jpg")
 
@@ -38,17 +34,17 @@ class Imgproxy < Formula
     pid = fork do
       exec bin/"imgproxy"
     end
-    sleep 3
+    sleep 10
 
     output = testpath/"test-converted.png"
 
-    system("curl", "-s", "-o", output, "http://127.0.0.1:#{port}/insecure/fit/100/100/no/0/plain/local:///test.jpg@png")
-    assert_equal 0, $CHILD_STATUS
+    system "curl", "-s", "-o", output,
+           "http://127.0.0.1:#{port}/insecure/resize:fit:100:100:true/plain/local:///test.jpg@png"
     assert_predicate output, :exist?
 
     file_output = shell_output("file #{output}")
     assert_match "PNG image data", file_output
-    assert_match "1 x 1", file_output
+    assert_match "100 x 100", file_output
   ensure
     Process.kill("TERM", pid)
     Process.wait(pid)

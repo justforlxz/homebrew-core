@@ -1,14 +1,23 @@
 class Widelands < Formula
   desc "Free real-time strategy game like Settlers II"
   homepage "https://www.widelands.org/"
-  url "https://launchpad.net/widelands/build20/build20/+download/widelands-build20.tar.bz2"
-  sha256 "38594d98c74f357d4c31dd8ee2b056bfe921f42935935af915d11b792677bcb2"
-  revision 1
+  url "https://github.com/widelands/widelands/archive/v1.0.tar.gz"
+  sha256 "1dab0c4062873cc72c5e0558f9e9620b0ef185f1a78923a77c4ce5b9ed76031a"
+  version_scheme 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "5f239a934442ca0adbf853a8d7d2761670a42aa04b4f6202092928ced39c120e" => :mojave
-    sha256 "02115536245a5dedb60d63df253f1658ddb25af43351625c250ad1b399ca785c" => :high_sierra
-    sha256 "5fa23f3fae36a92627f5e2b687a684a7888afa867074350a5ad2bee90edc4d02" => :sierra
+    sha256 arm64_monterey: "2f992a280442581a1b0e5c7b766c9ef28e26f5423774d2939798c710173c5a23"
+    sha256 arm64_big_sur:  "8f0377b940f20c79b0da12f8b5ae72d95424456b76c01d9b2f8f3032eae2b529"
+    sha256 monterey:       "516c380cd46bf5756bd737942507a118badb316e782500d36c69d2deca8449c5"
+    sha256 big_sur:        "443b39115903be7bd40d1f2353197a062a1210c42ff93f446ffc448a3ea5a183"
+    sha256 catalina:       "fa60c7429eda358d559ae1b1d5b0db456135c24bfc8ad35f8668f77c3e09cf51"
+    sha256 mojave:         "26663b82b323e4d087313ec8496f599d2aee39d5cb06c56da5576c257bca14b0"
+    sha256 x86_64_linux:   "3602f01c5e080a62ee4644abf8163b164082de937a5259b258020a67a3766248"
   end
 
   depends_on "cmake" => :build
@@ -23,6 +32,8 @@ class Widelands < Formula
   depends_on "sdl2_image"
   depends_on "sdl2_mixer"
   depends_on "sdl2_ttf"
+
+  uses_from_macos "curl"
 
   def install
     ENV.cxx11
@@ -42,6 +53,13 @@ class Widelands < Formula
   end
 
   test do
+    on_linux do
+      # Unable to start Widelands, because we were unable to add the home directory:
+      # RealFSImpl::make_directory: No such file or directory: /tmp/widelands-test/.local/share/widelands
+      mkdir_p ".local/share/widelands"
+      mkdir_p ".config/widelands"
+    end
+
     system bin/"widelands", "--version"
   end
 end

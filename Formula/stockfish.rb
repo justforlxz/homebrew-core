@@ -1,24 +1,33 @@
 class Stockfish < Formula
   desc "Strong open-source chess engine"
   homepage "https://stockfishchess.org/"
-  url "https://github.com/official-stockfish/Stockfish/files/2629649/sf_10.zip"
-  sha256 "9c2aa8b06935c930e80cba1426e10d76b6b1accc5a769e6bf1f41e15d79cadda"
-  head "https://github.com/official-stockfish/Stockfish.git"
+  url "https://github.com/official-stockfish/Stockfish/archive/sf_14.1.tar.gz"
+  sha256 "11d71018af47ba047175f846be72d8d9878df698e9b5d708ab158cf530633600"
+  license "GPL-3.0-only"
+  head "https://github.com/official-stockfish/Stockfish.git", branch: "master"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "788bbe949f69b99c2ca0220961aa3ad2cdc05487340d54b44b964f62ca076d3f" => :catalina
-    sha256 "7e7d58466b8d4f325e69eb593dbb40074541e383b9b1e62dae83b3d9cddfc3a7" => :mojave
-    sha256 "be82b92aa3b8a89162caca9f206645cb6395b93898f7575ea782f754b2183bd8" => :high_sierra
-    sha256 "84e6d5d13b0a30843ed3eafd245a3c6a61ecf67635b3b18ba5950fb69aed1bb1" => :sierra
+  livecheck do
+    url :stable
+    regex(/^sf[._-]v?(\d+(?:\.\d+)*)$/i)
   end
 
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "ef5e55e732a950acb837ea3eb4adfac3fdaa2b0e1ee282d70d5f1eb2c883cc6a"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "df0bfa47fc470ecde1d715f7ca949c3fd77a903f93a8eea9dba4b5a106eafbb2"
+    sha256 cellar: :any_skip_relocation, monterey:       "bed614a1f3d7d6b9ea90bd3fdc5f6186de9de856a6468b70547a5489c5adb753"
+    sha256 cellar: :any_skip_relocation, big_sur:        "11a90a078e9e3ecf881fb616d254f6ee9e921e03f382018f524d34cf09c1946f"
+    sha256 cellar: :any_skip_relocation, catalina:       "a7d63b4cde1d25c2467461e0410570c7c66c9cf0285e17f13791ce26e199f402"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "34ab8d99e0e5948551a9bea72fe37b8d6574890c0c90e84ce4a02121ae4311ac"
+  end
+
+  on_linux do
+    depends_on "gcc" # For C++17
+  end
+
+  fails_with gcc: "5"
+
   def install
-    arch = if MacOS.version.requires_popcnt?
-      "x86-64-modern"
-    else
-      "x86-64"
-    end
+    arch = Hardware::CPU.arm? ? "apple-silicon" : "x86-64-modern"
 
     system "make", "-C", "src", "build", "ARCH=#{arch}"
     bin.install "src/stockfish"

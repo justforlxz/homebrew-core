@@ -1,25 +1,29 @@
 class GitDelta < Formula
   desc "Syntax-highlighting pager for git and diff output"
   homepage "https://github.com/dandavison/delta"
-  url "https://github.com/dandavison/delta/archive/0.0.15.tar.gz"
-  sha256 "783374ee1e7527e2e30d134c6db6081638d50babfd053917d632c9c5eb1e8e7b"
+  url "https://github.com/dandavison/delta/archive/0.10.0.tar.gz"
+  sha256 "ce326c6010732734055671fd85733e0c19c5dff9401485bbf8d57024c6fa99da"
+  license "MIT"
   head "https://github.com/dandavison/delta.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "30fce1792a9f663a036fc17517ff81dc7da6f6d0849d27f1e341ed402c0799d7" => :catalina
-    sha256 "035f3a35e619f7f8b4248b07b9b3edd14df8246d2fbb6c0f8e56522bd9b76a75" => :mojave
-    sha256 "12a7db2b8a6fbef2322133e884cf0ec9ab188827f668ca5385529c51780e1707" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "47103c77f9d3636f615387729510dd3ef5f0b073b30e54527b7f69acd1c56727"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "31617e6008d892603987884de960a0eef6fc15821c4b7adea21e95d91450e678"
+    sha256 cellar: :any_skip_relocation, monterey:       "e87914140d2f40a839a30a0c5b649b762a52966b2648193a117bb8ff3fd787ee"
+    sha256 cellar: :any_skip_relocation, big_sur:        "0541dacf6c45eb93d86292f90cc4d72525a0ee6b138e3ef4b4c1fb201661c5bc"
+    sha256 cellar: :any_skip_relocation, catalina:       "0d6297016b2fb70a00164b5b1eed6d4323575a64ccc1398d21fb6d8f38c4c703"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "aacf9437f73ba968a939fe167d11552af26a075f75c087e13f62b74a1e71fa29"
   end
 
   depends_on "rust" => :build
-  uses_from_macos "llvm"
+  uses_from_macos "zlib"
 
-  conflicts_with "delta", :because => "both install a `delta` binary"
+  conflicts_with "delta", because: "both install a `delta` binary"
 
   def install
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
+    bash_completion.install "etc/completion/completion.bash" => "delta"
+    zsh_completion.install "etc/completion/completion.zsh" => "_delta"
   end
 
   test do

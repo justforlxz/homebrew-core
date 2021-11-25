@@ -1,14 +1,17 @@
 class Ucloud < Formula
-  desc "The official tool to managment your ucloud services"
+  desc "Official tool for managing UCloud services"
   homepage "https://www.ucloud.cn"
-  url "https://github.com/ucloud/ucloud-cli/archive/0.1.28.tar.gz"
-  sha256 "d5b1399956361d1d89c634c3067a7bc22383be577f8f9f08d671d181265bee2f"
+  url "https://github.com/ucloud/ucloud-cli/archive/0.1.37.tar.gz"
+  sha256 "91c8153854b102dcd671c58976e35b056b3ed32258a6daea3755c8cb35aed742"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "74252d770cdaffa85614fb58d679bed267b35b1984bee75f2f37a73926430074" => :catalina
-    sha256 "06b81238bdf4c69857974350474000353847d4d5e880661fa01b99b7ed12f364" => :mojave
-    sha256 "419a3d47d5f5a8fb1a197a1cb555edb7dc9d0ff7d843fb9e4816bb669d20139e" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "99d77eefb237043ab551e21c7bc5c4d8290987e92b2b06c5ede39d6a6946358d"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "3104755ba0d6f6c6ece54041f351b5626a1b6eab413f02ba1d6f7910ad145ca3"
+    sha256 cellar: :any_skip_relocation, monterey:       "d3e402a2646997e17c4b585d898a05f8341a58753f16546b9c4bf7ad717bbda7"
+    sha256 cellar: :any_skip_relocation, big_sur:        "e17891249c6853edd5e48bdb01417815944a593c2549fec53cb90797ed020878"
+    sha256 cellar: :any_skip_relocation, catalina:       "360540194c9c3f46ecd1a7fbdb659908123afcc3fa44d093cd641a6e87282ff8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "e5326dd1f207ab2ac02a00c06d8231ec5895735a595d543fe3a670a2c93854e3"
   end
 
   depends_on "go" => :build
@@ -23,7 +26,7 @@ class Ucloud < Formula
   end
 
   test do
-    system "#{bin}/ucloud", "config", "--project-id", "org-test", "--profile", "default"
+    system "#{bin}/ucloud", "config", "--project-id", "org-test", "--profile", "default", "--active", "true"
     config_json = (testpath/".ucloud/config.json").read
     assert_match '"project_id":"org-test"', config_json
     assert_match version.to_s, shell_output("#{bin}/ucloud --version")

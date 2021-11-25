@@ -1,15 +1,19 @@
 class Libpulsar < Formula
   desc "Apache Pulsar C++ library"
   homepage "https://pulsar.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=pulsar/pulsar-2.4.1/apache-pulsar-2.4.1-src.tar.gz"
-  sha256 "6fb764b0d15506884905b781cfd2f678ad6a819f2c8d60cc34f78966b4676d40"
-  revision 2
+  url "https://www.apache.org/dyn/closer.lua?path=pulsar/pulsar-2.8.1/apache-pulsar-2.8.1-src.tar.gz"
+  mirror "https://archive.apache.org/dist/pulsar/pulsar-2.8.1/apache-pulsar-2.8.1-src.tar.gz"
+  sha256 "8e30d0414f840477cad8fc27a09904523f3ff039f7c8570feb6acca047661710"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "758c5a7f3e535f2d1b090e0ebc7ea2cfe897610eb0e5f8c65f6c2347edea681e" => :catalina
-    sha256 "829dc72cdc0ef1061f3ce318daade47dd081b207343a6624701bf2a018c37648" => :mojave
-    sha256 "fe4d957fb5fdce6880fddc04d5da05ef044865e038845934f2a03c0493e56dbe" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "d66af4667d00250e795e34577700b927b3fbeb73d0ac629d466305333ae2b631"
+    sha256 cellar: :any,                 arm64_big_sur:  "f44531771bffaa687d9061132bd83acafd1288cd82b526028366c88ba52a027a"
+    sha256 cellar: :any,                 monterey:       "4b8fca76b83c8d16b07c7d7d2cf3585ecc87f6ec3f317e33b9feda96eaed9759"
+    sha256 cellar: :any,                 big_sur:        "3dd3fd3c00956ed62b9b2fbb91795889fb06b264e1df331fcb58a445cfa0784d"
+    sha256 cellar: :any,                 catalina:       "8538b133cd33c189390d1bcdcaa8d3c41dbac40631697f168f74c415929edf8a"
+    sha256 cellar: :any,                 mojave:         "743de257b0996bcf769a74054fcbee90c24a2a3f77584c34960ba3ffdfa153f2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "8acd3ad68d151b0e698b811d60db8e6eb00d7465c56fe9ac913546c45196dbeb"
   end
 
   depends_on "cmake" => :build
@@ -17,16 +21,13 @@ class Libpulsar < Formula
   depends_on "boost"
   depends_on "openssl@1.1"
   depends_on "protobuf"
+  depends_on "snappy"
   depends_on "zstd"
+
+  uses_from_macos "curl"
 
   def install
     cd "pulsar-client-cpp" do
-      # Stop opportunistic linking to snappy
-      # (Snappy was broken in 2.4.0 - could be added now)
-      inreplace "CMakeLists.txt",
-                "HAS_SNAPPY 1",
-                "HAS_SNAPPY 0"
-
       system "cmake", ".", *std_cmake_args,
                       "-DBUILD_TESTS=OFF",
                       "-DBUILD_PYTHON_WRAPPER=OFF",
@@ -47,7 +48,8 @@ class Libpulsar < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cc", "-L#{lib}", "-lpulsar", "-o", "test"
+
+    system ENV.cxx, "-std=gnu++11", "test.cc", "-L#{lib}", "-lpulsar", "-o", "test"
     system "./test"
   end
 end

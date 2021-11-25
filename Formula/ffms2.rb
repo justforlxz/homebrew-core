@@ -1,26 +1,27 @@
 class Ffms2 < Formula
   desc "Libav/ffmpeg based source library and Avisynth plugin"
   homepage "https://github.com/FFMS/ffms2"
-  url "https://github.com/FFMS/ffms2/archive/2.23.tar.gz"
-  mirror "https://deb.debian.org/debian/pool/main/f/ffms2/ffms2_2.23.orig.tar.gz"
-  sha256 "b09b2aa2b1c6f87f94a0a0dd8284b3c791cbe77f0f3df57af99ddebcd15273ed"
-  revision 2
+  url "https://github.com/FFMS/ffms2/archive/2.40.tar.gz"
+  mirror "https://deb.debian.org/debian/pool/main/f/ffms2/ffms2_2.40.orig.tar.gz"
+  sha256 "82e95662946f3d6e1b529eadbd72bed196adfbc41368b2d50493efce6e716320"
+  # The FFMS2 source is licensed under the MIT license, but its binaries
+  # are licensed under the GPL because GPL components of FFmpeg are used.
+  license "GPL-2.0"
+  revision 1
+  head "https://github.com/FFMS/ffms2.git"
 
   bottle do
-    cellar :any
-    sha256 "e83b73db4d441dd37b0811650f690756a863e629f7c5f89818ca59f300acafce" => :catalina
-    sha256 "638fda6fb3d0cf6af50ab122056e8fc23da52c0ab3d3b3df999b9ffcd2c7dbd1" => :mojave
-    sha256 "e42a13a433f713ec01ac496a36716c44f225c9ebe8ea397eb9d3d8d872faad7a" => :high_sierra
-    sha256 "c6fdb79a9e1bdbfd0bc0da134c7f8f845015527de866170e0d542ecef9861bdb" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "320b01b2ff9f7e02f2c9084ff3f5eecfa82ac965be08bb772ab93389e734db87"
+    sha256 cellar: :any,                 arm64_big_sur:  "221a3acdb567fd7414a8c8c7a452a878a941962c9c88fb238e6242ae5d7fc1b3"
+    sha256 cellar: :any,                 monterey:       "ccab0f325a1aba510fb1f1ae8078243126d43344c1cac035aaf9d1b2829708f6"
+    sha256 cellar: :any,                 big_sur:        "d3933ecde477f9ad7156ab174af028a409cf1a9e9def84f775036704a413101e"
+    sha256 cellar: :any,                 catalina:       "978c5addaa61cde403d5f5cf51448d6b9512e68c08570385b3ef645e39813d8b"
+    sha256 cellar: :any,                 mojave:         "4c9b2aa7932969e43df33c69c559df7bbc3212011e94a073cfb3024e334f7fee"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "86d18d8d718e46acabd4fa3a305667cdae70d9e82bc2905d2857f06c600ae049"
   end
 
-  head do
-    url "https://github.com/FFMS/ffms2.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-  end
-
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
   depends_on "pkg-config" => :build
   depends_on "ffmpeg"
 
@@ -40,12 +41,7 @@ class Ffms2 < Formula
       --prefix=#{prefix}
     ]
 
-    if build.head?
-      system "./autogen.sh", *args
-    else
-      system "./configure", *args
-    end
-
+    system "./autogen.sh", *args
     system "make", "install"
   end
 

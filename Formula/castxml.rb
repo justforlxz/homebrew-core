@@ -1,20 +1,33 @@
 class Castxml < Formula
   desc "C-family Abstract Syntax Tree XML Output"
   homepage "https://github.com/CastXML/CastXML"
-  url "https://github.com/CastXML/CastXML/archive/v0.2.0.tar.gz"
-  sha256 "626c395d0d3c777b5a1582cdfc4d33d142acfb12204ebe251535209126705ec1"
-  head "https://github.com/CastXML/castxml.git"
+  url "https://github.com/CastXML/CastXML/archive/v0.4.4.tar.gz"
+  sha256 "e7343edf262b291a9a3d702dbfa6d660e8ed81170454eab6af10a6dbf8c8141d"
+  license "Apache-2.0"
+  head "https://github.com/CastXML/castxml.git", branch: "master"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "5ec79b331bd18ac2d619c2acb01c42ccfabac62898f5e83971d9594fea1e91ed" => :catalina
-    sha256 "3a87a080247a21ab0f05db2dafb826664bb88426563507bb6a00d9c465d41e62" => :mojave
-    sha256 "295056ef0feae25c6f00c1e7e669f7f017bc3242c4cbdb0d6c95b34568b31655" => :high_sierra
-    sha256 "aaf5927a5f3dfcdc3c88a936a2aa6964ff8f304c48a0690087e6350ef75b0206" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "d76eb4f4e3cce08d062334f2c99f1cba63a3f831857ad00899ac7f5d82ccb2d7"
+    sha256 cellar: :any,                 arm64_big_sur:  "90aa62c5229d1084a1f197090b3c44b9cd85abddaf1695e2fecce2a2720b3f12"
+    sha256 cellar: :any,                 monterey:       "d8f8b6e5b027ae5707cdd74aba6f194babf02413b2251dbbab747426fd21ccac"
+    sha256 cellar: :any,                 big_sur:        "edd91bafec4e441ccbbcacd735d204873db448e36a2c45e84342c7e8f33a21d1"
+    sha256 cellar: :any,                 catalina:       "f44f3a928ad632cc5dd323d1122b597fd93562f83ebad2fbe4663764ad449726"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "d3fad7d88989008f812bc20583e05db10f9489e8fd9315afc03a22c9f0f9f0fc"
   end
 
   depends_on "cmake" => :build
   depends_on "llvm"
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
     mkdir "build" do
@@ -29,6 +42,7 @@ class Castxml < Formula
         return 0;
       }
     EOS
-    system "#{bin}/castxml", "-c", "-x", "c++", "--castxml-cc-gnu", "clang++", "--castxml-gccxml", "-o", "test.xml", "test.cpp"
+    system "#{bin}/castxml", "-c", "-x", "c++", "--castxml-cc-gnu", "clang++",
+                             "--castxml-gccxml", "-o", "test.xml", "test.cpp"
   end
 end

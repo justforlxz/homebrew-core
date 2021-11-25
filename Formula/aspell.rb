@@ -4,12 +4,20 @@ class Aspell < Formula
   url "https://ftp.gnu.org/gnu/aspell/aspell-0.60.8.tar.gz"
   mirror "https://ftpmirror.gnu.org/aspell/aspell-0.60.8.tar.gz"
   sha256 "f9b77e515334a751b2e60daab5db23499e26c9209f5e7b7443b05235ad0226f2"
+  license "LGPL-2.1-only"
 
   bottle do
-    sha256 "f34a5b53fa80f6f0ea3cef83d04eceed93f918153463e0b77a596374a842249d" => :catalina
-    sha256 "756d2f24409150b932043544af99bc1c2ea242299174ab89a2d06c7878812af8" => :mojave
-    sha256 "9bbb8be505d953395bcccde4712cf85792c6bf03af535cc553783361476ddddb" => :high_sierra
+    rebuild 1
+    sha256 arm64_monterey: "d75d3b4e2929123244786e9adb7ff335ec75943617e7dbd855d71c7ce3035173"
+    sha256 arm64_big_sur:  "bdd761d4454523f1bc8c0adba2db1a23c215c01371e348cd162b573347791159"
+    sha256 monterey:       "91f9e3083f86a059d0db046aa78e3ddf95a3c6cf531c982b7ca470dd0e57db3b"
+    sha256 big_sur:        "abf04f9f474e21d070e22667204cd122e7e099e90e60110dc7639fdaa5f5a66f"
+    sha256 catalina:       "86b7d31eff12742ccb73464c088c8313998bd4c1e37f108754f936d51b6f49dd"
+    sha256 mojave:         "aeded9b9861145353ad13bbf85772f23e556fe6dc0b263beebd555cf19762197"
+    sha256 x86_64_linux:   "5154c4a1e76b1f9ab21325d442cd9eaf80b83314792142ff837f84bcfb8cbb4a"
   end
+
+  uses_from_macos "ncurses"
 
   resource "en" do
     url "https://ftp.gnu.org/gnu/aspell/dict/en/aspell6-en-2018.04.16-0.tar.bz2"
@@ -563,8 +571,7 @@ class Aspell < Formula
   end
 
   test do
-    assert_equal shell_output("echo \"misspell worrd\" | #{bin}/aspell list -d en_US").strip,
-                 "worrd"
+    assert_equal "worrd", pipe_output("#{bin}/aspell list -d en_US", "misspell worrd").strip
   end
 end
 

@@ -3,46 +3,32 @@ class Pympress < Formula
 
   desc "Simple and powerful dual-screen PDF reader designed for presentations"
   homepage "https://github.com/Cimbali/pympress/"
-  url "https://files.pythonhosted.org/packages/35/03/4e655064b30b5717cfed53da88eda098971728fe4c8c94b1599833edbc66/pympress-1.5.1.tar.gz"
-  sha256 "8ea3808f31c9ae4152bdcf09632e1fece943d91fc3c974c4c3497ce1984e6d9c"
-  head "https://github.com/Cimbali/pympress.git"
+  url "https://files.pythonhosted.org/packages/c0/65/041a4feb4d432edce8215703892eef5379d0d925c7f304332501c29ddfac/pympress-1.7.0.tar.gz"
+  sha256 "0311f43f2016604108a90031f601b6798c973228cb64666a5e446195ddf689e1"
+  license "GPL-2.0-or-later"
+  head "https://github.com/Cimbali/pympress.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5f192402254be05dd85c5037153a3444854b429f2ec0118efac6eff445d3a175" => :catalina
-    sha256 "dad94bfa749bfeceb9b3bece78cb176fec098c9bbe5513e9e1772f6d9463a82f" => :mojave
-    sha256 "d7f9cbeaa860b3a40bd69688b7e4ec1ddd707c10cc3ea5c74423d79aed6431c1" => :high_sierra
+    sha256 cellar: :any_skip_relocation, monterey: "5df4896f9b20b957a56c2ca01aa97004420b3bb27ecb6752cedc938c132cbdea"
+    sha256 cellar: :any_skip_relocation, big_sur:  "d6a7c28f5b145de3054cbfcfe94999ca1dd0401d01092da0b5a56bc9af72f504"
+    sha256 cellar: :any_skip_relocation, catalina: "414c138633730609b93f975065f2528d63afae3cca4431479644b392b74a4f4b"
   end
 
   depends_on "gobject-introspection"
+  depends_on "gst-plugins-bad"
+  depends_on "gst-plugins-base"
+  depends_on "gst-plugins-good"
+  depends_on "gst-plugins-ugly"
+  depends_on "gstreamer"
   depends_on "gtk+3"
+  depends_on "libyaml"
   depends_on "poppler"
   depends_on "pygobject3"
-  depends_on "python"
-
-  resource "argh" do
-    url "https://files.pythonhosted.org/packages/e3/75/1183b5d1663a66aebb2c184e0398724b624cecd4f4b679cb6e25de97ed15/argh-0.26.2.tar.gz"
-    sha256 "e9535b8c84dc9571a48999094fda7f33e63c3f1b74f3e5f3ac0105a58405bb65"
-  end
-
-  resource "pathtools" do
-    url "https://files.pythonhosted.org/packages/e7/7f/470d6fcdf23f9f3518f6b0b76be9df16dcc8630ad409947f8be2eb0ed13a/pathtools-0.1.2.tar.gz"
-    sha256 "7c35c5421a39bb82e58018febd90e3b6e5db34c5443aaaf742b3f33d4655f1c0"
-  end
-
-  resource "python-vlc" do
-    url "https://files.pythonhosted.org/packages/a8/51/299f4804c43f99d718ed43a63b1ea0712932e25b6bbe1ee1817cb8e954f7/python-vlc-3.0.7110.tar.gz"
-    sha256 "821bca0dbe08fbff97a65e56ff2318ad7d499330876579c39f01f3fb38c7b679"
-  end
-
-  resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/e3/e8/b3212641ee2718d556df0f23f78de8303f068fe29cdaa7a91018849582fe/PyYAML-5.1.2.tar.gz"
-    sha256 "01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4"
-  end
+  depends_on "python@3.9"
 
   resource "watchdog" do
-    url "https://files.pythonhosted.org/packages/bb/e3/5a55d48a29300160779f0a0d2776d17c1b762a2039b36de528b093b87d5b/watchdog-0.9.0.tar.gz"
-    sha256 "965f658d0732de3188211932aeb0bb457587f04f63ab4c1e33eab878e9de961d"
+    url "https://files.pythonhosted.org/packages/c5/e9/fb0f9775c82b4df1815bb97ebac13383adddff4cf014aceefb7c02262675/watchdog-2.1.5.tar.gz"
+    sha256 "5563b005907613430ef3d4aaac9c78600dd5704e84764cb6deda4b3d72807f09"
   end
 
   def install
@@ -51,11 +37,11 @@ class Pympress < Formula
   end
 
   test do
-    system bin/"pympress", "--help"
+    on_linux do
+      # (pympress:48790): Gtk-WARNING **: 13:03:37.080: cannot open display
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
 
-    # Version info contained in log file only if all dependencies loaded successfully
-    assert_predicate testpath/"Library/Logs/pympress.log", :exist?
-    output = (testpath/"Library/Logs/pympress.log").read
-    assert_match /^INFO:pympress.__main__:Pympress: #{version}\s*;/, output
+    system bin/"pympress", "--quit"
   end
 end

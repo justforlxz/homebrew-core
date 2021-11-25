@@ -1,35 +1,32 @@
 class Chamber < Formula
   desc "CLI for managing secrets through AWS SSM Parameter Store"
   homepage "https://github.com/segmentio/chamber"
-  url "https://github.com/segmentio/chamber/archive/v2.7.5.tar.gz"
-  sha256 "be252801b89cd88a651833d1f4770e50ef1c46283190096dda71a902c35085aa"
-  head "https://github.com/segmentio/chamber.git"
+  url "https://github.com/segmentio/chamber/archive/v2.10.6.tar.gz"
+  sha256 "b5b667fefe54cf2d1805e7e1cd1676d7e2817678500031aaa0cd5efdd4f3b130"
+  license "MIT"
+  head "https://github.com/segmentio/chamber.git", branch: "master"
+
+  livecheck do
+    url :stable
+    regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+(?:-ci\d)?)["' >]}i)
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "335df38f4c238f4a5d2a16fecb69939ed6713ed8dd8d973982ca24f39360c472" => :catalina
-    sha256 "5dd2e5805853221f8cbe79083c7fdf13d85f16c70885d8cc78bacef7e641ee82" => :mojave
-    sha256 "5dd41982896b1d61207d658897e415e7bd9cbadf6c81c6362d592d9c50006bf7" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "5bcd5c6bcffa145e80b1ec6106bdee181a50afa4763f63914ccf21b733d5f29a"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "84b69b46b76eb37177043d1c7a2f1598925005dcae822f1b1dd637b137d6b3a7"
+    sha256 cellar: :any_skip_relocation, monterey:       "cb1602300084ca2528dccb7531fd97e39af887300c481cbf9cf41774aa9c5cb2"
+    sha256 cellar: :any_skip_relocation, big_sur:        "28ad359ee59635c5d42578ff307055c4061212bf04dcb6479deab92f4ce73b9c"
+    sha256 cellar: :any_skip_relocation, catalina:       "4d313ab693ce9f1b73c4a40bbacb2478bcf4892894911a8d2ba3aa5ff63597f0"
+    sha256 cellar: :any_skip_relocation, mojave:         "abbead2f61e23e7c35cf602d03c43f49d4b263e727ece4caae342d524226b2e2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "a02bfda5b5783f3a42bc8ebcf069c4b2d536a320a969bdd4216b41fce1af5204"
   end
 
   depends_on "go" => :build
-  depends_on "govendor" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GOOS"] = "darwin"
-    ENV["GOARCH"] = "amd64"
-    ENV["CGO_ENABLED"] = "0"
-
-    path = buildpath/"src/github.com/segmentio/chamber"
-    path.install Dir["{*,.git}"]
-
-    cd "src/github.com/segmentio/chamber" do
-      system "govendor", "sync"
-      system "go", "build", "-o", bin/"chamber",
-                   "-ldflags", "-X main.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.Version=v#{version}", "-trimpath", "-o", bin/"chamber"
+    prefix.install_metafiles
   end
 
   test do

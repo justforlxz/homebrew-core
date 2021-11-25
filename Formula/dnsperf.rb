@@ -1,25 +1,33 @@
 class Dnsperf < Formula
   desc "Measure DNS performance by simulating network conditions"
   homepage "https://www.dns-oarc.net/tools/dnsperf"
-  url "https://www.dns-oarc.net/files/dnsperf/dnsperf-2.3.2.tar.gz"
-  sha256 "292bbaeb95389b549a91f4bfc7faf8062326ef75a0382e879ca86cdfe71df408"
+  url "https://www.dns-oarc.net/files/dnsperf/dnsperf-2.8.0.tar.gz"
+  sha256 "d50b9e05d9688a7b5906447cdca87bf1d8e100b5288e0081db6c3cdd0fea19b3"
+  license "Apache-2.0"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?dnsperf[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "7c89a8d743a3a62653aebf2d0a6102991a88efa5fb0b8743d425745b2cc60e2a" => :catalina
-    sha256 "8901054afed6de33bdbbe8eda68f9238f0ac3915acd5ee319c942acae741841a" => :mojave
-    sha256 "f67934e4c9b06aafd7220815911a6fa27e430ef0add19b5fe8cfda3adb9dcae9" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "f06383bf7ab68f519f5b7037e31dedad98c77857cf475ef800e842321627e689"
+    sha256 cellar: :any,                 arm64_big_sur:  "740913f29f416d20fe462a5b609358c9331de5a2a79f0555536f5a25a515eb22"
+    sha256 cellar: :any,                 monterey:       "4144d2024ed40fcd9b6e8684edd476c1a5a3b6077a600cb929043c067eaa8dd4"
+    sha256 cellar: :any,                 big_sur:        "fc969607e2baacfcf5f14cc7f7338b25c147a76d01718b2055efe6b9b2df2d69"
+    sha256 cellar: :any,                 catalina:       "01eb44eafb115cc6d3c688d79014a972c4b3bf9b4121349de6f9d71b458bc04b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "7dfc2db092504211f547c184efbbaf3625175f9f6bd984528848f879f539fa0b"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "bind"
-  depends_on "libxml2"
+  depends_on "concurrencykit"
+  depends_on "ldns"
+  depends_on "libnghttp2"
+  depends_on "openssl@1.1"
 
   def install
-    # Fix "ld: file not found: /usr/lib/system/libsystem_darwin.dylib" for lxml
-    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
-
     system "./configure", "--prefix=#{prefix}"
+    system "make"
     system "make", "install"
   end
 

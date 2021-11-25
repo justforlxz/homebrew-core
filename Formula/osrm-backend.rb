@@ -1,17 +1,23 @@
 class OsrmBackend < Formula
   desc "High performance routing engine"
   homepage "http://project-osrm.org/"
-  url "https://github.com/Project-OSRM/osrm-backend/archive/v5.22.0.tar.gz"
-  sha256 "df0987a04bcf65d74f9c4e18f34a01982bf3bb97aa47f9d86cfb8b35f17a6a55"
-  revision 2
-  head "https://github.com/Project-OSRM/osrm-backend.git"
+  url "https://github.com/Project-OSRM/osrm-backend/archive/v5.26.0.tar.gz"
+  sha256 "45e986db540324bd0fc881b746e96477b054186698e8d14610ff7c095e906dcd"
+  license "BSD-2-Clause"
+  head "https://github.com/Project-OSRM/osrm-backend.git", branch: "master"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "12ec9670281dc1918f3d22cd39fc8f710008ee729b9997d65c10b6cfd4d6de1d" => :catalina
-    sha256 "db542349d5f721c7746b8222902d451828d593d7fe8d2b9235a6eb31ca3fffbc" => :mojave
-    sha256 "b43652ac087d596ecb02d922a88e9fc82769bf2d8a55be424ca6102807a03e45" => :high_sierra
+    sha256 cellar: :any, arm64_monterey: "f858c74b178e7d35752ca0ae3a61772421ea04ccff1041d27ee05433184b12d2"
+    sha256 cellar: :any, arm64_big_sur:  "a5247545b04b669711587d73ce192211669e4af288c5bce14923413936d285bf"
+    sha256 cellar: :any, monterey:       "c93ccda074ddfe27d18e17ef25aae4d5956dbab10eb45f4e1ac6ffb4ab9b3d03"
+    sha256 cellar: :any, big_sur:        "8aa632bde01a2f6566bbb006876a8d50af00bea45956e17ae0ddc87dd2278294"
+    sha256 cellar: :any, catalina:       "7caf6151936c3279afdf5c4e4b3bd5a81dbad1c33266a8fe80d3dbbeae5f7f79"
+    sha256 cellar: :any, mojave:         "e0b2e44267afd48717484ffc86fdee8096ec27020dcd2be0e2735b3cb2aef468"
   end
 
   depends_on "cmake" => :build
@@ -20,16 +26,16 @@ class OsrmBackend < Formula
   depends_on "libxml2"
   depends_on "libzip"
   depends_on "lua"
-
-  # "invalid use of non-static data member 'offset'"
-  # https://github.com/Project-OSRM/osrm-backend/issues/3719
-  depends_on :macos => :el_capitan
-
-  depends_on "tbb"
+  depends_on "tbb@2020"
 
   def install
+    lua = Formula["lua"]
+    luaversion = lua.version.major_minor
     mkdir "build" do
-      system "cmake", "..", "-DENABLE_CCACHE:BOOL=OFF", *std_cmake_args
+      system "cmake", "..", "-DENABLE_CCACHE:BOOL=OFF",
+                            "-DLUA_INCLUDE_DIR=#{lua.opt_include}/lua#{luaversion}",
+                            "-DLUA_LIBRARY=#{lua.opt_lib}/liblua.#{luaversion}.dylib",
+                            *std_cmake_args
       system "make"
       system "make", "install"
     end

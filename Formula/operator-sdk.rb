@@ -2,62 +2,49 @@ class OperatorSdk < Formula
   desc "SDK for building Kubernetes applications"
   homepage "https://coreos.com/operators/"
   url "https://github.com/operator-framework/operator-sdk.git",
-      :tag      => "v0.12.0",
-      :revision => "2445fcda834ca4b7cf0d6c38fba6317fb219b469"
-  head "https://github.com/operator-framework/operator-sdk.git"
+      tag:      "v1.15.0",
+      revision: "f6326e832a8a5e5453d0ad25e86714a0de2c0fc8"
+  license "Apache-2.0"
+  head "https://github.com/operator-framework/operator-sdk.git", branch: "master"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "3c1a3096fa626aaad7d10ad6a93fe467141a33959814e70e51628965ed2f2e97" => :catalina
-    sha256 "be37a061411e49e92b16970dcbc2e6a418e3fedc090aadffe88dc6c2818dfb58" => :mojave
-    sha256 "d866ecd94c8ccc81fed99c2402f1ec3d49ea6d0933fbe4917786f9ead396c68c" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "a27af0f2e0780e990ee493539195f0b2be040f83affcc33ca8cb1d1d9324c6d8"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "89876ea6a75442222385f2d93209de1400cf241644a0d82e628c370d9512f4c7"
+    sha256 cellar: :any_skip_relocation, monterey:       "e286b168d056d07fe5bccca5c42ce48fb0330cd36135105d1f479578cfc708be"
+    sha256 cellar: :any_skip_relocation, big_sur:        "420bca1b9c9aed17d73166693cb9d44693cda7946f6234050b962b6c75c2add1"
+    sha256 cellar: :any_skip_relocation, catalina:       "ee3f12cbf59eaeb43b149b9ce4b4314be293474e72aba50c6711eabd54a4e6ee"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "208e907d28832615d2c7f63e59e65e96fb7ea0cf9fecbbdb91a665207ee7bb02"
   end
 
   depends_on "go"
 
   def install
-    # TODO: Do not set GOROOT. This is a fix for failing tests when compiled with Go 1.13.
-    # See https://github.com/Homebrew/homebrew-core/pull/43820.
-    ENV["GOROOT"] = Formula["go"].opt_libexec
+    ENV["GOBIN"] = bin
+    system "make", "install"
 
-    ENV["GOPATH"] = buildpath
+    # Install bash completion
+    output = Utils.safe_popen_read("#{bin}/operator-sdk", "completion", "bash")
+    (bash_completion/"operator-sdk").write output
 
-    dir = buildpath/"src/github.com/operator-framework/operator-sdk"
-    dir.install buildpath.children - [buildpath/".brew_home"]
-    dir.cd do
-      # Make binary
-      system "make", "install"
-      bin.install buildpath/"bin/operator-sdk"
-
-      # Install bash completion
-      output = Utils.popen_read("#{bin}/operator-sdk completion bash")
-      (bash_completion/"operator-sdk").write output
-
-      # Install zsh completion
-      output = Utils.popen_read("#{bin}/operator-sdk completion zsh")
-      (zsh_completion/"_operator-sdk").write output
-
-      prefix.install_metafiles
-    end
+    # Install zsh completion
+    output = Utils.safe_popen_read("#{bin}/operator-sdk", "completion", "zsh")
+    (zsh_completion/"_operator-sdk").write output
   end
 
   test do
-    # Use the offical golang module cache to prevent network flakes and allow
-    # this test to complete before timing out.
-    ENV["GOPROXY"] = "https://proxy.golang.org"
-
     if build.stable?
       version_output = shell_output("#{bin}/operator-sdk version")
       assert_match "version: \"v#{version}\"", version_output
-      assert_match stable.specs[:revision], version_output
+      commit_regex = /[a-f0-9]{40}/
+      assert_match commit_regex, version_output
     end
 
-    # Create a new, blank operator
-    system "#{bin}/operator-sdk", "new", "test", "--repo=github.com/example-inc/app-operator"
-
-    cd "test" do
-      # Add an example API resource. This exercises most of the various pieces
-      # of generation logic.
-      system "#{bin}/operator-sdk", "add", "api", "--api-version=app.example.com/v1alpha1", "--kind=AppService"
-    end
+    output = shell_output("#{bin}/operator-sdk init --domain=example.com --license apache2 --owner BrewTest 2>&1", 1)
+    assert_match "failed to initialize project", output
   end
 end

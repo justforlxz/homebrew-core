@@ -1,28 +1,37 @@
 class Hidapi < Formula
   desc "Library for communicating with USB and Bluetooth HID devices"
   homepage "https://github.com/libusb/hidapi"
-  url "https://github.com/libusb/hidapi/archive/hidapi-0.9.0.tar.gz"
-  sha256 "630ee1834bdd5c5761ab079fd04f463a89585df8fcae51a7bfe4229b1e02a652"
+  url "https://github.com/libusb/hidapi/archive/hidapi-0.11.0.tar.gz"
+  sha256 "391d8e52f2d6a5cf76e2b0c079cfefe25497ba1d4659131297081fc0cd744632"
+  license :cannot_represent
   head "https://github.com/libusb/hidapi.git"
 
   bottle do
-    cellar :any
-    sha256 "08ed41cd6127ccaa6c4e60f34e663bd020e5ceb335c8b6fcfc7454ee75cbf948" => :catalina
-    sha256 "8e4c1959c227e51e8bc8e45532838dff3fd5c58aff90a03eb1e19d9cd51f7160" => :mojave
-    sha256 "0b972366a1dc78445d448b40892ef7885fb682eb2042e41723274d2e50388732" => :high_sierra
-    sha256 "befada3ffe32de1d7363d0a958aec534b248d8cd45111c4f30a6f46bb0ac401b" => :sierra
+    sha256 cellar: :any,                 arm64_monterey: "065513adb8485ea792f77c55a1ea9dcfb91c5c7aa4ed0fe2e033f847ffed425e"
+    sha256 cellar: :any,                 arm64_big_sur:  "785868d1b729ada62b76b49e1d1340a347b88db0c9a69a12d3417bd5539e750d"
+    sha256 cellar: :any,                 monterey:       "9551ebd0d5afd76d70008401cfe60810e7e1483e00727cbe919c0861aabcf3e1"
+    sha256 cellar: :any,                 big_sur:        "33612c008465ce62b39f1aeb519eaa58bd1d8e1296b118894765d4729b505f2b"
+    sha256 cellar: :any,                 catalina:       "a90ba3cd69ce428830a5dfba205cf375fd962b19b5653a702b7c1d8616fa62d0"
+    sha256 cellar: :any,                 mojave:         "35827213bd2b8b87c8574d7cf5f4fd18795dbf267d0b9355b4d0e528f9894b4f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "1441c545caecc11f3c611d494cd07d253909baa7572ad844374b93c0fef5dfaa"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
+  depends_on "cmake" => :build
   depends_on "pkg-config" => :build
 
+  on_linux do
+    depends_on "libusb"
+    depends_on "systemd" # for libudev
+  end
+
   def install
-    system "./bootstrap"
-    system "./configure", "--prefix=#{prefix}"
-    system "make", "install"
-    bin.install "hidtest/.libs/hidtest"
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args, "-DHIDAPI_BUILD_HIDTEST=ON"
+      system "make", "install"
+
+      # hidtest/.libs/hidtest does not exist for Linux, install it for macOS only
+      bin.install "hidtest/hidtest" if OS.mac?
+    end
   end
 
   test do
@@ -34,7 +43,14 @@ class Hidapi < Formula
       }
     EOS
 
-    flags = ["-I#{include}/hidapi", "-L#{lib}", "-lhidapi"] + ENV.cflags.to_s.split
+    flags = ["-I#{include}/hidapi", "-L#{lib}"]
+    on_macos do
+      flags << "-lhidapi"
+    end
+    on_linux do
+      flags << "-lhidapi-hidraw"
+    end
+    flags += ENV.cflags.to_s.split
     system ENV.cc, "-o", "test", "test.c", *flags
     system "./test"
   end

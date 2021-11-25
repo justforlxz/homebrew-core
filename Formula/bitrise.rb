@@ -1,30 +1,26 @@
 class Bitrise < Formula
   desc "Command-line automation tool"
   homepage "https://github.com/bitrise-io/bitrise"
-  url "https://github.com/bitrise-io/bitrise/archive/1.36.0.tar.gz"
-  sha256 "1b8999a1c0b1d56e2113b2222d8e6214f6350af25eb10c5e39bb7f6e18a17426"
+  url "https://github.com/bitrise-io/bitrise/archive/1.48.0.tar.gz"
+  sha256 "0800d63eaca091f6570e227dec26560483ed6c74ea43558781fb717b5dfbdb42"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "83b166d70e6ec9708d770c92f68c52cfa381737799ce03512879dcff1800875f" => :catalina
-    sha256 "0955e039c7b22b065e0d7e2b90583af0b506a0a23833819277f23e15eae65505" => :mojave
-    sha256 "1a5b0c22877f76d872e605a44d0e17f132a5fbac79e787e19880b1d3a9c5827f" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_monterey: "21b4b70f7fc7787108da2671dd4f579260970ea5d8cb691054c55ee5d2117558"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur:  "973602302d6b4270875e82c41709f8cfe4171a3bd53c271ce69a199d524f3aa6"
+    sha256 cellar: :any_skip_relocation, monterey:       "e68b5c2af567d68dbadce954b4be9e11f64a867f4087fd397b33796a4eb95437"
+    sha256 cellar: :any_skip_relocation, big_sur:        "7b200d18f14e18e611c3fc9a98a6c1ef656f85d2f8d4df75f9d98c8a77067762"
+    sha256 cellar: :any_skip_relocation, catalina:       "5f7902cce52a17241873c3a172e018bd874dfb28f9159a838aa6f48cc3100704"
+    sha256 cellar: :any_skip_relocation, mojave:         "746b543d056b120d00af803f2170be17b3648c5fc7f8e100aa1d367817b3cf50"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "1609e537cca0ea8a5452b30eeeae470d8663f7942e2fc28b7e72c518d7bee9df"
   end
 
   depends_on "go" => :build
 
+  uses_from_macos "rsync"
+
   def install
-    ENV["GOPATH"] = buildpath
-
-    # Install bitrise
-    bitrise_go_path = buildpath/"src/github.com/bitrise-io/bitrise"
-    bitrise_go_path.install Dir["*"]
-
-    cd bitrise_go_path do
-      prefix.install_metafiles
-
-      system "go", "build", "-o", bin/"bitrise"
-    end
+    system "go", "build", *std_go_args(ldflags: "-s -w")
   end
 
   test do

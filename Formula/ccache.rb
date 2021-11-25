@@ -1,34 +1,47 @@
 class Ccache < Formula
   desc "Object-file caching compiler wrapper"
   homepage "https://ccache.dev/"
-  url "https://github.com/ccache/ccache/releases/download/v3.7.6/ccache-3.7.6.tar.xz"
-  sha256 "73e2633ac9bca387b5a39c72a8f85634670c4091dab639228c433898163c86c0"
+  url "https://github.com/ccache/ccache/releases/download/v4.5.1/ccache-4.5.1.tar.xz"
+  sha256 "51186ebe0326365f4e6131e1caa8911de7da4aa6718efc00680322d63a759517"
+  license "GPL-3.0-or-later"
+  head "https://github.com/ccache/ccache.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3adbcce85eb17728cd913be9f53b1c9da01ad1e4ba5d2a646c7cea9b74877153" => :catalina
-    sha256 "349361984428110dd2ad23b3e25b564ca0d38edcf1d005ecc79835d5d5385231" => :mojave
-    sha256 "c54accd2400689df8a8debf9252fe6817db9da8450e026924b898983fcc871f0" => :high_sierra
+    sha256 cellar: :any,                 arm64_monterey: "400d5e7df0557fcd5da23b09eb2ad2a3349db05c6fd2cbed77fa9b5cb1e5842c"
+    sha256 cellar: :any,                 arm64_big_sur:  "1d03e8a6728d908b222ec0d929c848209edb0e76720959212e35205cf64e0c87"
+    sha256 cellar: :any,                 monterey:       "1cb93db06abd2a421e853a47ab40cbf57c6cf27eb51433dd1e2e51b921670585"
+    sha256 cellar: :any,                 big_sur:        "44638dde6b3c03920200fa2385456915461ce7338ac604e87ac0b234f0b72917"
+    sha256 cellar: :any,                 catalina:       "5aa9f5e03470cbc2af290f34dfdec800defc00af41ee6dc1e4348d171dcfd8f4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:   "84f24419115c4fa4d9b6631d49ccf957968a5defce895606fdf31ce954cfc64b"
   end
 
-  uses_from_macos "zlib"
+  depends_on "asciidoctor" => :build
+  depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
 
-  head do
-    url "https://github.com/ccache/ccache.git"
+  depends_on "hiredis"
+  depends_on "zstd"
 
-    depends_on "asciidoc" => :build
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
+  on_linux do
+    depends_on "gcc"
   end
+
+  fails_with gcc: "5"
 
   def install
-    ENV["XML_CATALOG_FILES"] = etc/"xml/catalog" if build.head?
+    system "cmake", "-S", ".", "-B", "build", *std_cmake_args, "-DENABLE_IPO=TRUE"
+    system "cmake", "--build", "build"
 
-    system "./autogen.sh" if build.head?
-    system "./configure", "--prefix=#{prefix}", "--mandir=#{man}"
-    system "make"
-    system "make", "install"
+    # Homebrew compiler shim actively prevents ccache usage (see caveats), which will break the test suite.
+    # We run the test suite for ccache because it provides a more in-depth functional test of the software
+    # (especially with IPO enabled), adds negligible time to the build process, and we don't actually test
+    # this formula properly in the test block since doing so would be too complicated.
+    # See https://github.com/Homebrew/homebrew-core/pull/83900#issuecomment-90624064
+    with_env(CC: DevelopmentTools.locate(DevelopmentTools.default_compiler)) do
+      system "ctest", "-j#{ENV.make_jobs}", "--test-dir", "build"
+    end
+
+    system "cmake", "--install", "build"
 
     libexec.mkpath
 
@@ -36,26 +49,33 @@ class Ccache < Formula
       clang
       clang++
       cc
-      gcc gcc2 gcc3 gcc-3.3 gcc-4.0 gcc-4.2 gcc-4.3 gcc-4.4 gcc-4.5 gcc-4.6 gcc-4.7 gcc-4.8 gcc-4.9 gcc-5 gcc-6 gcc-7 gcc-8 gcc-9
-      c++ c++3 c++-3.3 c++-4.0 c++-4.2 c++-4.3 c++-4.4 c++-4.5 c++-4.6 c++-4.7 c++-4.8 c++-4.9 c++-5 c++-6 c++-7 c++-8 c++-9
-      g++ g++2 g++3 g++-3.3 g++-4.0 g++-4.2 g++-4.3 g++-4.4 g++-4.5 g++-4.6 g++-4.7 g++-4.8 g++-4.9 g++-5 g++-6 g++-7 g++-8 g++-9
+      gcc gcc2 gcc3 gcc-3.3 gcc-4.0
+      gcc-4.2 gcc-4.3 gcc-4.4 gcc-4.5 gcc-4.6 gcc-4.7 gcc-4.8 gcc-4.9
+      gcc-5 gcc-6 gcc-7 gcc-8 gcc-9 gcc-10 gcc-11
+      c++ c++3 c++-3.3 c++-4.0
+      c++-4.2 c++-4.3 c++-4.4 c++-4.5 c++-4.6 c++-4.7 c++-4.8 c++-4.9
+      c++-5 c++-6 c++-7 c++-8 c++-9 c++-10 c++-11
+      g++ g++2 g++3 g++-3.3 g++-4.0
+      g++-4.2 g++-4.3 g++-4.4 g++-4.5 g++-4.6 g++-4.7 g++-4.8 g++-4.9
+      g++-5 g++-6 g++-7 g++-8 g++-9 g++-10 g++-11
     ].each do |prog|
       libexec.install_symlink bin/"ccache" => prog
     end
   end
 
-  def caveats; <<~EOS
-    To install symlinks for compilers that will automatically use
-    ccache, prepend this directory to your PATH:
-      #{opt_libexec}
+  def caveats
+    <<~EOS
+      To install symlinks for compilers that will automatically use
+      ccache, prepend this directory to your PATH:
+        #{opt_libexec}
 
-    If this is an upgrade and you have previously added the symlinks to
-    your PATH, you may need to modify it to the path specified above so
-    it points to the current version.
+      If this is an upgrade and you have previously added the symlinks to
+      your PATH, you may need to modify it to the path specified above so
+      it points to the current version.
 
-    NOTE: ccache can prevent some software from compiling.
-    ALSO NOTE: The brew command, by design, will never use ccache.
-  EOS
+      NOTE: ccache can prevent some software from compiling.
+      ALSO NOTE: The brew command, by design, will never use ccache.
+    EOS
   end
 
   test do

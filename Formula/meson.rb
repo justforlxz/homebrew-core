@@ -1,27 +1,36 @@
 class Meson < Formula
   desc "Fast and user friendly build system"
   homepage "https://mesonbuild.com/"
-  url "https://github.com/mesonbuild/meson/releases/download/0.52.0/meson-0.52.0.tar.gz"
-  sha256 "d60f75f0dedcc4fd249dbc7519d6f3ce6df490033d276ef1cf27453ef4938d32"
+  url "https://github.com/mesonbuild/meson/releases/download/0.60.1/meson-0.60.1.tar.gz"
+  sha256 "5add789c953d984b500858b2851ee3d7add0460cf1a6f852f0a721af17384e13"
+  license "Apache-2.0"
   head "https://github.com/mesonbuild/meson.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8df30b9960a09372a5695bb8a6c2275ecd42337d668e6334c846652cc0803e20" => :catalina
-    sha256 "8df30b9960a09372a5695bb8a6c2275ecd42337d668e6334c846652cc0803e20" => :mojave
-    sha256 "8df30b9960a09372a5695bb8a6c2275ecd42337d668e6334c846652cc0803e20" => :high_sierra
+    sha256 cellar: :any_skip_relocation, all: "bce1a538d419c7e6cb354ac23a65ebc5d8cbe76869a4acd245d3a64d195ebb9a"
   end
 
   depends_on "ninja"
-  depends_on "python"
+  depends_on "python@3.10"
 
   def install
-    version = Language::Python.major_minor_version("python3")
-    ENV["PYTHONPATH"] = lib/"python#{version}/site-packages"
+    python3 = Formula["python@3.10"].opt_bin/"python3"
+    system python3, *Language::Python.setup_install_args(prefix)
 
-    system "python3", *Language::Python.setup_install_args(prefix)
+    # Make the bottles uniform. This also ensures meson checks `HOMEBREW_PREFIX`
+    # for fulfilling dependencies rather than just `/usr/local`.
+    mesonbuild = prefix/Language::Python.site_packages(python3)/"mesonbuild"
+    inreplace_files = %w[
+      coredata.py
+      dependencies/boost.py
+      dependencies/cuda.py
+      dependencies/qt.py
+      mesonlib/universal.py
+      modules/python.py
+    ].map { |f| mesonbuild/f }
 
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    # Passing `build.stable?` ensures a failed `inreplace` won't fail HEAD installs.
+    inreplace inreplace_files, "/usr/local", HOMEBREW_PREFIX, build.stable?
   end
 
   test do
@@ -37,7 +46,7 @@ class Meson < Formula
     EOS
 
     mkdir testpath/"build" do
-      system "#{bin}/meson", ".."
+      system bin/"meson", ".."
       assert_predicate testpath/"build/build.ninja", :exist?
     end
   end

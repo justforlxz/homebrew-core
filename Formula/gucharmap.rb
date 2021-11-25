@@ -3,13 +3,16 @@ class Gucharmap < Formula
   homepage "https://wiki.gnome.org/Apps/Gucharmap"
   url "https://download.gnome.org/sources/gucharmap/12.0/gucharmap-12.0.1.tar.xz"
   sha256 "39de8aad9d7f0af33c29db1a89f645e76dad2fce00d1a0f7c8a689252a2c2155"
-  revision 1
+  revision 4
 
   bottle do
-    sha256 "02bf0a815ddc6b3cf366c2a4fee899e1dba4c72d2952c4e9df87a52fcf658d5b" => :catalina
-    sha256 "9c965568b01c23bb6ef12d997fa2f7335298ac6cba1acfb1ca0680b85a93e198" => :mojave
-    sha256 "644ffd53ce114c7790c97183807812121fb681aeb308303dcedbb5c2a889c5de" => :high_sierra
-    sha256 "b939644d0bb0ea2f732242acd4bca679a538dd18c8bd2d9ef23cdb37afb5043f" => :sierra
+    sha256 arm64_monterey: "04be31ca892b6d00aabe5025063abb525630883ff1dd1a99f4f6fc1e8de48802"
+    sha256 arm64_big_sur:  "f96625e52ea9855f9d4f350e0e61cbc90c352dfd76931dff3fc3503810be0118"
+    sha256 monterey:       "739f55d1ebe5cb2bbd1cb3e414c9e0e01f6f7d2172aa2cb858e016340da875ea"
+    sha256 big_sur:        "318ada0ffb5e2b9a2c4ed5968f8d38762a4cc2bb7119e50d6bb13354ca1de47f"
+    sha256 catalina:       "007a3670270b9b8cbc2e0e9f36cb3854ba987d8b8105ec73e236fc56d28c2cbe"
+    sha256 mojave:         "b8f34cbea2db76364e0a4e3a6d2e5ba3110e80ef6b76fa3c165b1ac6b30ee9f1"
+    sha256 high_sierra:    "f8ad1728dd1e0124201e568ad0f69f004245368eb21527dea98ecf045ccad708"
   end
 
   depends_on "coreutils" => :build
@@ -17,11 +20,17 @@ class Gucharmap < Formula
   depends_on "intltool" => :build
   depends_on "itstool" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "gtk+3"
 
+  # Fix -flat_namespace being used on Big Sur and later.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/03cf8088210822aa2c1ab544ed58ea04c897d9c4/libtool/configure-big_sur.diff"
+    sha256 "35acd6aebc19843f1a2b3a63e880baceb0f5278ab1ace661e57a502d9d78c93c"
+  end
+
   def install
-    xy = Language::Python.major_minor_version "python3"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
     ENV.append_path "PYTHONPATH", "#{Formula["libxml2"].opt_lib}/python#{xy}/site-packages"
     ENV["WGET"] = "curl"
 
